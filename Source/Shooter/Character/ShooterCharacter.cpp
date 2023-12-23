@@ -24,6 +24,7 @@ AShooterCharacter::AShooterCharacter()
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCamera->SetupAttachment(HandsMesh1P, TEXT("Camera_animatedSocket"));
 	FirstPersonCamera->bConstrainAspectRatio = true;
+	FirstPersonCamera->bUsePawnControlRotation = true;
 
 }
 
@@ -89,12 +90,18 @@ void AShooterCharacter::BeginPlay()
 void AShooterCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D CurrentValue = Value.Get<FVector2D>();
-	UE_LOG(LogTemp, Warning, TEXT("Look = X:%f, Y:%f"), CurrentValue.X, CurrentValue.Y);
+	
+	AddControllerYawInput(CurrentValue.X);
+	AddControllerPitchInput(CurrentValue.Y);
+
 }
 
 void AShooterCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D CurrentValue = Value.Get<FVector2D>();
-	UE_LOG(LogTemp, Warning, TEXT("Move = X:%f, Y:%f"), CurrentValue.X, CurrentValue.Y);
+	
+	AddMovementInput(GetActorRightVector(), CurrentValue.X);
+	AddMovementInput(GetActorForwardVector(), CurrentValue.Y);
+
 }
 
