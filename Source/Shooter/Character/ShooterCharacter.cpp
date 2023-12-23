@@ -3,6 +3,8 @@
 
 #include "ShooterCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -37,12 +39,26 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AShooterCharacter::Look);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AShooterCharacter::Move);
+	}
+
 }
 
 // Called when the game starts or when spawned
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* EnhancedInputLocalPlayerSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			EnhancedInputLocalPlayerSubsystem->AddMappingContext(MovementMappingContext, 0);
+		}
+	}
 
 	if (IsLocallyControlled())
 	{
@@ -68,5 +84,17 @@ void AShooterCharacter::BeginPlay()
 		}
 	}
 	
+}
+
+void AShooterCharacter::Look(const FInputActionValue& Value)
+{
+	const FVector2D CurrentValue = Value.Get<FVector2D>();
+	UE_LOG(LogTemp, Warning, TEXT("Look = X:%f, Y:%f"), CurrentValue.X, CurrentValue.Y);
+}
+
+void AShooterCharacter::Move(const FInputActionValue& Value)
+{
+	const FVector2D CurrentValue = Value.Get<FVector2D>();
+	UE_LOG(LogTemp, Warning, TEXT("Move = X:%f, Y:%f"), CurrentValue.X, CurrentValue.Y);
 }
 
