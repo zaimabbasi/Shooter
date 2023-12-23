@@ -18,5 +18,9 @@
 				"Editor"
 			]
 		}
+	],
+	"TargetPlatforms": [
+		"Windows",
+		"HoloLens"
 	]
 }
