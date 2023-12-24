@@ -51,4 +51,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+
+public:
+	FORCEINLINE USkeletalMeshComponent* GetHandsMesh1P() const { return HandsMesh1P; }
 };
