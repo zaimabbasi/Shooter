@@ -24,9 +24,4 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
-	if (USkeletalMeshComponent* HandsMesh1P = ShooterCharacter->GetHandsMesh1P())
-	{
-		RelativeRotation = HandsMesh1P->GetRelativeRotation();
-	}
-	ControlRotationPitch = ShooterCharacter->GetControlRotation().Pitch;
 }
