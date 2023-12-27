@@ -5,11 +5,10 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Shooter/Components/InventoryComponent.h"
 
-// Sets default values
 AShooterCharacter::AShooterCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
@@ -26,16 +25,17 @@ AShooterCharacter::AShooterCharacter()
 	FirstPersonCamera->bConstrainAspectRatio = true;
 	FirstPersonCamera->bUsePawnControlRotation = true;
 
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+	InventoryComponent->SetIsReplicated(true);
+
 }
 
-// Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
-// Called to bind functionality to input
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -48,7 +48,17 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 }
 
-// Called when the game starts or when spawned
+void AShooterCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	if (InventoryComponent)
+	{
+		InventoryComponent->OwningCharacter = this;
+		InventoryComponent->OnRepWeaponsArrayDelegate.BindUObject(this, &AShooterCharacter::OnRepWeaponsArrayCallback);
+	}
+}
+
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -103,5 +113,10 @@ void AShooterCharacter::Move(const FInputActionValue& Value)
 	AddMovementInput(GetActorRightVector(), CurrentValue.X);
 	AddMovementInput(GetActorForwardVector(), CurrentValue.Y);
 
+}
+
+void AShooterCharacter::OnRepWeaponsArrayCallback()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnRepWeaponsArrayCallback"));
 }
 

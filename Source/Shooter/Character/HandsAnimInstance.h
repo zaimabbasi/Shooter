@@ -7,9 +7,7 @@
 #include "HandsAnimInstance.generated.h"
 
 class AShooterCharacter;
-/**
- * 
- */
+
 UCLASS()
 class SHOOTER_API UHandsAnimInstance : public UAnimInstance
 {
@@ -17,7 +15,6 @@ class SHOOTER_API UHandsAnimInstance : public UAnimInstance
 	
 public:
 	virtual void NativeInitializeAnimation() override;
-
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 protected:
