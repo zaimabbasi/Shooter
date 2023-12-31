@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Shooter/Data/CharacterDataAsset.h"
 #include "InventoryComponent.generated.h"
 
 class AShooterCharacter;
@@ -24,6 +25,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	FOnRepWeaponsArrayDelegate OnRepWeaponsArrayDelegate;
+	FOnRepWeaponsArrayDelegate OnRepWeaponsArrayDelegate1P;
 
 protected:
 	virtual void BeginPlay() override;
@@ -31,21 +33,28 @@ protected:
 	UFUNCTION()
 	void OnRep_WeaponsArray();
 
+	UFUNCTION()
+	void OnRep_WeaponsArray1P();
+
 private:
 	AShooterCharacter* OwningCharacter;
+
+	TArray<FInventoryData> InventoryDataArray;
 
 	UPROPERTY(ReplicatedUsing = "OnRep_WeaponsArray")
 	TArray<AWeapon*> WeaponsArray;
 
+	UPROPERTY(ReplicatedUsing = "OnRep_WeaponsArray1P")
+	TArray<AWeapon*> WeaponsArray1P;
+
 public:
-	FORCEINLINE bool HasAuthority() const
-	{
-		APawn* OwningPawn = GetOwner<APawn>();
-		return OwningPawn && OwningPawn->HasAuthority();
-	}
+	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
 	FORCEINLINE bool IsLocallyControlled() const
 	{
 		APawn* OwningPawn = GetOwner<APawn>();
 		return OwningPawn && OwningPawn->IsLocallyControlled();
 	}
+
+	AWeapon* GetWeaponAtIndex(uint32 index);
+	AWeapon* GetWeaponAtIndex1P(uint32 index);
 };

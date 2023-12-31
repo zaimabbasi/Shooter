@@ -5,16 +5,18 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Shooter/Components/CombatComponent.h"
 #include "Shooter/Components/InventoryComponent.h"
+#include "Shooter/Weapon/Weapon.h"
 
 AShooterCharacter::AShooterCharacter()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
-	CharacterMesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
-	CharacterMesh1P->SetupAttachment(GetRootComponent());
-	CharacterMesh1P->SetCastShadow(false);
+	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh1P"));
+	Mesh1P->SetupAttachment(GetRootComponent());
+	Mesh1P->SetCastShadow(false);
 
 	HandsMesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandsMesh1P"));
 	HandsMesh1P->SetupAttachment(GetRootComponent());
@@ -27,6 +29,9 @@ AShooterCharacter::AShooterCharacter()
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 	InventoryComponent->SetIsReplicated(true);
+
+	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	CombatComponent->SetIsReplicated(true);
 
 }
 
@@ -56,6 +61,15 @@ void AShooterCharacter::PostInitializeComponents()
 	{
 		InventoryComponent->OwningCharacter = this;
 		InventoryComponent->OnRepWeaponsArrayDelegate.BindUObject(this, &AShooterCharacter::OnRepWeaponsArrayCallback);
+		InventoryComponent->OnRepWeaponsArrayDelegate1P.BindUObject(this, &AShooterCharacter::OnRepWeaponsArrayCallback1P);
+		if (CharacterDataAsset)
+		{
+			InventoryComponent->InventoryDataArray = CharacterDataAsset->InventoryDataArray;
+		}
+	}
+	if (CombatComponent)
+	{
+		CombatComponent->OwningCharacter = this;
 	}
 }
 
@@ -70,24 +84,24 @@ void AShooterCharacter::BeginPlay()
 			EnhancedInputLocalPlayerSubsystem->AddMappingContext(MovementMappingContext, 0);
 		}
 	}
-
+	
 	if (IsLocallyControlled())
 	{
-		if (USkeletalMeshComponent* CharacterMesh3P = GetMesh())
+		if (Mesh1P)
 		{
-			CharacterMesh3P->SetVisibility(false);
-			CharacterMesh3P->SetCastHiddenShadow(true);
+			Mesh1P->HideBoneByName(TEXT("Base-HumanSpine3"), EPhysBodyOp::PBO_None);
 		}
-		if (CharacterMesh1P)
+		if (USkeletalMeshComponent* Mesh3P = GetMesh())
 		{
-			CharacterMesh1P->HideBoneByName(TEXT("Base-HumanSpine3"), EPhysBodyOp::PBO_None);
+			Mesh3P->SetVisibility(false);
+			Mesh3P->SetCastHiddenShadow(true);
 		}
 	}
 	else
 	{
-		if (CharacterMesh1P)
+		if (Mesh1P)
 		{
-			CharacterMesh1P->DestroyComponent();
+			Mesh1P->DestroyComponent();
 		}
 		if (HandsMesh1P)
 		{
@@ -118,5 +132,20 @@ void AShooterCharacter::Move(const FInputActionValue& Value)
 void AShooterCharacter::OnRepWeaponsArrayCallback()
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnRepWeaponsArrayCallback"));
+	if (InventoryComponent && CombatComponent)
+	{
+		CombatComponent->Server_SetEquippedWeapon(InventoryComponent->GetWeaponAtIndex(0));
+	}
+
+}
+
+void AShooterCharacter::OnRepWeaponsArrayCallback1P()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnRepWeaponsArrayCallback1P"));
+	if (InventoryComponent && CombatComponent)
+	{
+		CombatComponent->SetEquippedWeapon1P(InventoryComponent->GetWeaponAtIndex1P(0));
+	}
+
 }
 

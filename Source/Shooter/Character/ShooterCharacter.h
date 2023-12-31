@@ -10,8 +10,9 @@
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
-class UInventoryComponent;
 class UCharacterDataAsset;
+class UInventoryComponent;
+class UCombatComponent;
 
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
@@ -32,14 +33,17 @@ protected:
 	UFUNCTION()
 	void OnRepWeaponsArrayCallback();
 
-private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* CharacterMesh1P;
+	UFUNCTION()
+	void OnRepWeaponsArrayCallback1P();
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* Mesh1P;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* HandsMesh1P;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
@@ -56,8 +60,9 @@ private:
 
 	UInventoryComponent* InventoryComponent;
 
+	UCombatComponent* CombatComponent;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh1P() const { return HandsMesh1P; }
-	FORCEINLINE UCharacterDataAsset* GetCharacterDataAsset() const { return CharacterDataAsset; }
 
 };

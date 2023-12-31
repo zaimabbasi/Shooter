@@ -2,16 +2,18 @@
 
 
 #include "Weapon.h"
+#include "Components/BoxComponent.h"
 
 AWeapon::AWeapon()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
 
-	USceneComponent* Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	SetRootComponent(Root);
+	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
+	SetRootComponent(Mesh);
 
-	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
-	WeaponMesh->SetupAttachment(Root);
+	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
+	BoxComponent->SetupAttachment(GetRootComponent());
 
 }
 
@@ -24,6 +26,6 @@ void AWeapon::Tick(float DeltaTime)
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 

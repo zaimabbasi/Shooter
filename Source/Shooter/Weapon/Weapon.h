@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
+class UBoxComponent;
+
 UCLASS()
 class SHOOTER_API AWeapon : public AActor
 {
@@ -19,7 +21,13 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* WeaponMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* Mesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UBoxComponent* BoxComponent;
+
+public:
+	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 
 };

@@ -4,7 +4,6 @@
 #include "InventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Shooter/Character/ShooterCharacter.h"
-#include "Shooter/Data/CharacterDataAsset.h"
 #include "Shooter/Weapon/Weapon.h"
 
 UInventoryComponent::UInventoryComponent()
@@ -24,46 +23,97 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(UInventoryComponent, WeaponsArray, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(UInventoryComponent, WeaponsArray1P, COND_OwnerOnly);
 
 }
 
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	if (HasAuthority())
 	{
-		if (OwningCharacter)
+		for (FInventoryData InventoryData : InventoryDataArray)
 		{
-			if (UCharacterDataAsset* CharacterDataAsset = OwningCharacter->GetCharacterDataAsset())
+			const TSubclassOf<AWeapon>& WeaponClass = InventoryData.WeaponClass;
+			if (!WeaponClass)
 			{
-				for (FInventoryData InventoryData : CharacterDataAsset->InventoryDataArray)
+				continue;
+			}
+			if (UWorld* World = GetWorld())
+			{
+				if (AWeapon* NewWeapon = World->SpawnActor<AWeapon>(WeaponClass))
 				{
-					const TSubclassOf<AWeapon>& WeaponClass = InventoryData.WeaponClass;
-					if (!WeaponClass)
+					NewWeapon->SetOwner(OwningCharacter);
+					NewWeapon->SetActorHiddenInGame(true);
+					WeaponsArray.Add(NewWeapon);
+				}
+				if (AWeapon* NewWeapon1P = World->SpawnActor<AWeapon>(WeaponClass))
+				{
+					NewWeapon1P->SetOwner(OwningCharacter);
+					NewWeapon1P->SetActorHiddenInGame(true);
+					if (IsLocallyControlled())
 					{
-						continue;
+						NewWeapon1P->SetReplicates(false);
 					}
-					if (UWorld* World = GetWorld())
+					if (USkeletalMeshComponent* WeaponMesh = NewWeapon1P->GetMesh())
 					{
-						AWeapon* NewWeapon = World->SpawnActor<AWeapon>(WeaponClass);
-						NewWeapon->SetOwner(OwningCharacter);
-						NewWeapon->SetActorHiddenInGame(true);
-						WeaponsArray.Add(NewWeapon);
+						WeaponMesh->SetCastShadow(false);
 					}
+					WeaponsArray1P.Add(NewWeapon1P);
 				}
 			}
 		}
 		if (IsLocallyControlled())
 		{
 			OnRepWeaponsArrayDelegate.Execute();
+			OnRepWeaponsArrayDelegate1P.Execute();
 		}
 	}
+	
 }
 
 void UInventoryComponent::OnRep_WeaponsArray()
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnRep_WeaponsArray"));
+	
 	OnRepWeaponsArrayDelegate.Execute();
 }
 
+void UInventoryComponent::OnRep_WeaponsArray1P()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_WeaponsArray1P"));
+
+	for (int32 i = 0; i < WeaponsArray1P.Num(); ++i)
+	{
+		if (AWeapon* Weapon1P = WeaponsArray1P[i])
+		{
+			if (USkeletalMeshComponent* WeaponMesh = Weapon1P->GetMesh())
+			{
+				WeaponMesh->SetCastShadow(false);
+			}
+		}
+	}
+
+	OnRepWeaponsArrayDelegate1P.Execute();
+}
+
+AWeapon* UInventoryComponent::GetWeaponAtIndex(uint32 index)
+{
+	if (WeaponsArray.IsValidIndex(index))
+	{
+		return WeaponsArray[index];
+	}
+	
+	return nullptr;
+}
+
+AWeapon* UInventoryComponent::GetWeaponAtIndex1P(uint32 index)
+{
+	if (WeaponsArray1P.IsValidIndex(index))
+	{
+		return WeaponsArray1P[index];
+	}
+
+	return nullptr;
+}
