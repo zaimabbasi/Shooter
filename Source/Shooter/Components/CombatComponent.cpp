@@ -73,14 +73,6 @@ void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponTo
 		{
 			WeaponRootSocket->AttachActor(WeaponToEquip, CharacterMesh3P);
 			WeaponToEquip->SetActorHiddenInGame(false);
-			if (IsLocallyControlled())
-			{
-				if (USkeletalMeshComponent* WeaponMesh = WeaponToEquip->GetMesh())
-				{
-					WeaponMesh->SetVisibility(false);
-					WeaponMesh->SetCastHiddenShadow(true);
-				}
-			}
 		}
 	}
 	EquippedWeapon = WeaponToEquip;
@@ -89,9 +81,5 @@ void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponTo
 void UCombatComponent::OnRep_EquippedWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnRep_EquippedWeapon"));
-	if (USkeletalMeshComponent* WeaponMesh = EquippedWeapon->GetMesh())
-	{
-		WeaponMesh->SetVisibility(false);
-		WeaponMesh->SetCastHiddenShadow(true);
-	}
+	
 }

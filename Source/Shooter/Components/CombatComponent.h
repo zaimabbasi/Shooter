@@ -23,7 +23,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
 	void SetEquippedWeapon1P(AWeapon* WeaponToEquip1P);
 
 	UFUNCTION(Server, Reliable)
@@ -37,13 +36,9 @@ private:
 
 	UPROPERTY(ReplicatedUsing = "OnRep_EquippedWeapon")
 	AWeapon* EquippedWeapon;
+
 	AWeapon* EquippedWeapon1P;
 
 public:
-	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
-	FORCEINLINE bool IsLocallyControlled() const
-	{
-		APawn* OwningPawn = GetOwner<APawn>();
-		return OwningPawn && OwningPawn->IsLocallyControlled();
-	}
+	
 };

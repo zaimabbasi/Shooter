@@ -31,9 +31,9 @@ void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (HasAuthority())
+	if (OwningCharacter && OwningCharacter->HasAuthority())
 	{
-		for (FInventoryData InventoryData : InventoryDataArray)
+		for (const FInventoryData InventoryData : InventoryDataArray)
 		{
 			const TSubclassOf<AWeapon>& WeaponClass = InventoryData.WeaponClass;
 			if (!WeaponClass)
@@ -42,29 +42,37 @@ void UInventoryComponent::BeginPlay()
 			}
 			if (UWorld* World = GetWorld())
 			{
-				if (AWeapon* NewWeapon = World->SpawnActor<AWeapon>(WeaponClass))
+				if (AWeapon* SpawnedWeapon = World->SpawnActor<AWeapon>(WeaponClass))
 				{
-					NewWeapon->SetOwner(OwningCharacter);
-					NewWeapon->SetActorHiddenInGame(true);
-					WeaponsArray.Add(NewWeapon);
-				}
-				if (AWeapon* NewWeapon1P = World->SpawnActor<AWeapon>(WeaponClass))
-				{
-					NewWeapon1P->SetOwner(OwningCharacter);
-					NewWeapon1P->SetActorHiddenInGame(true);
-					if (IsLocallyControlled())
+					SpawnedWeapon->SetOwner(OwningCharacter);
+					SpawnedWeapon->SetActorHiddenInGame(true);
+					if (OwningCharacter->IsLocallyControlled())
 					{
-						NewWeapon1P->SetReplicates(false);
+						if (USkeletalMeshComponent* WeaponMesh = SpawnedWeapon->GetMesh())
+						{
+							WeaponMesh->SetVisibility(false);
+							WeaponMesh->SetCastHiddenShadow(true);
+						}
 					}
-					if (USkeletalMeshComponent* WeaponMesh = NewWeapon1P->GetMesh())
+					WeaponsArray.Add(SpawnedWeapon);
+				}
+				if (AWeapon* SpawnedWeapon1P = World->SpawnActor<AWeapon>(WeaponClass))
+				{
+					SpawnedWeapon1P->SetOwner(OwningCharacter);
+					SpawnedWeapon1P->SetActorHiddenInGame(true);
+					if (OwningCharacter->IsLocallyControlled())
+					{
+						SpawnedWeapon1P->SetReplicates(false);
+					}
+					if (USkeletalMeshComponent* WeaponMesh = SpawnedWeapon1P->GetMesh())
 					{
 						WeaponMesh->SetCastShadow(false);
 					}
-					WeaponsArray1P.Add(NewWeapon1P);
+					WeaponsArray1P.Add(SpawnedWeapon1P);
 				}
 			}
 		}
-		if (IsLocallyControlled())
+		if (OwningCharacter->IsLocallyControlled())
 		{
 			OnRepWeaponsArrayDelegate.Execute();
 			OnRepWeaponsArrayDelegate1P.Execute();
@@ -75,26 +83,38 @@ void UInventoryComponent::BeginPlay()
 
 void UInventoryComponent::OnRep_WeaponsArray()
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnRep_WeaponsArray"));
-	
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_WeaponsArray: %i"), WeaponsArray.Num());
+
+	for (const AWeapon* Weapon : WeaponsArray)
+	{
+		if (Weapon == nullptr)
+		{
+			continue;
+		}
+		if (USkeletalMeshComponent* WeaponMesh = Weapon->GetMesh())
+		{
+			WeaponMesh->SetVisibility(false);
+			WeaponMesh->SetCastHiddenShadow(true);
+		}
+	}
 	OnRepWeaponsArrayDelegate.Execute();
 }
 
 void UInventoryComponent::OnRep_WeaponsArray1P()
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnRep_WeaponsArray1P"));
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_WeaponsArray1P: %i"), WeaponsArray1P.Num());
 
-	for (int32 i = 0; i < WeaponsArray1P.Num(); ++i)
+	for (const AWeapon* Weapon1P : WeaponsArray1P)
 	{
-		if (AWeapon* Weapon1P = WeaponsArray1P[i])
+		if (Weapon1P == nullptr)
 		{
-			if (USkeletalMeshComponent* WeaponMesh = Weapon1P->GetMesh())
-			{
-				WeaponMesh->SetCastShadow(false);
-			}
+			continue;
+		}
+		if (USkeletalMeshComponent* WeaponMesh = Weapon1P->GetMesh())
+		{
+			WeaponMesh->SetCastShadow(false);
 		}
 	}
-
 	OnRepWeaponsArrayDelegate1P.Execute();
 }
 

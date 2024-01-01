@@ -48,13 +48,6 @@ private:
 	TArray<AWeapon*> WeaponsArray1P;
 
 public:
-	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
-	FORCEINLINE bool IsLocallyControlled() const
-	{
-		APawn* OwningPawn = GetOwner<APawn>();
-		return OwningPawn && OwningPawn->IsLocallyControlled();
-	}
-
 	AWeapon* GetWeaponAtIndex(uint32 index);
 	AWeapon* GetWeaponAtIndex1P(uint32 index);
 };

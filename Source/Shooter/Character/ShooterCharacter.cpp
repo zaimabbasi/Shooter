@@ -134,7 +134,10 @@ void AShooterCharacter::OnRepWeaponsArrayCallback()
 	UE_LOG(LogTemp, Warning, TEXT("OnRepWeaponsArrayCallback"));
 	if (InventoryComponent && CombatComponent)
 	{
-		CombatComponent->Server_SetEquippedWeapon(InventoryComponent->GetWeaponAtIndex(0));
+		if (AWeapon* WeaponToEquip = InventoryComponent->GetWeaponAtIndex(0))
+		{
+			CombatComponent->Server_SetEquippedWeapon(WeaponToEquip);
+		}
 	}
 
 }
@@ -144,7 +147,10 @@ void AShooterCharacter::OnRepWeaponsArrayCallback1P()
 	UE_LOG(LogTemp, Warning, TEXT("OnRepWeaponsArrayCallback1P"));
 	if (InventoryComponent && CombatComponent)
 	{
-		CombatComponent->SetEquippedWeapon1P(InventoryComponent->GetWeaponAtIndex1P(0));
+		if (AWeapon* WeaponToEquip1P = InventoryComponent->GetWeaponAtIndex1P(0))
+		{
+			CombatComponent->SetEquippedWeapon1P(WeaponToEquip1P);
+		}
 	}
 
 }
