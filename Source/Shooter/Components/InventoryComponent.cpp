@@ -83,7 +83,7 @@ void UInventoryComponent::BeginPlay()
 
 void UInventoryComponent::OnRep_WeaponsArray()
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnRep_WeaponsArray: %i"), WeaponsArray.Num());
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_WeaponsArray"));
 
 	for (const AWeapon* Weapon : WeaponsArray)
 	{
@@ -102,7 +102,7 @@ void UInventoryComponent::OnRep_WeaponsArray()
 
 void UInventoryComponent::OnRep_WeaponsArray1P()
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnRep_WeaponsArray1P: %i"), WeaponsArray1P.Num());
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_WeaponsArray1P"));
 
 	for (const AWeapon* Weapon1P : WeaponsArray1P)
 	{

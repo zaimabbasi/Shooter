@@ -131,7 +131,6 @@ void AShooterCharacter::Move(const FInputActionValue& Value)
 
 void AShooterCharacter::OnRepWeaponsArrayCallback()
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnRepWeaponsArrayCallback"));
 	if (InventoryComponent && CombatComponent)
 	{
 		if (AWeapon* WeaponToEquip = InventoryComponent->GetWeaponAtIndex(0))
@@ -144,7 +143,6 @@ void AShooterCharacter::OnRepWeaponsArrayCallback()
 
 void AShooterCharacter::OnRepWeaponsArrayCallback1P()
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnRepWeaponsArrayCallback1P"));
 	if (InventoryComponent && CombatComponent)
 	{
 		if (AWeapon* WeaponToEquip1P = InventoryComponent->GetWeaponAtIndex1P(0))

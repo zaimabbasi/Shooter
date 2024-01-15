@@ -57,7 +57,6 @@ void UCombatComponent::SetEquippedWeapon1P(AWeapon* WeaponToEquip1P)
 
 void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponToEquip)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Server_SetEquippedWeapon_Implementation"));
 	if (WeaponToEquip == nullptr || OwningCharacter == nullptr)
 	{
 		return;
