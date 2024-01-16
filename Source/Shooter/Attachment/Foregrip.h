@@ -4,14 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Attachment.h"
-#include "Stock.generated.h"
+#include "Foregrip.generated.h"
 
+/**
+ * 
+ */
 UCLASS()
-class SHOOTER_API AStock : public AAttachment
+class SHOOTER_API AForegrip : public AAttachment
 {
 	GENERATED_BODY()
 	
-public:	
-	AStock();
+public:
+	AForegrip();
 
 };

@@ -5,19 +5,6 @@
 
 APistolgrip::APistolgrip()
 {
-	PrimaryActorTick.bCanEverTick = false;
 
-}
-
-void APistolgrip::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void APistolgrip::BeginPlay()
-{
-	Super::BeginPlay();
-	
 }
 

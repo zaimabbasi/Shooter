@@ -3,21 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Attachment.h"
 #include "Muzzle.generated.h"
 
 UCLASS()
-class SHOOTER_API AMuzzle : public AActor
+class SHOOTER_API AMuzzle : public AAttachment
 {
 	GENERATED_BODY()
 	
 public:	
 	AMuzzle();
-	virtual void Tick(float DeltaTime) override;
-
-protected:
-	virtual void BeginPlay() override;
-
-private:
 
 };

@@ -3,21 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Attachment.h"
 #include "Reciever.generated.h"
 
 UCLASS()
-class SHOOTER_API AReciever : public AActor
+class SHOOTER_API AReciever : public AAttachment
 {
 	GENERATED_BODY()
 	
 public:	
 	AReciever();
-	virtual void Tick(float DeltaTime) override;
-
-protected:
-	virtual void BeginPlay() override;
-
-private:
 
 };

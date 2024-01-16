@@ -5,19 +5,6 @@
 
 AMagazine::AMagazine()
 {
-	PrimaryActorTick.bCanEverTick = false;
 
-}
-
-void AMagazine::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void AMagazine::BeginPlay()
-{
-	Super::BeginPlay();
-	
 }
 

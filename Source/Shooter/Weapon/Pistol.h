@@ -3,15 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Attachment.h"
-#include "Stock.generated.h"
+#include "Weapon.h"
+#include "Pistol.generated.h"
 
 UCLASS()
-class SHOOTER_API AStock : public AAttachment
+class SHOOTER_API APistol : public AWeapon
 {
 	GENERATED_BODY()
 	
-public:	
-	AStock();
+public:
+	APistol();
 
 };

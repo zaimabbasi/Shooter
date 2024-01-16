@@ -38,7 +38,5 @@ private:
 	AWeapon* EquippedWeapon;
 
 	AWeapon* EquippedWeapon1P;
-
-public:
 	
 };

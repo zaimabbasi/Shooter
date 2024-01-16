@@ -3,21 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Attachment.h"
 #include "Pistolgrip.generated.h"
 
 UCLASS()
-class SHOOTER_API APistolgrip : public AActor
+class SHOOTER_API APistolgrip : public AAttachment
 {
 	GENERATED_BODY()
 	
 public:	
 	APistolgrip();
-	virtual void Tick(float DeltaTime) override;
-
-protected:
-	virtual void BeginPlay() override;
-
-private:
 
 };

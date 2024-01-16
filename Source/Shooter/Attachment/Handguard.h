@@ -3,21 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Attachment.h"
 #include "Handguard.generated.h"
 
 UCLASS()
-class SHOOTER_API AHandguard : public AActor
+class SHOOTER_API AHandguard : public AAttachment
 {
 	GENERATED_BODY()
 	
 public:	
 	AHandguard();
-	virtual void Tick(float DeltaTime) override;
-
-protected:
-	virtual void BeginPlay() override;
-
-private:
 
 };

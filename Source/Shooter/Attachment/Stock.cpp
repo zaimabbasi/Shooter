@@ -5,19 +5,6 @@
 
 AStock::AStock()
 {
-	PrimaryActorTick.bCanEverTick = false;
 
-}
-
-void AStock::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void AStock::BeginPlay()
-{
-	Super::BeginPlay();
-	
 }
 

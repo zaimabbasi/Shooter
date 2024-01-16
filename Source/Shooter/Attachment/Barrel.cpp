@@ -5,19 +5,6 @@
 
 ABarrel::ABarrel()
 {
-	PrimaryActorTick.bCanEverTick = false;
-
-}
-
-void ABarrel::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void ABarrel::BeginPlay()
-{
-	Super::BeginPlay();
 	
 }
 

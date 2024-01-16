@@ -3,21 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Attachment.h"
 #include "Gasblock.generated.h"
 
 UCLASS()
-class SHOOTER_API AGasblock : public AActor
+class SHOOTER_API AGasblock : public AAttachment
 {
 	GENERATED_BODY()
 	
 public:	
 	AGasblock();
-	virtual void Tick(float DeltaTime) override;
-
-protected:
-	virtual void BeginPlay() override;
-
-private:
 
 };

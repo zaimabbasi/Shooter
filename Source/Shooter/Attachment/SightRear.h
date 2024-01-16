@@ -3,21 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Attachment.h"
 #include "SightRear.generated.h"
 
 UCLASS()
-class SHOOTER_API ASightRear : public AActor
+class SHOOTER_API ASightRear : public AAttachment
 {
 	GENERATED_BODY()
 	
 public:	
 	ASightRear();
-	virtual void Tick(float DeltaTime) override;
-
-protected:
-	virtual void BeginPlay() override;
-
-private:
 
 };

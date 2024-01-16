@@ -6,7 +6,10 @@
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
+class AShooterCharacter;
+class UAttachmentComponent;
 class UBoxComponent;
+class UWeaponDataAsset;
 
 UCLASS()
 class SHOOTER_API AWeapon : public AActor
@@ -16,16 +19,23 @@ class SHOOTER_API AWeapon : public AActor
 public:	
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
+	virtual void PostInitializeComponents() override;
 
 protected:
 	virtual void BeginPlay() override;
 
-private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	AShooterCharacter* OwningCharacter;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* Mesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision", meta = (AllowPrivateAccess = "true"))
 	UBoxComponent* BoxComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
+	UWeaponDataAsset* WeaponDataAsset;
+
+	UAttachmentComponent* AttachmentComponent;
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }

@@ -24,7 +24,7 @@ class SHOOTER_API UCharacterDataAsset : public UDataAsset
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, Category = "InventoryDataArray")
+	UPROPERTY(EditAnywhere, Category = "InventoryData")
 	TArray<FInventoryData> InventoryDataArray;
 	
 };

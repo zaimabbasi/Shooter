@@ -1,10 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Muzzle.h"
+#include "Tactical.h"
 
-AMuzzle::AMuzzle()
+ATactical::ATactical()
 {
 
 }
-
