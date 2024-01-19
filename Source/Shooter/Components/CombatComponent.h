@@ -23,7 +23,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	void SetEquippedWeapon1P(AWeapon* WeaponToEquip1P);
+	//void SetEquippedWeapon1P(AWeapon* WeaponToEquip1P);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetEquippedWeapon(AWeapon* WeaponToEquip);
@@ -37,6 +37,6 @@ private:
 	UPROPERTY(ReplicatedUsing = "OnRep_EquippedWeapon")
 	AWeapon* EquippedWeapon;
 
-	AWeapon* EquippedWeapon1P;
+	//AWeapon* EquippedWeapon1P;
 	
 };

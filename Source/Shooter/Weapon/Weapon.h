@@ -7,7 +7,7 @@
 #include "Weapon.generated.h"
 
 class AShooterCharacter;
-class UAttachmentComponent;
+class UModComponent;
 class UBoxComponent;
 class UWeaponDataAsset;
 
@@ -20,6 +20,7 @@ public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void PostInitializeComponents() override;
+	void SetActorHiddenInGame(bool bNewHidden, bool bPropagateToChildren = false);
 
 protected:
 	virtual void BeginPlay() override;
@@ -35,7 +36,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	UWeaponDataAsset* WeaponDataAsset;
 
-	UAttachmentComponent* AttachmentComponent;
+	UModComponent* ModComponent;
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }

@@ -3,7 +3,7 @@
 
 #include "Weapon.h"
 #include "Components/BoxComponent.h"
-#include "Shooter/Components/AttachmentComponent.h"
+#include "Shooter/Components/ModComponent.h"
 #include "Shooter/Data/WeaponDataAsset.h"
 
 AWeapon::AWeapon()
@@ -17,8 +17,8 @@ AWeapon::AWeapon()
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
 	BoxComponent->SetupAttachment(GetRootComponent());
 
-	AttachmentComponent = CreateDefaultSubobject<UAttachmentComponent>(TEXT("AttachmentComponent"));
-	AttachmentComponent->SetIsReplicated(true);
+	ModComponent = CreateDefaultSubobject<UModComponent>(TEXT("ModComponent"));
+	ModComponent->SetIsReplicated(true);
 
 }
 
@@ -32,12 +32,25 @@ void AWeapon::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	if (AttachmentComponent)
+	if (ModComponent)
 	{
-		AttachmentComponent->OwningWeapon = this;
+		ModComponent->OwningWeapon = this;
 		if (WeaponDataAsset)
 		{
-			AttachmentComponent->AttachmentData = WeaponDataAsset->AttachmentData;
+			ModComponent->ModData = WeaponDataAsset->ModData;
+		}
+	}
+}
+
+void AWeapon::SetActorHiddenInGame(bool bNewHidden, bool bPropagateToChildren)
+{
+	Super::SetActorHiddenInGame(bNewHidden);
+
+	if (bPropagateToChildren)
+	{
+		for (AActor* ChildActor : Children)
+		{
+			ChildActor->SetActorHiddenInGame(bNewHidden);
 		}
 	}
 }

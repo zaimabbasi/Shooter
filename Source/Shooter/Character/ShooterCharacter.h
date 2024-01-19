@@ -33,8 +33,8 @@ protected:
 	UFUNCTION()
 	void OnRepWeaponsArrayCallback();
 
-	UFUNCTION()
-	void OnRepWeaponsArrayCallback1P();
+	/*UFUNCTION()
+	void OnRepWeaponsArrayCallback1P();*/
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))

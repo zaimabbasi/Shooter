@@ -19,7 +19,7 @@ AShooterCharacter::AShooterCharacter()
 	Mesh1P->SetCastShadow(false);
 
 	HandsMesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandsMesh1P"));
-	HandsMesh1P->SetupAttachment(GetRootComponent());
+	HandsMesh1P->SetupAttachment(GetMesh());
 	HandsMesh1P->SetCastShadow(false);
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -61,7 +61,7 @@ void AShooterCharacter::PostInitializeComponents()
 	{
 		InventoryComponent->OwningCharacter = this;
 		InventoryComponent->OnRepWeaponsArrayDelegate.BindUObject(this, &AShooterCharacter::OnRepWeaponsArrayCallback);
-		InventoryComponent->OnRepWeaponsArrayDelegate1P.BindUObject(this, &AShooterCharacter::OnRepWeaponsArrayCallback1P);
+		//InventoryComponent->OnRepWeaponsArrayDelegate1P.BindUObject(this, &AShooterCharacter::OnRepWeaponsArrayCallback1P);
 		if (CharacterDataAsset)
 		{
 			InventoryComponent->InventoryDataArray = CharacterDataAsset->InventoryDataArray;
@@ -105,7 +105,8 @@ void AShooterCharacter::BeginPlay()
 		}
 		if (HandsMesh1P)
 		{
-			HandsMesh1P->DestroyComponent();
+			/*HandsMesh1P->DestroyComponent();*/
+			HandsMesh1P->SetVisibility(false);
 		}
 	}
 	
@@ -141,15 +142,15 @@ void AShooterCharacter::OnRepWeaponsArrayCallback()
 
 }
 
-void AShooterCharacter::OnRepWeaponsArrayCallback1P()
-{
-	if (InventoryComponent && CombatComponent)
-	{
-		if (AWeapon* WeaponToEquip1P = InventoryComponent->GetWeaponAtIndex1P(0))
-		{
-			CombatComponent->SetEquippedWeapon1P(WeaponToEquip1P);
-		}
-	}
-
-}
+//void AShooterCharacter::OnRepWeaponsArrayCallback1P()
+//{
+//	if (InventoryComponent && CombatComponent)
+//	{
+//		if (AWeapon* WeaponToEquip1P = InventoryComponent->GetWeaponAtIndex1P(0))
+//		{
+//			CombatComponent->SetEquippedWeapon1P(WeaponToEquip1P);
+//		}
+//	}
+//
+//}
 

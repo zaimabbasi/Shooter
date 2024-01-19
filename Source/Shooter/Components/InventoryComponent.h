@@ -25,7 +25,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	FOnRepWeaponsArrayDelegate OnRepWeaponsArrayDelegate;
-	FOnRepWeaponsArrayDelegate OnRepWeaponsArrayDelegate1P;
+	//FOnRepWeaponsArrayDelegate OnRepWeaponsArrayDelegate1P;
 
 protected:
 	virtual void BeginPlay() override;
@@ -33,8 +33,8 @@ protected:
 	UFUNCTION()
 	void OnRep_WeaponsArray();
 
-	UFUNCTION()
-	void OnRep_WeaponsArray1P();
+	/*UFUNCTION()
+	void OnRep_WeaponsArray1P();*/
 
 private:
 	AShooterCharacter* OwningCharacter;
@@ -44,10 +44,10 @@ private:
 	UPROPERTY(ReplicatedUsing = "OnRep_WeaponsArray")
 	TArray<AWeapon*> WeaponsArray;
 
-	UPROPERTY(ReplicatedUsing = "OnRep_WeaponsArray1P")
-	TArray<AWeapon*> WeaponsArray1P;
+	/*UPROPERTY(ReplicatedUsing = "OnRep_WeaponsArray1P")
+	TArray<AWeapon*> WeaponsArray1P;*/
 
 public:
 	AWeapon* GetWeaponAtIndex(uint32 index);
-	AWeapon* GetWeaponAtIndex1P(uint32 index);
+	//AWeapon* GetWeaponAtIndex1P(uint32 index);
 };

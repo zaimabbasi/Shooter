@@ -7,42 +7,71 @@
 #include "WeaponDataAsset.generated.h"
 
 class ABarrel;
-class AFlashlight;
-class AForegrip;
+//class AFlashlight;
+//class AForegrip;
 class AGasblock;
 class AHandguard;
 class AMagazine;
-class AMount;
+//class AMount;
 class AMuzzle;
-class APistolgrip;
 class AReciever;
-class AScope;
+class APistolgrip;
+//class AScope;
 class ASightFront;
 class ASightRear;
 class AStock;
-class ATactical;
+//class ATactical;
 
 USTRUCT()
-struct FAttachmentData
+struct FModData
 {
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<ABarrel> BarrelClass;
-	TSubclassOf<AFlashlight> FlashlightClass;
-	TSubclassOf<AForegrip> ForegripClass;
+
+	/*UPROPERTY(EditAnywhere)
+	TSubclassOf<AFlashlight> FlashlightClass;*/
+
+	/*UPROPERTY(EditAnywhere)
+	TSubclassOf<AForegrip> ForegripClass;*/
+
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<AGasblock> GasblockClass;
+
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<AHandguard> HandguardClass;
+
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<AMagazine> MagazineClass;
-	TSubclassOf<AMount> MountClass;
+
+	/*UPROPERTY(EditAnywhere)
+	TSubclassOf<AMount> MountClass;*/
+
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<AMuzzle> MuzzleClass;
-	TSubclassOf<APistolgrip> PistolgripClass;
+
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<AReciever> RecieverClass;
-	TSubclassOf<AScope> ScopeClass;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<APistolgrip> PistolgripClass;
+
+	/*UPROPERTY(EditAnywhere)
+	TSubclassOf<AScope> ScopeClass;*/
+
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<ASightFront> SightFrontClass;
+
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<ASightRear> SightRearClass;
+
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<AStock> StockClass;
-	TSubclassOf<ATactical> TacticalClass;
+
+	/*UPROPERTY(EditAnywhere)
+	TSubclassOf<ATactical> TacticalClass;*/
 
 };
 
@@ -52,7 +81,7 @@ class SHOOTER_API UWeaponDataAsset : public UDataAsset
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, category = "AttachmentData")
-	FAttachmentData AttachmentData;
+	UPROPERTY(EditAnywhere, category = "ModData")
+	FModData ModData;
 
 };

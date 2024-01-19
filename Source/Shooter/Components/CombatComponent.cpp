@@ -33,27 +33,27 @@ void UCombatComponent::BeginPlay()
 	
 }
 
-void UCombatComponent::SetEquippedWeapon1P(AWeapon* WeaponToEquip1P)
-{
-	if (WeaponToEquip1P == nullptr || OwningCharacter == nullptr)
-	{
-		return;
-	}
-	if (EquippedWeapon1P)
-	{
-		EquippedWeapon1P->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
-		EquippedWeapon1P->SetActorHiddenInGame(true);
-	}
-	if (USkeletalMeshComponent* HandsMesh1P = OwningCharacter->GetHandsMesh1P())
-	{
-		if (const USkeletalMeshSocket* WeaponRootSocket = HandsMesh1P->GetSocketByName(TEXT("Weapon_rootSocket")))
-		{
-			WeaponRootSocket->AttachActor(WeaponToEquip1P, HandsMesh1P);
-			WeaponToEquip1P->SetActorHiddenInGame(false);
-		}
-	}
-	EquippedWeapon1P = WeaponToEquip1P;
-}
+//void UCombatComponent::SetEquippedWeapon1P(AWeapon* WeaponToEquip1P)
+//{
+//	if (WeaponToEquip1P == nullptr || OwningCharacter == nullptr)
+//	{
+//		return;
+//	}
+//	if (EquippedWeapon1P)
+//	{
+//		EquippedWeapon1P->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+//		EquippedWeapon1P->SetActorHiddenInGame(true);
+//	}
+//	if (USkeletalMeshComponent* HandsMesh1P = OwningCharacter->GetHandsMesh1P())
+//	{
+//		if (const USkeletalMeshSocket* WeaponRootSocket = HandsMesh1P->GetSocketByName(TEXT("Weapon_rootSocket")))
+//		{
+//			WeaponRootSocket->AttachActor(WeaponToEquip1P, HandsMesh1P);
+//			WeaponToEquip1P->SetActorHiddenInGame(false);
+//		}
+//	}
+//	EquippedWeapon1P = WeaponToEquip1P;
+//}
 
 void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponToEquip)
 {
@@ -64,16 +64,24 @@ void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponTo
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
-		EquippedWeapon->SetActorHiddenInGame(true);
+		EquippedWeapon->SetActorHiddenInGame(true, true);
 	}
-	if (USkeletalMeshComponent* CharacterMesh3P = OwningCharacter->GetMesh())
+	if (USkeletalMeshComponent* HandsMesh1P = OwningCharacter->GetHandsMesh1P())
+	{
+		if (const USkeletalMeshSocket* WeaponRootSocket = HandsMesh1P->GetSocketByName(TEXT("Weapon_rootSocket")))
+		{
+			WeaponRootSocket->AttachActor(WeaponToEquip, HandsMesh1P);
+			WeaponToEquip->SetActorHiddenInGame(false, true);
+		}
+	}
+	/*if (USkeletalMeshComponent* CharacterMesh3P = OwningCharacter->GetMesh())
 	{
 		if (const USkeletalMeshSocket* WeaponRootSocket = CharacterMesh3P->GetSocketByName(TEXT("Weapon_rootSocket")))
 		{
 			WeaponRootSocket->AttachActor(WeaponToEquip, CharacterMesh3P);
 			WeaponToEquip->SetActorHiddenInGame(false);
 		}
-	}
+	}*/
 	EquippedWeapon = WeaponToEquip;
 }
 
