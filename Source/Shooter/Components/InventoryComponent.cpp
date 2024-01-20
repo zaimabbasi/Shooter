@@ -6,7 +6,8 @@
 #include "Shooter/Character/ShooterCharacter.h"
 #include "Shooter/Weapon/Weapon.h"
 
-UInventoryComponent::UInventoryComponent()
+UInventoryComponent::UInventoryComponent() :
+	CurrentIndex(0)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
@@ -23,6 +24,7 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(UInventoryComponent, WeaponsArray, COND_OwnerOnly);
+	DOREPLIFETIME(UInventoryComponent, CurrentIndex);
 	//DOREPLIFETIME_CONDITION(UInventoryComponent, WeaponsArray1P, COND_OwnerOnly);
 
 }
@@ -45,7 +47,7 @@ void UInventoryComponent::BeginPlay()
 				if (AWeapon* SpawnedWeapon = World->SpawnActor<AWeapon>(WeaponClass))
 				{
 					SpawnedWeapon->SetOwner(OwningCharacter);
-					SpawnedWeapon->SetActorHiddenInGame(true, true);
+					SpawnedWeapon->SetHiddenInGame(true, true);
 					/*if (OwningCharacter->IsLocallyControlled())
 					{
 						if (USkeletalMeshComponent* WeaponMesh = SpawnedWeapon->GetMesh())
@@ -100,6 +102,15 @@ void UInventoryComponent::OnRep_WeaponsArray()
 	OnRepWeaponsArrayDelegate.Execute();
 }
 
+void UInventoryComponent::Server_SetCurrentIndex_Implementation(uint8 Index)
+{
+	if (!WeaponsArray.IsValidIndex(Index))
+	{
+		return;
+	}
+	CurrentIndex = Index;
+}
+
 //void UInventoryComponent::OnRep_WeaponsArray1P()
 //{
 //	UE_LOG(LogTemp, Warning, TEXT("OnRep_WeaponsArray1P"));
@@ -118,11 +129,11 @@ void UInventoryComponent::OnRep_WeaponsArray()
 //	OnRepWeaponsArrayDelegate1P.Execute();
 //}
 
-AWeapon* UInventoryComponent::GetWeaponAtIndex(uint32 index)
+AWeapon* UInventoryComponent::GetWeaponAtIndex(uint32 Index)
 {
-	if (WeaponsArray.IsValidIndex(index))
+	if (WeaponsArray.IsValidIndex(Index))
 	{
-		return WeaponsArray[index];
+		return WeaponsArray[Index];
 	}
 	
 	return nullptr;

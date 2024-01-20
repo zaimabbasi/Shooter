@@ -42,9 +42,9 @@ void AWeapon::PostInitializeComponents()
 	}
 }
 
-void AWeapon::SetActorHiddenInGame(bool bNewHidden, bool bPropagateToChildren)
+void AWeapon::SetHiddenInGame(bool bNewHidden, bool bPropagateToChildren)
 {
-	Super::SetActorHiddenInGame(bNewHidden);
+	SetActorHiddenInGame(bNewHidden);
 
 	if (bPropagateToChildren)
 	{

@@ -27,11 +27,17 @@ public:
 	FOnRepWeaponsArrayDelegate OnRepWeaponsArrayDelegate;
 	//FOnRepWeaponsArrayDelegate OnRepWeaponsArrayDelegate1P;
 
+	static const uint8 PRIMARY_WEAPON_INDEX = 0;
+	static const uint8 SECONDARY_WEAPON_INDEX = 1;
+
 protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
 	void OnRep_WeaponsArray();
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetCurrentIndex(uint8 Index);
 
 	/*UFUNCTION()
 	void OnRep_WeaponsArray1P();*/
@@ -44,10 +50,13 @@ private:
 	UPROPERTY(ReplicatedUsing = "OnRep_WeaponsArray")
 	TArray<AWeapon*> WeaponsArray;
 
+	UPROPERTY(Replicated)
+	uint8 CurrentIndex;
+
 	/*UPROPERTY(ReplicatedUsing = "OnRep_WeaponsArray1P")
 	TArray<AWeapon*> WeaponsArray1P;*/
 
 public:
-	AWeapon* GetWeaponAtIndex(uint32 index);
+	AWeapon* GetWeaponAtIndex(uint32 Index);
 	//AWeapon* GetWeaponAtIndex1P(uint32 index);
 };

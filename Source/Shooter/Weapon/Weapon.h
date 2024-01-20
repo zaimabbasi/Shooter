@@ -20,7 +20,7 @@ public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void PostInitializeComponents() override;
-	void SetActorHiddenInGame(bool bNewHidden, bool bPropagateToChildren = false);
+	void SetHiddenInGame(bool bNewHidden, bool bPropagateToChildren = false);
 
 protected:
 	virtual void BeginPlay() override;

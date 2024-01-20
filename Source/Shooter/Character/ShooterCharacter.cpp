@@ -49,6 +49,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	{
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AShooterCharacter::Look);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AShooterCharacter::Move);
+		EnhancedInputComponent->BindAction(EquipPrimaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::EquipPrimaryWeapon);
+		EnhancedInputComponent->BindAction(EquipSecondaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::EquipSecondaryWeapon);
 	}
 
 }
@@ -82,6 +84,7 @@ void AShooterCharacter::BeginPlay()
 		if (UEnhancedInputLocalPlayerSubsystem* EnhancedInputLocalPlayerSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			EnhancedInputLocalPlayerSubsystem->AddMappingContext(MovementMappingContext, 0);
+			EnhancedInputLocalPlayerSubsystem->AddMappingContext(InventoryMappingContext, 0);
 		}
 	}
 	
@@ -130,11 +133,43 @@ void AShooterCharacter::Move(const FInputActionValue& Value)
 
 }
 
+void AShooterCharacter::EquipPrimaryWeapon(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue)
+	{
+		if (InventoryComponent && CombatComponent)
+		{
+			if (InventoryComponent->CurrentIndex != InventoryComponent->PRIMARY_WEAPON_INDEX)
+			{
+				CombatComponent->Server_SetEquippedWeapon(InventoryComponent->GetWeaponAtIndex(InventoryComponent->PRIMARY_WEAPON_INDEX));
+				InventoryComponent->Server_SetCurrentIndex(InventoryComponent->PRIMARY_WEAPON_INDEX);
+			}
+		}
+	}
+}
+
+void AShooterCharacter::EquipSecondaryWeapon(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue)
+	{
+		if (InventoryComponent && CombatComponent)
+		{
+			if (InventoryComponent->CurrentIndex != InventoryComponent->SECONDARY_WEAPON_INDEX)
+			{
+				CombatComponent->Server_SetEquippedWeapon(InventoryComponent->GetWeaponAtIndex(InventoryComponent->SECONDARY_WEAPON_INDEX));
+				InventoryComponent->Server_SetCurrentIndex(InventoryComponent->SECONDARY_WEAPON_INDEX);
+			}
+		}
+	}
+}
+
 void AShooterCharacter::OnRepWeaponsArrayCallback()
 {
 	if (InventoryComponent && CombatComponent)
 	{
-		if (AWeapon* WeaponToEquip = InventoryComponent->GetWeaponAtIndex(0))
+		if (AWeapon* WeaponToEquip = InventoryComponent->GetWeaponAtIndex(InventoryComponent->PRIMARY_WEAPON_INDEX))
 		{
 			CombatComponent->Server_SetEquippedWeapon(WeaponToEquip);
 		}
