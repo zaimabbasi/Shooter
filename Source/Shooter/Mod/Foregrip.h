@@ -6,9 +6,6 @@
 #include "Mod.h"
 #include "Foregrip.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class SHOOTER_API AForegrip : public AMod
 {

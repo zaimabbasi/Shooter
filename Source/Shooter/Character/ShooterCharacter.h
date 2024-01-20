@@ -35,9 +35,6 @@ protected:
 	UFUNCTION()
 	void OnRepWeaponsArrayCallback();
 
-	/*UFUNCTION()
-	void OnRepWeaponsArrayCallback1P();*/
-
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* Mesh1P;
@@ -75,7 +72,5 @@ private:
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh1P() const { return HandsMesh1P; }
-	FORCEINLINE UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
-	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
 
 };

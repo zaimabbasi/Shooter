@@ -6,9 +6,6 @@
 #include "Mod.h"
 #include "Mount.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class SHOOTER_API AMount : public AMod
 {

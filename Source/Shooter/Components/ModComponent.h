@@ -10,9 +10,9 @@
 class ABarrel;
 //class AFlashlight;
 //class AForegrip;
-class AGasblock;
+class AGasBlock;
 class AHandguard;
-class AMagazine;
+class AMag;
 //class AMount;
 class AMuzzle;
 class APistolgrip;
@@ -54,13 +54,13 @@ private:
 	AForegrip* Foregrip;*/
 
 	UPROPERTY(Replicated)
-	AGasblock* Gasblock;
+	AGasBlock* GasBlock;
 
 	UPROPERTY(Replicated)
 	AHandguard* Handguard;
 
 	UPROPERTY(Replicated)
-	AMagazine* Magazine;
+	AMag* Mag;
 
 	/*UPROPERTY(Replicated)
 	AMount* Mount;*/

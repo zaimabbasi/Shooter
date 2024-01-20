@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Mod.h"
-#include "Magazine.generated.h"
+#include "Mag.generated.h"
 
 UCLASS()
-class SHOOTER_API AMagazine : public AMod
+class SHOOTER_API AMag: public AMod
 {
 	GENERATED_BODY()
 	
 public:	
-	AMagazine();
+	AMag();
 
 };

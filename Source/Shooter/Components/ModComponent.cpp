@@ -7,9 +7,9 @@
 #include "Shooter/Mod/Barrel.h"
 //#include "Shooter/Mod/Flashlight.h"
 //#include "Shooter/Mod/Foregrip.h"
-#include "Shooter/Mod/Gasblock.h"
+#include "Shooter/Mod/GasBlock.h"
 #include "Shooter/Mod/Handguard.h"
-#include "Shooter/Mod/Magazine.h"
+#include "Shooter/Mod/Mag.h"
 //#include "Shooter/Mod/Mount.h"
 #include "Shooter/Mod/Muzzle.h"
 #include "Shooter/Mod/Reciever.h"
@@ -40,9 +40,9 @@ void UModComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(UModComponent, Barrel);
 	//DOREPLIFETIME(UModComponent, Flashlight);
 	//DOREPLIFETIME(UModComponent, Foregrip);
-	DOREPLIFETIME(UModComponent, Gasblock);
+	DOREPLIFETIME(UModComponent, GasBlock);
 	DOREPLIFETIME(UModComponent, Handguard);
-	DOREPLIFETIME(UModComponent, Magazine);
+	DOREPLIFETIME(UModComponent, Mag);
 	//DOREPLIFETIME(UModComponent, Mount);
 	DOREPLIFETIME(UModComponent, Muzzle);
 	DOREPLIFETIME(UModComponent, Pistolgrip);
@@ -77,20 +77,20 @@ void UModComponent::BeginPlay()
 				Foregrip = World->SpawnActor<AForegrip>(ForegripClass);
 				Foregrip->SetOwner(OwningWeapon);
 			}*/
-			if (const TSubclassOf<AGasblock>& GasblockClass = ModData.GasblockClass)
+			if (const TSubclassOf<AGasBlock>& GasBlockClass = ModData.GasBlockClass)
 			{
-				Gasblock = World->SpawnActor<AGasblock>(GasblockClass);
-				Gasblock->SetOwner(OwningWeapon);
+				GasBlock = World->SpawnActor<AGasBlock>(GasBlockClass);
+				GasBlock->SetOwner(OwningWeapon);
 			}
 			if (const TSubclassOf<AHandguard>& HandguardClass = ModData.HandguardClass)
 			{
 				Handguard = World->SpawnActor<AHandguard>(HandguardClass);
 				Handguard->SetOwner(OwningWeapon);
 			}
-			if (const TSubclassOf<AMagazine>& MagazineClass = ModData.MagazineClass)
+			if (const TSubclassOf<AMag>& MagClass = ModData.MagClass)
 			{
-				Magazine = World->SpawnActor<AMagazine>(MagazineClass);
-				Magazine->SetOwner(OwningWeapon);
+				Mag = World->SpawnActor<AMag>(MagClass);
+				Mag->SetOwner(OwningWeapon);
 			}
 			/*if (const TSubclassOf<AMount>& MountClass = ModData.MountClass)
 			{
@@ -152,16 +152,16 @@ void UModComponent::BeginPlay()
 				}
 			}
 		}
-		if (Gasblock)
+		if (GasBlock)
 		{
-			FName GasblockSocketName = TEXT("mod_gas_blockSocket");
+			FName GasBlockSocketName = TEXT("mod_gas_blockSocket");
 			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
 			{
-				if (WeaponMesh->DoesSocketExist(GasblockSocketName))
+				if (WeaponMesh->DoesSocketExist(GasBlockSocketName))
 				{
-					if (const USkeletalMeshSocket* GasblockSocket = WeaponMesh->GetSocketByName(GasblockSocketName))
+					if (const USkeletalMeshSocket* GasBlockSocket = WeaponMesh->GetSocketByName(GasBlockSocketName))
 					{
-						GasblockSocket->AttachActor(Gasblock, WeaponMesh);
+						GasBlockSocket->AttachActor(GasBlock, WeaponMesh);
 					}
 				}
 			}
@@ -180,16 +180,16 @@ void UModComponent::BeginPlay()
 				}
 			}
 		}
-		if (Magazine)
+		if (Mag)
 		{
-			FName MagazineSocketName = TEXT("mod_magazineSocket");
+			FName MagSocketName = TEXT("mod_magazineSocket");
 			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
 			{
-				if (WeaponMesh->DoesSocketExist(MagazineSocketName))
+				if (WeaponMesh->DoesSocketExist(MagSocketName))
 				{
-					if (const USkeletalMeshSocket* MagazineSocket = WeaponMesh->GetSocketByName(MagazineSocketName))
+					if (const USkeletalMeshSocket* MagSocket = WeaponMesh->GetSocketByName(MagSocketName))
 					{
-						MagazineSocket->AttachActor(Magazine, WeaponMesh);
+						MagSocket->AttachActor(Mag, WeaponMesh);
 					}
 				}
 			}

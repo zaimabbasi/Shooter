@@ -23,20 +23,14 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	//void SetEquippedWeapon1P(AWeapon* WeaponToEquip1P);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetEquippedWeapon(AWeapon* WeaponToEquip);
 
-	UFUNCTION()
-	void OnRep_EquippedWeapon();
-
 private:
 	AShooterCharacter* OwningCharacter;
 
-	UPROPERTY(ReplicatedUsing = "OnRep_EquippedWeapon")
+	UPROPERTY(Replicated)
 	AWeapon* EquippedWeapon;
-
-	//AWeapon* EquippedWeapon1P;
 	
 };

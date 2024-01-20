@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Mod.h"
-#include "Gasblock.generated.h"
+#include "GasBlock.generated.h"
 
 UCLASS()
-class SHOOTER_API AGasblock : public AMod
+class SHOOTER_API AGasBlock : public AMod
 {
 	GENERATED_BODY()
 	
 public:	
-	AGasblock();
+	AGasBlock();
 
 };

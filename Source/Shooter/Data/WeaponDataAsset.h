@@ -9,9 +9,9 @@
 class ABarrel;
 //class AFlashlight;
 //class AForegrip;
-class AGasblock;
+class AGasBlock;
 class AHandguard;
-class AMagazine;
+class AMag;
 //class AMount;
 class AMuzzle;
 class AReciever;
@@ -38,13 +38,13 @@ public:
 	TSubclassOf<AForegrip> ForegripClass;*/
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AGasblock> GasblockClass;
+	TSubclassOf<AGasBlock> GasBlockClass;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AHandguard> HandguardClass;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AMagazine> MagazineClass;
+	TSubclassOf<AMag> MagClass;
 
 	/*UPROPERTY(EditAnywhere)
 	TSubclassOf<AMount> MountClass;*/

@@ -7,7 +7,6 @@
 #include "Mod.generated.h"
 
 class AWeapon;
-class UBoxComponent;
 
 UCLASS()
 class SHOOTER_API AMod : public AActor
