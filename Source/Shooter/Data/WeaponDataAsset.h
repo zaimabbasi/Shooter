@@ -9,7 +9,7 @@
 class ABarrel;
 //class AFlashlight;
 //class AForegrip;
-class AGasBlock;
+class AGasblock;
 class AHandguard;
 class AMag;
 //class AMount;
@@ -38,7 +38,7 @@ public:
 	TSubclassOf<AForegrip> ForegripClass;*/
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AGasBlock> GasBlockClass;
+	TSubclassOf<AGasblock> GasblockClass;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AHandguard> HandguardClass;

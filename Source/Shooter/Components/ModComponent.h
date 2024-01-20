@@ -10,7 +10,7 @@
 class ABarrel;
 //class AFlashlight;
 //class AForegrip;
-class AGasBlock;
+class AGasblock;
 class AHandguard;
 class AMag;
 //class AMount;
@@ -54,7 +54,7 @@ private:
 	AForegrip* Foregrip;*/
 
 	UPROPERTY(Replicated)
-	AGasBlock* GasBlock;
+	AGasblock* Gasblock;
 
 	UPROPERTY(Replicated)
 	AHandguard* Handguard;

@@ -7,7 +7,7 @@
 #include "Shooter/Mod/Barrel.h"
 //#include "Shooter/Mod/Flashlight.h"
 //#include "Shooter/Mod/Foregrip.h"
-#include "Shooter/Mod/GasBlock.h"
+#include "Shooter/Mod/Gasblock.h"
 #include "Shooter/Mod/Handguard.h"
 #include "Shooter/Mod/Mag.h"
 //#include "Shooter/Mod/Mount.h"
@@ -40,7 +40,7 @@ void UModComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(UModComponent, Barrel);
 	//DOREPLIFETIME(UModComponent, Flashlight);
 	//DOREPLIFETIME(UModComponent, Foregrip);
-	DOREPLIFETIME(UModComponent, GasBlock);
+	DOREPLIFETIME(UModComponent, Gasblock);
 	DOREPLIFETIME(UModComponent, Handguard);
 	DOREPLIFETIME(UModComponent, Mag);
 	//DOREPLIFETIME(UModComponent, Mount);
@@ -77,10 +77,10 @@ void UModComponent::BeginPlay()
 				Foregrip = World->SpawnActor<AForegrip>(ForegripClass);
 				Foregrip->SetOwner(OwningWeapon);
 			}*/
-			if (const TSubclassOf<AGasBlock>& GasBlockClass = ModData.GasBlockClass)
+			if (const TSubclassOf<AGasblock>& GasblockClass = ModData.GasblockClass)
 			{
-				GasBlock = World->SpawnActor<AGasBlock>(GasBlockClass);
-				GasBlock->SetOwner(OwningWeapon);
+				Gasblock = World->SpawnActor<AGasblock>(GasblockClass);
+				Gasblock->SetOwner(OwningWeapon);
 			}
 			if (const TSubclassOf<AHandguard>& HandguardClass = ModData.HandguardClass)
 			{
@@ -152,16 +152,16 @@ void UModComponent::BeginPlay()
 				}
 			}
 		}
-		if (GasBlock)
+		if (Gasblock)
 		{
-			FName GasBlockSocketName = TEXT("mod_gas_blockSocket");
+			FName GasblockSocketName = TEXT("mod_gas_blockSocket");
 			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
 			{
-				if (WeaponMesh->DoesSocketExist(GasBlockSocketName))
+				if (WeaponMesh->DoesSocketExist(GasblockSocketName))
 				{
-					if (const USkeletalMeshSocket* GasBlockSocket = WeaponMesh->GetSocketByName(GasBlockSocketName))
+					if (const USkeletalMeshSocket* GasblockSocket = WeaponMesh->GetSocketByName(GasblockSocketName))
 					{
-						GasBlockSocket->AttachActor(GasBlock, WeaponMesh);
+						GasblockSocket->AttachActor(Gasblock, WeaponMesh);
 					}
 				}
 			}

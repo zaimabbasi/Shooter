@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GasBlock.h"
+#include "Gasblock.h"
 
-AGasBlock::AGasBlock()
+AGasblock::AGasblock()
 {
 
 }
