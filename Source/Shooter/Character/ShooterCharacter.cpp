@@ -62,7 +62,6 @@ void AShooterCharacter::PostInitializeComponents()
 	if (InventoryComponent)
 	{
 		InventoryComponent->OwningCharacter = this;
-		InventoryComponent->OnRepWeaponsArrayDelegate.BindUObject(this, &AShooterCharacter::OnRepWeaponsArrayCallback);
 		if (CharacterDataAsset)
 		{
 			InventoryComponent->InventoryDataArray = CharacterDataAsset->InventoryDataArray;
@@ -108,6 +107,15 @@ void AShooterCharacter::BeginPlay()
 		if (HandsMesh1P)
 		{
 			HandsMesh1P->SetVisibility(false);
+		}
+	}
+
+	if (HasAuthority())
+	{
+		if (InventoryComponent && CombatComponent)
+		{
+			CombatComponent->Server_SetEquippedWeapon(InventoryComponent->GetWeaponAtIndex(InventoryComponent->PRIMARY_WEAPON_INDEX));
+			InventoryComponent->Server_SetCurrentIndex(InventoryComponent->PRIMARY_WEAPON_INDEX);
 		}
 	}
 	
@@ -163,9 +171,4 @@ void AShooterCharacter::EquipSecondaryWeapon(const FInputActionValue& Value)
 			}
 		}
 	}
-}
-
-void AShooterCharacter::OnRepWeaponsArrayCallback()
-{
-	EquipPrimaryWeapon(true);
 }

@@ -42,16 +42,12 @@ void AWeapon::PostInitializeComponents()
 	}
 }
 
-void AWeapon::SetHiddenInGame(bool bNewHidden, bool bPropagateToChildren)
+void AWeapon::SetActorHiddenInGameWithChildren(bool bNewHidden)
 {
 	SetActorHiddenInGame(bNewHidden);
-
-	if (bPropagateToChildren)
+	for (AActor* ChildActor : Children)
 	{
-		for (AActor* ChildActor : Children)
-		{
-			ChildActor->SetActorHiddenInGame(bNewHidden);
-		}
+		ChildActor->SetActorHiddenInGame(bNewHidden);
 	}
 }
 

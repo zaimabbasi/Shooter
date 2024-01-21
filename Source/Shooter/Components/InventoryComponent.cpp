@@ -6,8 +6,7 @@
 #include "Shooter/Character/ShooterCharacter.h"
 #include "Shooter/Weapon/Weapon.h"
 
-UInventoryComponent::UInventoryComponent() :
-	CurrentIndex(0)
+UInventoryComponent::UInventoryComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
@@ -23,7 +22,7 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(UInventoryComponent, WeaponsArray, COND_OwnerOnly);
+	DOREPLIFETIME(UInventoryComponent, WeaponsArray);
 	DOREPLIFETIME(UInventoryComponent, CurrentIndex);
 
 }
@@ -46,22 +45,13 @@ void UInventoryComponent::BeginPlay()
 				if (AWeapon* SpawnedWeapon = World->SpawnActor<AWeapon>(WeaponClass))
 				{
 					SpawnedWeapon->SetOwner(OwningCharacter);
-					SpawnedWeapon->SetHiddenInGame(true, true);
+					SpawnedWeapon->SetActorHiddenInGameWithChildren(true);
 					WeaponsArray.Add(SpawnedWeapon);
 				}
 			}
 		}
-		if (OwningCharacter->IsLocallyControlled())
-		{
-			OnRepWeaponsArrayDelegate.Execute();
-		}
 	}
 
-}
-
-void UInventoryComponent::OnRep_WeaponsArray()
-{
-	OnRepWeaponsArrayDelegate.Execute();
 }
 
 void UInventoryComponent::Server_SetCurrentIndex_Implementation(uint8 Index)

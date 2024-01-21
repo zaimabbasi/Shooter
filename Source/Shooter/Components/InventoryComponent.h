@@ -10,8 +10,6 @@
 class AShooterCharacter;
 class AWeapon;
 
-DECLARE_DELEGATE(FOnRepWeaponsArrayDelegate);
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SHOOTER_API UInventoryComponent : public UActorComponent
 {
@@ -24,16 +22,11 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	FOnRepWeaponsArrayDelegate OnRepWeaponsArrayDelegate;
-
-	static const uint8 PRIMARY_WEAPON_INDEX = 0;
-	static const uint8 SECONDARY_WEAPON_INDEX = 1;
+	const uint8 PRIMARY_WEAPON_INDEX = 0;
+	const uint8 SECONDARY_WEAPON_INDEX = 1;
 
 protected:
 	virtual void BeginPlay() override;
-
-	UFUNCTION()
-	void OnRep_WeaponsArray();
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetCurrentIndex(uint8 Index);
@@ -43,7 +36,7 @@ private:
 
 	TArray<FInventoryData> InventoryDataArray;
 
-	UPROPERTY(ReplicatedUsing = "OnRep_WeaponsArray")
+	UPROPERTY(Replicated)
 	TArray<AWeapon*> WeaponsArray;
 
 	UPROPERTY(Replicated)
