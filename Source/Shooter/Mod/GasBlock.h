@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Mod.h"
-#include "Gas_block.generated.h"
+#include "GasBlock.generated.h"
 
 UCLASS()
 class SHOOTER_API AGasBlock : public AMod

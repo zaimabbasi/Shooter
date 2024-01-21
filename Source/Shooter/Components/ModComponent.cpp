@@ -7,7 +7,7 @@
 #include "Shooter/Mod/Barrel.h"
 //#include "Shooter/Mod/Flashlight.h"
 //#include "Shooter/Mod/Foregrip.h"
-#include "Shooter/Mod/Gas_block.h"
+#include "Shooter/Mod/GasBlock.h"
 #include "Shooter/Mod/Handguard.h"
 #include "Shooter/Mod/Mag.h"
 //#include "Shooter/Mod/Mount.h"
