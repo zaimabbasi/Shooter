@@ -23,7 +23,7 @@ AShooterCharacter::AShooterCharacter()
 	HandsMesh1P->SetCastShadow(false);
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCamera->SetupAttachment(HandsMesh1P, TEXT("Camera_animatedSocket"));
+	FirstPersonCamera->SetupAttachment(HandsMesh1P, TEXT("Camera_animated"));
 	FirstPersonCamera->bConstrainAspectRatio = true;
 	FirstPersonCamera->bUsePawnControlRotation = true;
 
