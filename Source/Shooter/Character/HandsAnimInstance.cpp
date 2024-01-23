@@ -27,7 +27,7 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	if (USkeletalMeshComponent* CharacterMesh = ShooterCharacter->GetMesh())
 	{
 		FVector CharacterBaseHumanRibcageLocation = CharacterMesh->GetBoneLocation(TEXT("Base-HumanRibcage"), EBoneSpaces::ComponentSpace);
-		if (USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh1P())
+		if (USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh())
 		{
 			HandsMesh->SetRelativeLocation(CharacterBaseHumanRibcageLocation);
 		}

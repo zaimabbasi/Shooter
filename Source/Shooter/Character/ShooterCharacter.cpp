@@ -14,16 +14,16 @@ AShooterCharacter::AShooterCharacter()
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
-	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh1P"));
-	Mesh1P->SetupAttachment(GetRootComponent());
-	Mesh1P->SetCastShadow(false);
+	LegsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LegsMesh"));
+	LegsMesh->SetupAttachment(GetRootComponent());
+	LegsMesh->SetCastShadow(false);
 
-	HandsMesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandsMesh1P"));
-	HandsMesh1P->SetupAttachment(GetMesh());
-	HandsMesh1P->SetCastShadow(false);
+	HandsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandsMesh"));
+	HandsMesh->SetupAttachment(GetMesh());
+	HandsMesh->SetCastShadow(false);
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCamera->SetupAttachment(HandsMesh1P, TEXT("Camera_animated"));
+	FirstPersonCamera->SetupAttachment(HandsMesh, TEXT("Camera_animated"));
 	FirstPersonCamera->bConstrainAspectRatio = true;
 	FirstPersonCamera->bUsePawnControlRotation = true;
 
@@ -88,25 +88,25 @@ void AShooterCharacter::BeginPlay()
 	
 	if (IsLocallyControlled())
 	{
-		if (Mesh1P)
+		if (LegsMesh)
 		{
-			Mesh1P->HideBoneByName(TEXT("Base-HumanSpine3"), EPhysBodyOp::PBO_None);
+			LegsMesh->HideBoneByName(TEXT("Base-HumanSpine3"), EPhysBodyOp::PBO_None);
 		}
-		if (USkeletalMeshComponent* Mesh3P = GetMesh())
+		if (USkeletalMeshComponent* CharacterMesh = GetMesh())
 		{
-			Mesh3P->SetVisibility(false);
-			Mesh3P->SetCastHiddenShadow(true);
+			CharacterMesh->SetVisibility(false);
+			CharacterMesh->SetCastHiddenShadow(true);
 		}
 	}
 	else
 	{
-		if (Mesh1P)
+		if (LegsMesh)
 		{
-			Mesh1P->DestroyComponent();
+			LegsMesh->DestroyComponent();
 		}
-		if (HandsMesh1P)
+		if (HandsMesh)
 		{
-			HandsMesh1P->SetVisibility(false);
+			HandsMesh->SetVisibility(false);
 		}
 	}
 

@@ -34,10 +34,10 @@ protected:
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* Mesh1P;
+	USkeletalMeshComponent* LegsMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* HandsMesh1P;
+	USkeletalMeshComponent* HandsMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCamera;
@@ -68,6 +68,6 @@ private:
 	UCombatComponent* CombatComponent;
 
 public:
-	FORCEINLINE USkeletalMeshComponent* GetHandsMesh1P() const { return HandsMesh1P; }
+	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 
 };
