@@ -172,3 +172,12 @@ void AShooterCharacter::EquipSecondaryWeapon(const FInputActionValue& Value)
 		}
 	}
 }
+
+AWeapon* AShooterCharacter::GetEquippedWeapon()
+{
+	if (CombatComponent == nullptr)
+	{
+		return nullptr;
+	}
+	return CombatComponent->EquippedWeapon;
+}

@@ -40,6 +40,12 @@ void AWeapon::PostInitializeComponents()
 			ModComponent->ModData = WeaponDataAsset->ModData;
 		}
 	}
+
+	if (WeaponDataAsset)
+	{
+		HandsAnimationDataAsset = WeaponDataAsset->HandsAnimationDataAsset;
+		WeaponAnimationDataAsset = WeaponDataAsset->WeaponAnimationDataAsset;
+	}
 }
 
 void AWeapon::SetActorHiddenInGameWithChildren(bool bNewHidden)

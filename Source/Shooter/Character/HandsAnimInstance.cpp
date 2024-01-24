@@ -2,6 +2,8 @@
 
 
 #include "HandsAnimInstance.h"
+#include "Shooter/Data/WeaponDataAsset.h"
+#include "Shooter/Weapon/Weapon.h"
 #include "ShooterCharacter.h"
 
 void UHandsAnimInstance::NativeInitializeAnimation()
@@ -30,6 +32,14 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		if (USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh())
 		{
 			HandsMesh->SetRelativeLocation(CharacterBaseHumanRibcageLocation);
+		}
+	}
+
+	if (AWeapon* EquippedWeapon = ShooterCharacter->GetEquippedWeapon())
+	{
+		if (UHandsAnimationDataAsset* HandsAnimationDataAsset = EquippedWeapon->GetHandsAnimationDataAsset())
+		{
+			IdleAnim = HandsAnimationDataAsset->IdleAnim;
 		}
 	}
 

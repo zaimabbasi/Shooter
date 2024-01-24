@@ -2,6 +2,8 @@
 
 
 #include "CharacterAnimInstance.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "ShooterCharacter.h"
 
 void UCharacterAnimInstance::NativeInitializeAnimation()
@@ -23,5 +25,17 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		return;
 	}
+
+	FVector Velocity = ShooterCharacter->GetVelocity();
+	Velocity.Z = 0.0;
+	Speed = Velocity.Size();
+
+	bIsAccelerating = ShooterCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.0 ? true : false;
+
+	FRotator BaseAimRotation = ShooterCharacter->GetBaseAimRotation();
+	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetVelocity());
+	FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, BaseAimRotation);
+	DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaSeconds, 10.0f);
+	YawOffset = DeltaRotation.Yaw;
 
 }

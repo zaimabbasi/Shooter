@@ -7,12 +7,13 @@
 #include "InputActionValue.h"
 #include "ShooterCharacter.generated.h"
 
+class AWeapon;
 class UCameraComponent;
-class UInputMappingContext;
-class UInputAction;
 class UCharacterDataAsset;
-class UInventoryComponent;
 class UCombatComponent;
+class UInputAction;
+class UInputMappingContext;
+class UInventoryComponent;
 
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
@@ -69,5 +70,6 @@ private:
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
+	AWeapon* GetEquippedWeapon();
 
 };

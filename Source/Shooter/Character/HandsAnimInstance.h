@@ -20,4 +20,7 @@ public:
 private:
 	AShooterCharacter* ShooterCharacter;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UAnimSequence* IdleAnim;
+
 };

@@ -7,8 +7,10 @@
 #include "Weapon.generated.h"
 
 class AShooterCharacter;
-class UModComponent;
 class UBoxComponent;
+class UHandsAnimationDataAsset;
+class UModComponent;
+class UWeaponAnimationDataAsset;
 class UWeaponDataAsset;
 
 UCLASS()
@@ -38,7 +40,13 @@ protected:
 
 	UModComponent* ModComponent;
 
+	UHandsAnimationDataAsset* HandsAnimationDataAsset;
+
+	UWeaponAnimationDataAsset* WeaponAnimationDataAsset;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
+	FORCEINLINE UHandsAnimationDataAsset* GetHandsAnimationDataAsset() const { return HandsAnimationDataAsset; }
+	FORCEINLINE UWeaponAnimationDataAsset* GetWeaponAnimationDataAsset() const { return WeaponAnimationDataAsset; }
 
 };
