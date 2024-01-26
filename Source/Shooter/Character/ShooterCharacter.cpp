@@ -25,7 +25,6 @@ AShooterCharacter::AShooterCharacter()
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCamera->SetupAttachment(HandsMesh, TEXT("Camera_animated"));
 	FirstPersonCamera->bConstrainAspectRatio = true;
-	FirstPersonCamera->bUsePawnControlRotation = true;
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 	InventoryComponent->SetIsReplicated(true);
