@@ -38,4 +38,23 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaSeconds, 10.0f);
 	YawOffset = DeltaRotation.Yaw;
 
+	USkeletalMeshComponent* CharacterMesh = ShooterCharacter->GetMesh();
+	HandsMesh = ShooterCharacter->GetHandsMesh();
+	if (CharacterMesh && HandsMesh)
+	{
+		FVector LPalmOutLocation;
+		FRotator LPalmOutRotation;
+		FVector RPalmOutLocation;
+		FRotator RPalmOutRotation;
+		LPalmTransform = HandsMesh->GetSocketTransform(TEXT("Base-HumanLPalm"), ERelativeTransformSpace::RTS_World);
+		RPalmTransform = HandsMesh->GetSocketTransform(TEXT("Base-HumanRPalm"), ERelativeTransformSpace::RTS_World);
+		CharacterMesh->TransformToBoneSpace(TEXT("IK_S_LPalm"), LPalmTransform.GetLocation(), FRotator(LPalmTransform.GetRotation()), LPalmOutLocation, LPalmOutRotation);
+		CharacterMesh->TransformToBoneSpace(TEXT("IK_S_RPalm"), RPalmTransform.GetLocation(), FRotator(RPalmTransform.GetRotation()), RPalmOutLocation, RPalmOutRotation);
+		LPalmTransform.SetLocation(LPalmOutLocation);
+		LPalmTransform.SetRotation(FQuat(LPalmOutRotation));
+		RPalmTransform.SetLocation(RPalmOutLocation);
+		RPalmTransform.SetRotation(FQuat(RPalmOutRotation));
+
+	}
+
 }

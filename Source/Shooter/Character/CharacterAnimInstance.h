@@ -31,4 +31,13 @@ private:
 
 	FRotator DeltaRotation;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* HandsMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	FTransform LPalmTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	FTransform RPalmTransform;
+
 };
