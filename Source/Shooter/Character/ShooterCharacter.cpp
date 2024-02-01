@@ -23,7 +23,7 @@ AShooterCharacter::AShooterCharacter()
 	HandsMesh->SetCastShadow(false);
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCamera->SetupAttachment(HandsMesh, TEXT("Camera_animated"));
+	FirstPersonCamera->SetupAttachment(HandsMesh, TEXT("Camera_animatedSocket"));
 	FirstPersonCamera->bConstrainAspectRatio = true;
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
