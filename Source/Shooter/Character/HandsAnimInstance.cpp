@@ -26,15 +26,6 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
-	if (USkeletalMeshComponent* CharacterMesh = ShooterCharacter->GetMesh())
-	{
-		FVector CharacterBaseHumanRibcageLocation = CharacterMesh->GetBoneLocation(TEXT("Base-HumanRibcage"), EBoneSpaces::ComponentSpace);
-		if (USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh())
-		{
-			HandsMesh->SetRelativeLocation(CharacterBaseHumanRibcageLocation);
-		}
-	}
-
 	if (AWeapon* EquippedWeapon = ShooterCharacter->GetEquippedWeapon())
 	{
 		if (UHandsAnimationDataAsset* HandsAnimationDataAsset = EquippedWeapon->GetHandsAnimationDataAsset())
@@ -42,5 +33,15 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			IdleAnim = HandsAnimationDataAsset->IdleAnim;
 		}
 	}
+
+	USkeletalMeshComponent* CharacterMesh = ShooterCharacter->GetMesh();
+	USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh();
+	if (CharacterMesh && HandsMesh)
+	{
+		FVector CharacterBaseHumanRibcageLocation = CharacterMesh->GetBoneLocation(TEXT("Base-HumanRibcage"), EBoneSpaces::ComponentSpace);
+		HandsMesh->SetRelativeLocation(CharacterBaseHumanRibcageLocation);
+	}
+
+	ControlRotationPitch = ShooterCharacter->GetControlRotation().Pitch;
 
 }

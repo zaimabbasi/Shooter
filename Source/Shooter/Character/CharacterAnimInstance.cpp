@@ -54,7 +54,6 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		LPalmTransform.SetRotation(FQuat(LPalmOutRotation));
 		RPalmTransform.SetLocation(RPalmOutLocation);
 		RPalmTransform.SetRotation(FQuat(RPalmOutRotation));
-
 	}
 
 }
