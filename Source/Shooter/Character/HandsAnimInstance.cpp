@@ -42,6 +42,6 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		HandsMesh->SetRelativeLocation(CharacterBaseHumanRibcageLocation);
 	}
 
-	ControlRotationPitch = ShooterCharacter->GetControlRotation().Pitch;
+	AO_Pitch = ShooterCharacter->GetAO_Pitch();
 
 }

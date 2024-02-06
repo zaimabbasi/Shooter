@@ -32,6 +32,7 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void EquipPrimaryWeapon(const FInputActionValue& Value);
 	void EquipSecondaryWeapon(const FInputActionValue& Value);
+	void CalculateAO_Pitch(float DeltaTime);
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
@@ -68,8 +69,12 @@ private:
 
 	UCombatComponent* CombatComponent;
 
+	float AO_Pitch;
+	FRotator DeltaAimRotation;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	AWeapon* GetEquippedWeapon();
+	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 
 };

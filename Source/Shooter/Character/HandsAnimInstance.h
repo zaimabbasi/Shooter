@@ -24,6 +24,6 @@ private:
 	UAnimSequence* IdleAnim;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	float ControlRotationPitch;
+	float AO_Pitch;
 
 };

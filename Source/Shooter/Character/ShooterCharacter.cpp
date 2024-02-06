@@ -11,7 +11,7 @@
 
 AShooterCharacter::AShooterCharacter()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
 	LegsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LegsMesh"));
@@ -37,6 +37,8 @@ AShooterCharacter::AShooterCharacter()
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	CalculateAO_Pitch(DeltaTime);
 
 }
 
@@ -169,6 +171,25 @@ void AShooterCharacter::EquipSecondaryWeapon(const FInputActionValue& Value)
 				InventoryComponent->Server_SetCurrentIndex(InventoryComponent->SECONDARY_WEAPON_INDEX);
 			}
 		}
+	}
+}
+
+void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
+{
+	if (IsLocallyControlled())
+	{
+		AO_Pitch = GetControlRotation().Pitch;
+	}
+	else
+	{
+		DeltaAimRotation = FMath::RInterpTo(DeltaAimRotation, GetBaseAimRotation(), DeltaTime, 15.0f);
+		AO_Pitch = DeltaAimRotation.Pitch;
+	}
+	if (AO_Pitch > 90.0f)
+	{
+		FVector2D InRange = FVector2D(270.0, 360.0);
+		FVector2D OutRange = FVector2D(-90.0, 0.0);
+		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
 }
 
