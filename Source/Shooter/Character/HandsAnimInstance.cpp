@@ -38,8 +38,10 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh();
 	if (CharacterMesh && HandsMesh)
 	{
-		FVector CharacterBaseHumanRibcageLocation = CharacterMesh->GetBoneLocation(TEXT("Base-HumanRibcage"), EBoneSpaces::ComponentSpace);
-		HandsMesh->SetRelativeLocation(CharacterBaseHumanRibcageLocation);
+		FTransform CharacterWeaponRootTransform = CharacterMesh->GetSocketTransform(TEXT("Weapon_root"), ERelativeTransformSpace::RTS_Component);
+		FTransform HandsWeaponRootTransform = HandsMesh->GetSocketTransform(TEXT("Weapon_root"), ERelativeTransformSpace::RTS_Component);
+		FTransform DeltaWeaponRootTransform = HandsWeaponRootTransform.GetRelativeTransformReverse(CharacterWeaponRootTransform);
+		HandsMesh->SetRelativeLocation(DeltaWeaponRootTransform.GetLocation());
 	}
 
 	AO_Pitch = ShooterCharacter->GetAO_Pitch();
