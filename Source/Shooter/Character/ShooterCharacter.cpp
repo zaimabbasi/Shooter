@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Shooter/Components/CombatComponent.h"
 #include "Shooter/Components/InventoryComponent.h"
 #include "Shooter/Weapon/Weapon.h"
@@ -19,7 +20,7 @@ AShooterCharacter::AShooterCharacter()
 	LegsMesh->SetCastShadow(false);
 
 	HandsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandsMesh"));
-	HandsMesh->SetupAttachment(GetMesh());
+	HandsMesh->SetupAttachment(GetRootComponent());
 	HandsMesh->SetCastShadow(false);
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -38,7 +39,7 @@ void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	CalculateAO_Pitch(DeltaTime);
+	ControlMovement(DeltaTime);
 
 }
 
@@ -74,6 +75,13 @@ void AShooterCharacter::PostInitializeComponents()
 	}
 }
 
+float AShooterCharacter::GetSpeed()
+{
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.0;
+	return Velocity.Size();
+}
+
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -98,6 +106,8 @@ void AShooterCharacter::BeginPlay()
 			CharacterMesh->SetVisibility(false);
 			CharacterMesh->SetCastHiddenShadow(true);
 		}
+
+		LastAimRotation = GetControlRotation();
 	}
 	else
 	{
@@ -109,6 +119,8 @@ void AShooterCharacter::BeginPlay()
 		{
 			HandsMesh->SetVisibility(false);
 		}
+
+		LastAimRotation = GetBaseAimRotation();
 	}
 
 	if (HasAuthority())
@@ -174,23 +186,39 @@ void AShooterCharacter::EquipSecondaryWeapon(const FInputActionValue& Value)
 	}
 }
 
-void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
+void AShooterCharacter::ControlMovement(float DeltaTime)
 {
+	FRotator CurrentAimRotation;
+	bUseControllerRotationYaw = GetSpeed() > 0.0 ? true : false;
+
 	if (IsLocallyControlled())
 	{
-		AO_Pitch = GetControlRotation().Pitch;
+		CurrentAimRotation = GetControlRotation();
+		AO_Pitch = CurrentAimRotation.Pitch;
 	}
 	else
 	{
-		DeltaAimRotation = FMath::RInterpTo(DeltaAimRotation, GetBaseAimRotation(), DeltaTime, 15.0f);
-		AO_Pitch = DeltaAimRotation.Pitch;
+		CurrentAimRotation = GetBaseAimRotation();
+		AO_Pitch = FMath::RInterpTo(FRotator(AO_Pitch, 0.0, 0.0), FRotator(CurrentAimRotation.Pitch, 0.0, 0.0), DeltaTime, 15.0f).Pitch;
 	}
+
+	if (bUseControllerRotationYaw)
+	{
+		LastAimRotation = CurrentAimRotation;
+		AO_Yaw = 0.0;
+	}
+	else
+	{
+		AO_Yaw = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, LastAimRotation).Yaw;
+	}
+
 	if (AO_Pitch > 90.0f)
 	{
 		FVector2D InRange = FVector2D(270.0, 360.0);
 		FVector2D OutRange = FVector2D(-90.0, 0.0);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
+
 }
 
 AWeapon* AShooterCharacter::GetEquippedWeapon()

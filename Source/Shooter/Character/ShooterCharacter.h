@@ -25,6 +25,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PostInitializeComponents() override;
+	float GetSpeed();
 
 protected:
 	virtual void BeginPlay() override;
@@ -32,7 +33,7 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void EquipPrimaryWeapon(const FInputActionValue& Value);
 	void EquipSecondaryWeapon(const FInputActionValue& Value);
-	void CalculateAO_Pitch(float DeltaTime);
+	void ControlMovement(float DeltaTime);
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
@@ -69,12 +70,14 @@ private:
 
 	UCombatComponent* CombatComponent;
 
+	FRotator LastAimRotation;
+	float AO_Yaw;
 	float AO_Pitch;
-	FRotator DeltaAimRotation;
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	AWeapon* GetEquippedWeapon();
+	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 
 };

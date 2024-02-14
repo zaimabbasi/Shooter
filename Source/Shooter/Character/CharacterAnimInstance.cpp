@@ -56,6 +56,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		RPalmTransform.SetRotation(FQuat(RPalmOutRotation));
 	}
 
+	AO_Yaw = ShooterCharacter->GetAO_Yaw();
 	AO_Pitch = ShooterCharacter->GetAO_Pitch();
 
 }
