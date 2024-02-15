@@ -24,6 +24,7 @@ public:
 	AShooterCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	float GetSpeed();
 
@@ -34,6 +35,9 @@ protected:
 	void EquipPrimaryWeapon(const FInputActionValue& Value);
 	void EquipSecondaryWeapon(const FInputActionValue& Value);
 	void ControlMovement(float DeltaTime);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetMovementInputVector(const FVector2D MovementInput);
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
@@ -74,10 +78,14 @@ private:
 	float AO_Yaw;
 	float AO_Pitch;
 
+	UPROPERTY(Replicated)
+	FVector2D MovementInputVector;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	AWeapon* GetEquippedWeapon();
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
+	FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
 
 };

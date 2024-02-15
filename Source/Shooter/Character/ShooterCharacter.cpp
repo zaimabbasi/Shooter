@@ -6,6 +6,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Net/UnrealNetwork.h"
 #include "Shooter/Components/CombatComponent.h"
 #include "Shooter/Components/InventoryComponent.h"
 #include "Shooter/Weapon/Weapon.h"
@@ -54,6 +55,14 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(EquipPrimaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::EquipPrimaryWeapon);
 		EnhancedInputComponent->BindAction(EquipSecondaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::EquipSecondaryWeapon);
 	}
+
+}
+
+void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AShooterCharacter, MovementInputVector);
 
 }
 
@@ -147,8 +156,7 @@ void AShooterCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D CurrentValue = Value.Get<FVector2D>();
 	
-	AddMovementInput(GetActorRightVector(), CurrentValue.X);
-	AddMovementInput(GetActorForwardVector(), CurrentValue.Y);
+	Server_SetMovementInputVector(CurrentValue);
 
 }
 
@@ -219,6 +227,11 @@ void AShooterCharacter::ControlMovement(float DeltaTime)
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
 
+}
+
+void AShooterCharacter::Server_SetMovementInputVector_Implementation(const FVector2D MovementInput)
+{
+	MovementInputVector = MovementInput;
 }
 
 AWeapon* AShooterCharacter::GetEquippedWeapon()
