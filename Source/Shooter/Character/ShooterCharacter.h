@@ -38,7 +38,10 @@ protected:
 	void CalculateAO_Pitch(float DeltaTime);
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetMovementInputVector(const FVector2D MovementInput);
+	void Server_SetRemoteViewYaw(float RemoteYaw);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetMovementInputVector(FVector2D MovementInput);
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
@@ -80,6 +83,9 @@ private:
 	float AO_Pitch;
 
 	UPROPERTY(Replicated)
+	float RemoteViewYaw;
+
+	UPROPERTY(Replicated)
 	FVector2D MovementInputVector;
 
 public:
@@ -89,5 +95,4 @@ public:
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
 	float GetSpeed() const;
-
 };

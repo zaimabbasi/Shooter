@@ -62,6 +62,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(AShooterCharacter, RemoteViewYaw);
 	DOREPLIFETIME(AShooterCharacter, MovementInputVector);
 
 }
@@ -109,7 +110,7 @@ void AShooterCharacter::BeginPlay()
 			CharacterMesh->SetCastHiddenShadow(true);
 		}
 
-		LastAimRotation = GetControlRotation();
+		LastAimRotation = FRotator(0.0, GetControlRotation().Yaw, 0.0);
 	}
 	else
 	{
@@ -122,7 +123,7 @@ void AShooterCharacter::BeginPlay()
 			HandsMesh->SetVisibility(false);
 		}
 
-		LastAimRotation = GetBaseAimRotation();
+		LastAimRotation = FRotator(0.0, GetBaseAimRotation().Yaw, 0.0);
 	}
 
 	if (HasAuthority())
@@ -200,11 +201,11 @@ void AShooterCharacter::CalculateAO_Yaw(float DeltaTime)
 
 	if (IsLocallyControlled())
 	{
-		CurrentAimRotation = GetControlRotation();
+		CurrentAimRotation = FRotator(0.0, GetControlRotation().Yaw, 0.0);
 	}
 	else
 	{
-		CurrentAimRotation = GetBaseAimRotation();
+		CurrentAimRotation = FRotator(0.0, GetBaseAimRotation().Yaw, 0.0);
 	}
 
 	if (GetSpeed() > 0.0)
@@ -218,6 +219,16 @@ void AShooterCharacter::CalculateAO_Yaw(float DeltaTime)
 		bUseControllerRotationYaw = false;
 		AO_Yaw = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, LastAimRotation).Yaw;
 	}
+
+	if (HasAuthority() || IsLocallyControlled())
+	{
+		Server_SetRemoteViewYaw(AO_Yaw);
+	}
+	else
+	{
+		AO_Yaw = RemoteViewYaw;
+	}
+
 }
 
 void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
@@ -239,7 +250,12 @@ void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
 	}
 }
 
-void AShooterCharacter::Server_SetMovementInputVector_Implementation(const FVector2D MovementInput)
+void AShooterCharacter::Server_SetRemoteViewYaw_Implementation(float RemoteYaw)
+{
+	RemoteViewYaw = RemoteYaw;
+}
+
+void AShooterCharacter::Server_SetMovementInputVector_Implementation(FVector2D MovementInput)
 {
 	MovementInputVector = MovementInput;
 }
