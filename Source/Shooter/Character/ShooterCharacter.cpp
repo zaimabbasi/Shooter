@@ -25,7 +25,7 @@ AShooterCharacter::AShooterCharacter()
 	HandsMesh->SetCastShadow(false);
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCamera->SetupAttachment(HandsMesh, TEXT("Camera_animatedSocket"));
+	FirstPersonCamera->SetupAttachment(HandsMesh, TEXT("Camera_animated"));
 	FirstPersonCamera->bConstrainAspectRatio = true;
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
@@ -82,13 +82,6 @@ void AShooterCharacter::PostInitializeComponents()
 	{
 		CombatComponent->OwningCharacter = this;
 	}
-}
-
-float AShooterCharacter::GetSpeed()
-{
-	FVector Velocity = GetVelocity();
-	Velocity.Z = 0.0;
-	return Velocity.Size();
 }
 
 void AShooterCharacter::BeginPlay()
@@ -155,7 +148,7 @@ void AShooterCharacter::Look(const FInputActionValue& Value)
 void AShooterCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D CurrentValue = Value.Get<FVector2D>();
-	
+
 	Server_SetMovementInputVector(CurrentValue);
 
 }
@@ -196,28 +189,46 @@ void AShooterCharacter::EquipSecondaryWeapon(const FInputActionValue& Value)
 
 void AShooterCharacter::ControlMovement(float DeltaTime)
 {
+	CalculateAO_Yaw(DeltaTime);
+	CalculateAO_Pitch(DeltaTime);
+
+}
+
+void AShooterCharacter::CalculateAO_Yaw(float DeltaTime)
+{
 	FRotator CurrentAimRotation;
-	bUseControllerRotationYaw = GetSpeed() > 0.0 ? true : false;
 
 	if (IsLocallyControlled())
 	{
 		CurrentAimRotation = GetControlRotation();
-		AO_Pitch = CurrentAimRotation.Pitch;
 	}
 	else
 	{
 		CurrentAimRotation = GetBaseAimRotation();
-		AO_Pitch = FMath::RInterpTo(FRotator(AO_Pitch, 0.0, 0.0), FRotator(CurrentAimRotation.Pitch, 0.0, 0.0), DeltaTime, 15.0f).Pitch;
 	}
 
-	if (bUseControllerRotationYaw)
+	if (GetSpeed() > 0.0)
 	{
+		bUseControllerRotationYaw = true;
 		LastAimRotation = CurrentAimRotation;
 		AO_Yaw = 0.0;
 	}
 	else
 	{
+		bUseControllerRotationYaw = false;
 		AO_Yaw = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, LastAimRotation).Yaw;
+	}
+}
+
+void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
+{
+	if (IsLocallyControlled())
+	{
+		AO_Pitch = GetControlRotation().Pitch;
+	}
+	else
+	{
+		AO_Pitch = FMath::RInterpTo(FRotator(AO_Pitch, 0.0, 0.0), FRotator(GetBaseAimRotation().Pitch, 0.0, 0.0), DeltaTime, 15.0f).Pitch;
 	}
 
 	if (AO_Pitch > 90.0f)
@@ -226,7 +237,6 @@ void AShooterCharacter::ControlMovement(float DeltaTime)
 		FVector2D OutRange = FVector2D(-90.0, 0.0);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
-
 }
 
 void AShooterCharacter::Server_SetMovementInputVector_Implementation(const FVector2D MovementInput)
@@ -241,4 +251,11 @@ AWeapon* AShooterCharacter::GetEquippedWeapon()
 		return nullptr;
 	}
 	return CombatComponent->EquippedWeapon;
+}
+
+float AShooterCharacter::GetSpeed() const
+{
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.0;
+	return Velocity.Size();
 }

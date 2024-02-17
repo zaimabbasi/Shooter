@@ -26,7 +26,6 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
-	float GetSpeed();
 
 protected:
 	virtual void BeginPlay() override;
@@ -35,6 +34,8 @@ protected:
 	void EquipPrimaryWeapon(const FInputActionValue& Value);
 	void EquipSecondaryWeapon(const FInputActionValue& Value);
 	void ControlMovement(float DeltaTime);
+	void CalculateAO_Yaw(float DeltaTime);
+	void CalculateAO_Pitch(float DeltaTime);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetMovementInputVector(const FVector2D MovementInput);
@@ -87,5 +88,6 @@ public:
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
+	float GetSpeed() const;
 
 };
