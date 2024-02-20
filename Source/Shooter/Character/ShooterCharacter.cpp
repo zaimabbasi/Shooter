@@ -110,7 +110,7 @@ void AShooterCharacter::BeginPlay()
 			CharacterMesh->SetCastHiddenShadow(true);
 		}
 
-		LastAimRotation = FRotator(0.0, GetControlRotation().Yaw, 0.0);
+		LastAimRotation = GetControlRotation();
 	}
 	else
 	{
@@ -123,7 +123,7 @@ void AShooterCharacter::BeginPlay()
 			HandsMesh->SetVisibility(false);
 		}
 
-		LastAimRotation = FRotator(0.0, GetBaseAimRotation().Yaw, 0.0);
+		LastAimRotation = GetBaseAimRotation();
 	}
 
 	if (HasAuthority())
@@ -190,24 +190,15 @@ void AShooterCharacter::EquipSecondaryWeapon(const FInputActionValue& Value)
 
 void AShooterCharacter::ControlMovement(float DeltaTime)
 {
-	CalculateAO_Yaw(DeltaTime);
-	CalculateAO_Pitch(DeltaTime);
+	FRotator CurrentAimRotation = IsLocallyControlled() ? GetControlRotation() : GetBaseAimRotation();
+
+	CalculateAO_Yaw(CurrentAimRotation, DeltaTime);
+	CalculateAO_Pitch(CurrentAimRotation, DeltaTime);
 
 }
 
-void AShooterCharacter::CalculateAO_Yaw(float DeltaTime)
+void AShooterCharacter::CalculateAO_Yaw(FRotator CurrentAimRotation, float DeltaTime)
 {
-	FRotator CurrentAimRotation;
-
-	if (IsLocallyControlled())
-	{
-		CurrentAimRotation = FRotator(0.0, GetControlRotation().Yaw, 0.0);
-	}
-	else
-	{
-		CurrentAimRotation = FRotator(0.0, GetBaseAimRotation().Yaw, 0.0);
-	}
-
 	if (GetSpeed() > 0.0)
 	{
 		bUseControllerRotationYaw = true;
@@ -231,15 +222,15 @@ void AShooterCharacter::CalculateAO_Yaw(float DeltaTime)
 
 }
 
-void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
+void AShooterCharacter::CalculateAO_Pitch(FRotator CurrentAimRotation, float DeltaTime)
 {
 	if (IsLocallyControlled())
 	{
-		AO_Pitch = GetControlRotation().Pitch;
+		AO_Pitch = CurrentAimRotation.Pitch;
 	}
 	else
 	{
-		AO_Pitch = FMath::RInterpTo(FRotator(AO_Pitch, 0.0, 0.0), FRotator(GetBaseAimRotation().Pitch, 0.0, 0.0), DeltaTime, 15.0f).Pitch;
+		AO_Pitch = FMath::RInterpTo(FRotator(AO_Pitch, 0.0, 0.0), FRotator(CurrentAimRotation.Pitch, 0.0, 0.0), DeltaTime, 15.0f).Pitch;
 	}
 
 	if (AO_Pitch > 90.0f)

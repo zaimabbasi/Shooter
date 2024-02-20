@@ -34,8 +34,8 @@ protected:
 	void EquipPrimaryWeapon(const FInputActionValue& Value);
 	void EquipSecondaryWeapon(const FInputActionValue& Value);
 	void ControlMovement(float DeltaTime);
-	void CalculateAO_Yaw(float DeltaTime);
-	void CalculateAO_Pitch(float DeltaTime);
+	void CalculateAO_Yaw(FRotator CurrentAimRotation, float DeltaTime);
+	void CalculateAO_Pitch(FRotator CurrentAimRotation, float DeltaTime);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetRemoteViewYaw(float RemoteYaw);
