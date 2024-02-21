@@ -78,7 +78,6 @@ private:
 
 	UCombatComponent* CombatComponent;
 
-	FRotator LastAimRotation;
 	float AO_Yaw;
 	float AO_Pitch;
 
@@ -94,5 +93,5 @@ public:
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
-	float GetSpeed() const;
+
 };

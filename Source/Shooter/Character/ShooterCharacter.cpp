@@ -109,8 +109,6 @@ void AShooterCharacter::BeginPlay()
 			CharacterMesh->SetVisibility(false);
 			CharacterMesh->SetCastHiddenShadow(true);
 		}
-
-		LastAimRotation = GetControlRotation();
 	}
 	else
 	{
@@ -122,8 +120,6 @@ void AShooterCharacter::BeginPlay()
 		{
 			HandsMesh->SetVisibility(false);
 		}
-
-		LastAimRotation = GetBaseAimRotation();
 	}
 
 	if (HasAuthority())
@@ -191,7 +187,7 @@ void AShooterCharacter::EquipSecondaryWeapon(const FInputActionValue& Value)
 void AShooterCharacter::ControlMovement(float DeltaTime)
 {
 	FRotator CurrentAimRotation = IsLocallyControlled() ? GetControlRotation() : GetBaseAimRotation();
-
+	
 	CalculateAO_Yaw(CurrentAimRotation, DeltaTime);
 	CalculateAO_Pitch(CurrentAimRotation, DeltaTime);
 
@@ -199,26 +195,6 @@ void AShooterCharacter::ControlMovement(float DeltaTime)
 
 void AShooterCharacter::CalculateAO_Yaw(FRotator CurrentAimRotation, float DeltaTime)
 {
-	if (GetSpeed() > 0.0)
-	{
-		bUseControllerRotationYaw = true;
-		LastAimRotation = CurrentAimRotation;
-		AO_Yaw = 0.0;
-	}
-	else
-	{
-		bUseControllerRotationYaw = false;
-		AO_Yaw = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, LastAimRotation).Yaw;
-	}
-
-	if (HasAuthority() || IsLocallyControlled())
-	{
-		Server_SetRemoteViewYaw(AO_Yaw);
-	}
-	else
-	{
-		AO_Yaw = RemoteViewYaw;
-	}
 
 }
 
@@ -258,11 +234,4 @@ AWeapon* AShooterCharacter::GetEquippedWeapon()
 		return nullptr;
 	}
 	return CombatComponent->EquippedWeapon;
-}
-
-float AShooterCharacter::GetSpeed() const
-{
-	FVector Velocity = GetVelocity();
-	Velocity.Z = 0.0;
-	return Velocity.Size();
 }
