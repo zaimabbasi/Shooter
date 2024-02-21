@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Shooter/Components/CombatComponent.h"
@@ -34,6 +35,8 @@ AShooterCharacter::AShooterCharacter()
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	CombatComponent->SetIsReplicated(true);
 
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+
 }
 
 void AShooterCharacter::Tick(float DeltaTime)
@@ -54,6 +57,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AShooterCharacter::Move);
 		EnhancedInputComponent->BindAction(EquipPrimaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::EquipPrimaryWeapon);
 		EnhancedInputComponent->BindAction(EquipSecondaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::EquipSecondaryWeapon);
+		EnhancedInputComponent->BindAction(ToggleCrouchUnCrouchAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleCrouchUncrouch);
 	}
 
 }
@@ -180,6 +184,22 @@ void AShooterCharacter::EquipSecondaryWeapon(const FInputActionValue& Value)
 				CombatComponent->Server_SetEquippedWeapon(SecondaryWeapon);
 				InventoryComponent->Server_SetCurrentIndex(InventoryComponent->SECONDARY_WEAPON_INDEX);
 			}
+		}
+	}
+}
+
+void AShooterCharacter::ToggleCrouchUncrouch(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue)
+	{
+		if (bIsCrouched)
+		{
+			UnCrouch();
+		}
+		else
+		{
+			Crouch();
 		}
 	}
 }

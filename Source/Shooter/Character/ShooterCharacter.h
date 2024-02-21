@@ -33,6 +33,7 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void EquipPrimaryWeapon(const FInputActionValue& Value);
 	void EquipSecondaryWeapon(const FInputActionValue& Value);
+	void ToggleCrouchUncrouch(const FInputActionValue& Value);
 	void ControlMovement(float DeltaTime);
 	void CalculateAO_Yaw(FRotator CurrentAimRotation, float DeltaTime);
 	void CalculateAO_Pitch(FRotator CurrentAimRotation, float DeltaTime);
@@ -70,6 +71,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* EquipSecondaryWeaponAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* ToggleCrouchUnCrouchAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	UCharacterDataAsset* CharacterDataAsset;
