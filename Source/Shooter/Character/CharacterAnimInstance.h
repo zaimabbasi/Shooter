@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "Shooter/Types/TurnInPlace.h"
 #include "CharacterAnimInstance.generated.h"
 
 class AShooterCharacter;
@@ -40,5 +41,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	bool bIsCrouched;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	ETurnInPlace TurnInPlace;
 
 };

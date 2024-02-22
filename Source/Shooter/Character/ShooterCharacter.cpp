@@ -37,6 +37,8 @@ AShooterCharacter::AShooterCharacter()
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
+	TurnInPlace = ETurnInPlace::TIP_None;
+
 }
 
 void AShooterCharacter::Tick(float DeltaTime)
@@ -113,6 +115,8 @@ void AShooterCharacter::BeginPlay()
 			CharacterMesh->SetVisibility(false);
 			CharacterMesh->SetCastHiddenShadow(true);
 		}
+
+		LastAimRotation = GetControlRotation();
 	}
 	else
 	{
@@ -124,6 +128,8 @@ void AShooterCharacter::BeginPlay()
 		{
 			HandsMesh->SetVisibility(false);
 		}
+
+		LastAimRotation = GetBaseAimRotation();
 	}
 
 	if (HasAuthority())
@@ -207,14 +213,44 @@ void AShooterCharacter::ToggleCrouchUncrouch(const FInputActionValue& Value)
 void AShooterCharacter::ControlMovement(float DeltaTime)
 {
 	FRotator CurrentAimRotation = IsLocallyControlled() ? GetControlRotation() : GetBaseAimRotation();
-	
-	CalculateAO_Yaw(CurrentAimRotation, DeltaTime);
+	bool bIsMoving = MovementInputVector.Size() > 0.0 ? true : false;
+	if (bIsMoving)
+	{
+		bUseControllerRotationYaw = true;
+		LastAimRotation = CurrentAimRotation;
+		AO_Yaw = 0.0f;
+		TurnInPlace = ETurnInPlace::TIP_None;
+	}
+	else
+	{
+		bUseControllerRotationYaw = false;
+		AO_Yaw = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, CurrentAimRotation.Yaw, 0.0), FRotator(0.0, LastAimRotation.Yaw, 0.0)).Yaw;
+	}
+
+	if (HasAuthority() || IsLocallyControlled())
+	{
+		Server_SetRemoteViewYaw(AO_Yaw);
+	}
+	else
+	{
+		AO_Yaw = RemoteViewYaw;
+	}
+
+	if (AO_Yaw < -90.0f)
+	{
+		TurnInPlace = ETurnInPlace::TIP_Left;
+	}
+	else if (AO_Yaw > 90.0f)
+	{
+		TurnInPlace = ETurnInPlace::TIP_Right;
+	}
+
+	if (TurnInPlace != ETurnInPlace::TIP_None)
+	{
+
+	}
+
 	CalculateAO_Pitch(CurrentAimRotation, DeltaTime);
-
-}
-
-void AShooterCharacter::CalculateAO_Yaw(FRotator CurrentAimRotation, float DeltaTime)
-{
 
 }
 

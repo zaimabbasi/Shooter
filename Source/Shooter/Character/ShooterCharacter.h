@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "Shooter/Types/TurnInPlace.h"
 #include "ShooterCharacter.generated.h"
 
 class AWeapon;
@@ -35,7 +36,6 @@ protected:
 	void EquipSecondaryWeapon(const FInputActionValue& Value);
 	void ToggleCrouchUncrouch(const FInputActionValue& Value);
 	void ControlMovement(float DeltaTime);
-	void CalculateAO_Yaw(FRotator CurrentAimRotation, float DeltaTime);
 	void CalculateAO_Pitch(FRotator CurrentAimRotation, float DeltaTime);
 
 	UFUNCTION(Server, Reliable)
@@ -91,11 +91,16 @@ private:
 	UPROPERTY(Replicated)
 	FVector2D MovementInputVector;
 
+	FRotator LastAimRotation;
+
+	ETurnInPlace TurnInPlace;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	AWeapon* GetEquippedWeapon();
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
+	FORCEINLINE ETurnInPlace GetTurnInPlace() const { return TurnInPlace; }
 
 };

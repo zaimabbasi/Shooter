@@ -51,4 +51,6 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	bIsCrouched = ShooterCharacter->bIsCrouched;
 
+	TurnInPlace = ShooterCharacter->GetTurnInPlace();
+
 }
