@@ -22,7 +22,7 @@ AShooterCharacter::AShooterCharacter()
 	LegsMesh->SetCastShadow(false);
 
 	HandsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandsMesh"));
-	HandsMesh->SetupAttachment(GetRootComponent());
+	HandsMesh->SetupAttachment(GetMesh());
 	HandsMesh->SetCastShadow(false);
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
