@@ -12,7 +12,8 @@
 #include "Shooter/Components/InventoryComponent.h"
 #include "Shooter/Weapon/Weapon.h"
 
-AShooterCharacter::AShooterCharacter()
+AShooterCharacter::AShooterCharacter() : 
+	TurnInPlace(ETurnInPlace::TIP_None)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
@@ -36,8 +37,6 @@ AShooterCharacter::AShooterCharacter()
 	CombatComponent->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
-
-	TurnInPlace = ETurnInPlace::TIP_None;
 
 }
 
@@ -212,6 +211,47 @@ void AShooterCharacter::ToggleCrouchUncrouch(const FInputActionValue& Value)
 
 void AShooterCharacter::ControlMovement(float DeltaTime)
 {
+	CalculateAO_Yaw(DeltaTime);
+
+	if (AO_Yaw < -90.0f)
+	{
+		TurnInPlace = ETurnInPlace::TIP_Left;
+	}
+	else if (AO_Yaw > 90.0f)
+	{
+		TurnInPlace = ETurnInPlace::TIP_Right;
+	}
+
+	FRotator CurrentActorRotation = GetActorRotation();
+	if (TurnInPlace != ETurnInPlace::TIP_None)
+	{
+		float DeltaActorRotationYaw = UKismetMathLibrary::NormalizedDeltaRotator(CurrentActorRotation, LastActorRotation).Yaw;
+		LastAimRotation.Add(0.0, DeltaActorRotationYaw, 0.0);
+		AO_Yaw -= DeltaActorRotationYaw;
+		if (FMath::IsNearlyZero(DeltaActorRotationYaw))
+		{
+			if (!bIsTurningInPlace)
+			{
+				bIsTurningInPlace = true;
+			}
+			else
+			{
+				TurnInPlace = ETurnInPlace::TIP_None;
+			}
+		}
+	}
+	else
+	{
+		bIsTurningInPlace = false;
+	}
+	LastActorRotation = CurrentActorRotation;
+
+	CalculateAO_Pitch(DeltaTime);
+
+}
+
+void AShooterCharacter::CalculateAO_Yaw(float DeltaTime)
+{
 	FRotator CurrentAimRotation = IsLocallyControlled() ? GetControlRotation() : GetBaseAimRotation();
 	bool bIsMoving = MovementInputVector.Size() > 0.0 ? true : false;
 	if (bIsMoving)
@@ -235,34 +275,17 @@ void AShooterCharacter::ControlMovement(float DeltaTime)
 	{
 		AO_Yaw = RemoteViewYaw;
 	}
-
-	if (AO_Yaw < -90.0f)
-	{
-		TurnInPlace = ETurnInPlace::TIP_Left;
-	}
-	else if (AO_Yaw > 90.0f)
-	{
-		TurnInPlace = ETurnInPlace::TIP_Right;
-	}
-
-	if (TurnInPlace != ETurnInPlace::TIP_None)
-	{
-
-	}
-
-	CalculateAO_Pitch(CurrentAimRotation, DeltaTime);
-
 }
 
-void AShooterCharacter::CalculateAO_Pitch(FRotator CurrentAimRotation, float DeltaTime)
+void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
 {
 	if (IsLocallyControlled())
 	{
-		AO_Pitch = CurrentAimRotation.Pitch;
+		AO_Pitch = GetControlRotation().Pitch;
 	}
 	else
 	{
-		AO_Pitch = FMath::RInterpTo(FRotator(AO_Pitch, 0.0, 0.0), FRotator(CurrentAimRotation.Pitch, 0.0, 0.0), DeltaTime, 15.0f).Pitch;
+		AO_Pitch = FMath::RInterpTo(FRotator(AO_Pitch, 0.0, 0.0), FRotator(GetBaseAimRotation().Pitch, 0.0, 0.0), DeltaTime, 15.0f).Pitch;
 	}
 
 	if (AO_Pitch > 90.0f)

@@ -36,7 +36,8 @@ protected:
 	void EquipSecondaryWeapon(const FInputActionValue& Value);
 	void ToggleCrouchUncrouch(const FInputActionValue& Value);
 	void ControlMovement(float DeltaTime);
-	void CalculateAO_Pitch(FRotator CurrentAimRotation, float DeltaTime);
+	void CalculateAO_Yaw(float DeltaTime);
+	void CalculateAO_Pitch(float DeltaTime);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetRemoteViewYaw(float RemoteYaw);
@@ -92,8 +93,11 @@ private:
 	FVector2D MovementInputVector;
 
 	FRotator LastAimRotation;
+	FRotator LastActorRotation;
 
 	ETurnInPlace TurnInPlace;
+
+	bool bIsTurningInPlace;
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
