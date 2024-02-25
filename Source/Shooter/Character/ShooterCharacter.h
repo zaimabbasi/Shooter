@@ -36,7 +36,6 @@ protected:
 	void EquipSecondaryWeapon(const FInputActionValue& Value);
 	void ToggleCrouchUncrouch(const FInputActionValue& Value);
 	void ControlMovement(float DeltaTime);
-	void CalculateAO_Yaw(float DeltaTime);
 	void CalculateAO_Pitch(float DeltaTime);
 
 	UFUNCTION(Server, Reliable)
@@ -105,6 +104,7 @@ public:
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
+	FORCEINLINE bool IsMoving() const { return MovementInputVector.Size() > 0.0 ? true : false; }
 	FORCEINLINE ETurnInPlace GetTurnInPlace() const { return TurnInPlace; }
 
 };
