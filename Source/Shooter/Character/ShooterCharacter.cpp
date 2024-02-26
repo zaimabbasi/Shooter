@@ -60,7 +60,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AShooterCharacter::Move);
 		EnhancedInputComponent->BindAction(EquipPrimaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::EquipPrimaryWeapon);
 		EnhancedInputComponent->BindAction(EquipSecondaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::EquipSecondaryWeapon);
-		EnhancedInputComponent->BindAction(ToggleCrouchUnCrouchAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleCrouchUncrouch);
+		EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleCrouch);
+		EnhancedInputComponent->BindAction(ToggleSlowAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleSlow);
 	}
 
 }
@@ -71,6 +72,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME(AShooterCharacter, RemoteViewYaw);
 	DOREPLIFETIME(AShooterCharacter, MovementInputVector);
+	DOREPLIFETIME(AShooterCharacter, bIsSlow);
 
 }
 
@@ -157,6 +159,7 @@ void AShooterCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D CurrentValue = Value.Get<FVector2D>();
 
+	MovementInputVector.Set(CurrentValue.X, CurrentValue.Y);
 	Server_SetMovementInputVector(CurrentValue);
 
 }
@@ -195,7 +198,7 @@ void AShooterCharacter::EquipSecondaryWeapon(const FInputActionValue& Value)
 	}
 }
 
-void AShooterCharacter::ToggleCrouchUncrouch(const FInputActionValue& Value)
+void AShooterCharacter::ToggleCrouch(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue)
@@ -209,6 +212,14 @@ void AShooterCharacter::ToggleCrouchUncrouch(const FInputActionValue& Value)
 			Crouch();
 		}
 	}
+}
+
+void AShooterCharacter::ToggleSlow(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	
+	bIsSlow = CurrentValue;
+	Server_SetIsSlow(CurrentValue);
 }
 
 void AShooterCharacter::ControlMovement(float DeltaTime)
@@ -298,6 +309,11 @@ void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
 		FVector2D OutRange = FVector2D(-90.0, 0.0);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
+}
+
+void AShooterCharacter::Server_SetIsSlow_Implementation(bool bSlow)
+{
+	bIsSlow = bSlow;
 }
 
 void AShooterCharacter::Server_SetRemoteViewYaw_Implementation(float RemoteYaw)

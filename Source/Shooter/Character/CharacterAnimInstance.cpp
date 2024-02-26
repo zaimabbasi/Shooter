@@ -55,4 +55,6 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	TurnInPlace = ShooterCharacter->GetTurnInPlace();
 
+	bIsSlow = ShooterCharacter->GetIsSlow();
+
 }
