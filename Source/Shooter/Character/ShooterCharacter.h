@@ -32,6 +32,7 @@ protected:
 	virtual void BeginPlay() override;
 	void Look(const FInputActionValue& Value);
 	void Move(const FInputActionValue& Value);
+	void Jump(const FInputActionValue& Value);
 	void EquipPrimaryWeapon(const FInputActionValue& Value);
 	void EquipSecondaryWeapon(const FInputActionValue& Value);
 	void ToggleCrouch(const FInputActionValue& Value);
@@ -69,6 +70,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* JumpAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* EquipPrimaryWeaponAction;
