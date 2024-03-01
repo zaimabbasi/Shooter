@@ -32,7 +32,6 @@ protected:
 	virtual void BeginPlay() override;
 	void Look(const FInputActionValue& Value);
 	void Move(const FInputActionValue& Value);
-	void Jump(const FInputActionValue& Value);
 	void EquipPrimaryWeapon(const FInputActionValue& Value);
 	void EquipSecondaryWeapon(const FInputActionValue& Value);
 	void ToggleCrouch(const FInputActionValue& Value);
@@ -70,9 +69,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* EquipPrimaryWeaponAction;
@@ -114,12 +110,11 @@ private:
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
-	AWeapon* GetEquippedWeapon();
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
-	FORCEINLINE bool IsMoving() const { return MovementInputVector.Size() > 0.0 ? true : false; }
 	FORCEINLINE ETurnInPlace GetTurnInPlace() const { return TurnInPlace; }
 	FORCEINLINE bool GetIsSlow() const { return bIsSlow; }
+	AWeapon* GetEquippedWeapon();
 
 };
