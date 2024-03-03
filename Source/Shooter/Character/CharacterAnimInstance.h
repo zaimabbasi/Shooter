@@ -48,4 +48,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	bool bIsSlow;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	bool bIsSprinting;
+
 };

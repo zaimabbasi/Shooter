@@ -62,6 +62,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(EquipSecondaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::EquipSecondaryWeapon);
 		EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleCrouch);
 		EnhancedInputComponent->BindAction(ToggleSlowAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleSlow);
+		EnhancedInputComponent->BindAction(ToggleSprintAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleSprint);
 	}
 
 }
@@ -73,6 +74,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(AShooterCharacter, RemoteViewYaw);
 	DOREPLIFETIME(AShooterCharacter, MovementInputVector);
 	DOREPLIFETIME(AShooterCharacter, bIsSlow);
+	DOREPLIFETIME(AShooterCharacter, bIsSprinting);
 
 }
 
@@ -217,9 +219,21 @@ void AShooterCharacter::ToggleCrouch(const FInputActionValue& Value)
 void AShooterCharacter::ToggleSlow(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue)
+	{
+		const bool bSlow = !bIsSlow;
+		bIsSlow = bSlow;
+		Server_SetIsSlow(bSlow);
+	}
 	
-	bIsSlow = CurrentValue;
-	Server_SetIsSlow(CurrentValue);
+}
+
+void AShooterCharacter::ToggleSprint(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	
+	bIsSprinting = CurrentValue;
+	Server_SetIsSprinting(CurrentValue);
 }
 
 void AShooterCharacter::ControlMovement(float DeltaTime)
@@ -310,6 +324,11 @@ void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
 		FVector2D OutRange = FVector2D(-90.0, 0.0);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
+}
+
+void AShooterCharacter::Server_SetIsSprinting_Implementation(bool bSprinting)
+{
+	bIsSprinting = bSprinting;
 }
 
 void AShooterCharacter::Server_SetIsSlow_Implementation(bool bSlow)

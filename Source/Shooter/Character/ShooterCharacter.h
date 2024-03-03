@@ -36,6 +36,7 @@ protected:
 	void EquipSecondaryWeapon(const FInputActionValue& Value);
 	void ToggleCrouch(const FInputActionValue& Value);
 	void ToggleSlow(const FInputActionValue& Value);
+	void ToggleSprint(const FInputActionValue& Value);
 	void ControlMovement(float DeltaTime);
 	void CalculateAO_Pitch(float DeltaTime);
 
@@ -47,6 +48,9 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetIsSlow(bool bSlow);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetIsSprinting(bool bSprinting);
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
@@ -82,6 +86,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* ToggleSlowAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* ToggleSprintAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	UCharacterDataAsset* CharacterDataAsset;
 
@@ -108,6 +115,9 @@ private:
 	UPROPERTY(Replicated)
 	bool bIsSlow;
 
+	UPROPERTY(Replicated)
+	bool bIsSprinting;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
@@ -115,6 +125,7 @@ public:
 	FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
 	FORCEINLINE ETurnInPlace GetTurnInPlace() const { return TurnInPlace; }
 	FORCEINLINE bool GetIsSlow() const { return bIsSlow; }
+	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
 	AWeapon* GetEquippedWeapon();
 
 };

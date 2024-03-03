@@ -55,4 +55,6 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	bIsSlow = ShooterCharacter->GetIsSlow();
 
+	bIsSprinting = ShooterCharacter->GetIsSprinting();
+
 }
