@@ -13,7 +13,8 @@
 #include "Shooter/Weapon/Weapon.h"
 
 AShooterCharacter::AShooterCharacter() : 
-	TurnInPlace(ETurnInPlace::TIP_None)
+	TurnDirection(ETurnDirection::TD_None),
+	LeanDirection(ELeanDirection::LD_None)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
@@ -63,6 +64,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleCrouch);
 		EnhancedInputComponent->BindAction(ToggleSlowAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleSlow);
 		EnhancedInputComponent->BindAction(ToggleSprintAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleSprint);
+		EnhancedInputComponent->BindAction(ToggleLeanLeftAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleLeanLeft);
+		EnhancedInputComponent->BindAction(ToggleLeanRightAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleLeanRight);
 	}
 
 }
@@ -75,6 +78,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(AShooterCharacter, MovementInputVector);
 	DOREPLIFETIME(AShooterCharacter, bIsSlow);
 	DOREPLIFETIME(AShooterCharacter, bIsSprinting);
+	DOREPLIFETIME(AShooterCharacter, LeanDirection);
 
 }
 
@@ -236,13 +240,43 @@ void AShooterCharacter::ToggleSprint(const FInputActionValue& Value)
 	Server_SetIsSprinting(CurrentValue);
 }
 
+void AShooterCharacter::ToggleLeanLeft(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue)
+	{
+		ELeanDirection Direction = ELeanDirection::LD_Left;
+		if (LeanDirection == ELeanDirection::LD_Left)
+		{
+			Direction = ELeanDirection::LD_None;
+		}
+		LeanDirection = Direction;
+		Server_SetLeanDirection(Direction);
+	}
+}
+
+void AShooterCharacter::ToggleLeanRight(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue)
+	{
+		ELeanDirection Direction = ELeanDirection::LD_Right;
+		if (LeanDirection == ELeanDirection::LD_Right)
+		{
+			Direction = ELeanDirection::LD_None;
+		}
+		LeanDirection = Direction;
+		Server_SetLeanDirection(Direction);
+	}
+}
+
 void AShooterCharacter::ControlMovement(float DeltaTime)
 {
 	FRotator CurrentAimRotation = IsLocallyControlled() ? GetControlRotation() : GetBaseAimRotation();
 	bool bInputMove = MovementInputVector.Size() > 0.0 ? true : false;
 	if (bInputMove)
 	{
-		TurnInPlace = ETurnInPlace::TIP_None;
+		TurnDirection = ETurnDirection::TD_None;
 	}
 
 	AO_Yaw = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, CurrentAimRotation.Yaw, 0.0), FRotator(0.0, LastAimRotation.Yaw, 0.0)).Yaw;
@@ -259,33 +293,33 @@ void AShooterCharacter::ControlMovement(float DeltaTime)
 
 	if (AO_Yaw < -90.0f)
 	{
-		TurnInPlace = ETurnInPlace::TIP_Left;
+		TurnDirection = ETurnDirection::TD_Left;
 	}
 	else if (AO_Yaw > 90.0f)
 	{
-		TurnInPlace = ETurnInPlace::TIP_Right;
+		TurnDirection = ETurnDirection::TD_Right;
 	}
 
-	if (TurnInPlace != ETurnInPlace::TIP_None)
+	if (TurnDirection != ETurnDirection::TD_None)
 	{
 		float DeltaActorRotationYaw = UKismetMathLibrary::NormalizedDeltaRotator(GetActorRotation(), LastActorRotation).Yaw;
 		LastAimRotation.Add(0.0, DeltaActorRotationYaw, 0.0);
 		AO_Yaw -= DeltaActorRotationYaw;
 		if (FMath::IsNearlyZero(DeltaActorRotationYaw))
 		{
-			if (!bIsTurningInPlace)
+			if (!bIsTurning)
 			{
-				bIsTurningInPlace = true;
+				bIsTurning = true;
 			}
 			else
 			{
-				TurnInPlace = ETurnInPlace::TIP_None;
+				TurnDirection = ETurnDirection::TD_None;
 			}
 		}
 	}
 	else
 	{
-		bIsTurningInPlace = false;
+		bIsTurning = false;
 	}
 
 	if (bInputMove)
@@ -324,6 +358,11 @@ void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
 		FVector2D OutRange = FVector2D(-90.0, 0.0);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
+}
+
+void AShooterCharacter::Server_SetLeanDirection_Implementation(ELeanDirection Direction)
+{
+	LeanDirection = Direction;
 }
 
 void AShooterCharacter::Server_SetIsSprinting_Implementation(bool bSprinting)

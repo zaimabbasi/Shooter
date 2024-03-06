@@ -5,7 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
-#include "Shooter/Types/TurnInPlace.h"
+#include "Shooter/Types/LeanDirection.h"
+#include "Shooter/Types/TurnDirection.h"
 #include "ShooterCharacter.generated.h"
 
 class AWeapon;
@@ -37,6 +38,8 @@ protected:
 	void ToggleCrouch(const FInputActionValue& Value);
 	void ToggleSlow(const FInputActionValue& Value);
 	void ToggleSprint(const FInputActionValue& Value);
+	void ToggleLeanLeft(const FInputActionValue& Value);
+	void ToggleLeanRight(const FInputActionValue& Value);
 	void ControlMovement(float DeltaTime);
 	void CalculateAO_Pitch(float DeltaTime);
 
@@ -51,6 +54,9 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetIsSprinting(bool bSprinting);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetLeanDirection(ELeanDirection Direction);
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
@@ -89,6 +95,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* ToggleSprintAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* ToggleLeanLeftAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* ToggleLeanRightAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	UCharacterDataAsset* CharacterDataAsset;
 
@@ -108,9 +120,9 @@ private:
 	FRotator LastAimRotation;
 	FRotator LastActorRotation;
 
-	ETurnInPlace TurnInPlace;
+	ETurnDirection TurnDirection;
 
-	bool bIsTurningInPlace;
+	bool bIsTurning;
 
 	UPROPERTY(Replicated)
 	bool bIsSlow;
@@ -118,14 +130,18 @@ private:
 	UPROPERTY(Replicated)
 	bool bIsSprinting;
 
+	UPROPERTY(Replicated)
+	ELeanDirection LeanDirection;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
-	FORCEINLINE ETurnInPlace GetTurnInPlace() const { return TurnInPlace; }
+	FORCEINLINE ETurnDirection GetTurnDirection() const { return TurnDirection; }
 	FORCEINLINE bool GetIsSlow() const { return bIsSlow; }
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
+	FORCEINLINE ELeanDirection GetLeanDirection() const { return LeanDirection; }
 	AWeapon* GetEquippedWeapon();
 
 };

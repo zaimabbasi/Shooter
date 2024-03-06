@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "Shooter/Types/TurnInPlace.h"
+#include "Shooter/Types/LeanDirection.h"
+#include "Shooter/Types/TurnDirection.h"
 #include "CharacterAnimInstance.generated.h"
 
 class AShooterCharacter;
@@ -43,12 +44,15 @@ private:
 	bool bIsCrouched;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	ETurnInPlace TurnInPlace;
+	ETurnDirection TurnDirection;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	bool bIsSlow;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	bool bIsSprinting;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	ELeanDirection LeanDirection;
 
 };

@@ -51,10 +51,12 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	bIsCrouched = ShooterCharacter->bIsCrouched;
 
-	TurnInPlace = ShooterCharacter->GetTurnInPlace();
+	TurnDirection = ShooterCharacter->GetTurnDirection();
 
 	bIsSlow = ShooterCharacter->GetIsSlow();
 
 	bIsSprinting = ShooterCharacter->GetIsSprinting();
+
+	LeanDirection = ShooterCharacter->GetLeanDirection();
 
 }
