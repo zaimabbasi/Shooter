@@ -79,6 +79,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(AShooterCharacter, bIsSlow);
 	DOREPLIFETIME(AShooterCharacter, bIsSprinting);
 	DOREPLIFETIME(AShooterCharacter, LeanDirection);
+	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
 
 }
 
@@ -245,13 +246,21 @@ void AShooterCharacter::ToggleLeanLeft(const FInputActionValue& Value)
 	const bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue)
 	{
-		ELeanDirection Direction = ELeanDirection::LD_Left;
+		ELeanDirection NewLeanDirection = ELeanDirection::LD_Left;
+		float TransitionDuration = DefaultAnimationTransitionDuration;
 		if (LeanDirection == ELeanDirection::LD_Left)
 		{
-			Direction = ELeanDirection::LD_None;
+			NewLeanDirection = ELeanDirection::LD_None;
 		}
-		LeanDirection = Direction;
-		Server_SetLeanDirection(Direction);
+		else if (LeanDirection == ELeanDirection::LD_Right)
+		{
+			TransitionDuration = DefaultAnimationTransitionDuration * 1.5f;;
+		}
+		LeanDirection = NewLeanDirection;
+		Server_SetLeanDirection(NewLeanDirection);
+
+		LeanTransitionDuration = TransitionDuration;
+		Server_SetLeanTransitionDuration(TransitionDuration);
 	}
 }
 
@@ -260,13 +269,21 @@ void AShooterCharacter::ToggleLeanRight(const FInputActionValue& Value)
 	const bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue)
 	{
-		ELeanDirection Direction = ELeanDirection::LD_Right;
+		ELeanDirection NewLeanDirection = ELeanDirection::LD_Right;
+		float TransitionDuration = DefaultAnimationTransitionDuration;
 		if (LeanDirection == ELeanDirection::LD_Right)
 		{
-			Direction = ELeanDirection::LD_None;
+			NewLeanDirection = ELeanDirection::LD_None;
 		}
-		LeanDirection = Direction;
-		Server_SetLeanDirection(Direction);
+		else if (LeanDirection == ELeanDirection::LD_Left)
+		{
+			TransitionDuration = DefaultAnimationTransitionDuration * 1.5f;
+		}
+		LeanDirection = NewLeanDirection;
+		Server_SetLeanDirection(NewLeanDirection);
+
+		LeanTransitionDuration = TransitionDuration;
+		Server_SetLeanTransitionDuration(TransitionDuration);
 	}
 }
 
@@ -360,9 +377,14 @@ void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
 	}
 }
 
-void AShooterCharacter::Server_SetLeanDirection_Implementation(ELeanDirection Direction)
+void AShooterCharacter::Server_SetLeanTransitionDuration_Implementation(float TransitionDuration)
 {
-	LeanDirection = Direction;
+	LeanTransitionDuration = TransitionDuration;
+}
+
+void AShooterCharacter::Server_SetLeanDirection_Implementation(ELeanDirection NewLeanDirection)
+{
+	LeanDirection = NewLeanDirection;
 }
 
 void AShooterCharacter::Server_SetIsSprinting_Implementation(bool bSprinting)

@@ -59,4 +59,8 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	LeanDirection = ShooterCharacter->GetLeanDirection();
 
+	LeanTransitionDuration = ShooterCharacter->GetLeanTransitionDuration();
+
+	AnimationTransitionDuration = ShooterCharacter->DefaultAnimationTransitionDuration;
+
 }
