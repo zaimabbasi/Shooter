@@ -43,6 +43,7 @@ protected:
 	void ToggleSprint(const FInputActionValue& Value);
 	void ToggleLeanLeft(const FInputActionValue& Value);
 	void ToggleLeanRight(const FInputActionValue& Value);
+	void ToggleAim(const FInputActionValue& Value);
 	void ControlMovement(float DeltaTime);
 	void CalculateAO_Pitch(float DeltaTime);
 
@@ -84,6 +85,9 @@ private:
 	UInputMappingContext* InventoryMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputMappingContext* CombatMappingContext;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
@@ -109,6 +113,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* ToggleLeanRightAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* ToggleAimAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	UCharacterDataAsset* CharacterDataAsset;

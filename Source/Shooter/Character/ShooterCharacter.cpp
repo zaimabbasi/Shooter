@@ -66,6 +66,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(ToggleSprintAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleSprint);
 		EnhancedInputComponent->BindAction(ToggleLeanLeftAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleLeanLeft);
 		EnhancedInputComponent->BindAction(ToggleLeanRightAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleLeanRight);
+		EnhancedInputComponent->BindAction(ToggleAimAction, ETriggerEvent::Triggered, this, &AShooterCharacter::ToggleAim);
 	}
 
 }
@@ -112,6 +113,7 @@ void AShooterCharacter::BeginPlay()
 		{
 			EnhancedInputLocalPlayerSubsystem->AddMappingContext(MovementMappingContext, 0);
 			EnhancedInputLocalPlayerSubsystem->AddMappingContext(InventoryMappingContext, 0);
+			EnhancedInputLocalPlayerSubsystem->AddMappingContext(CombatMappingContext, 0);
 		}
 	}
 	
@@ -297,6 +299,19 @@ void AShooterCharacter::ToggleLeanRight(const FInputActionValue& Value)
 		const float Rate = MaxLeanRotation / LeanTransitionDuration;
 		LeaningRate = Rate;
 		Server_SetLeaningRate(Rate);
+	}
+}
+
+void AShooterCharacter::ToggleAim(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Aim: true"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Aim: false"));
 	}
 }
 
