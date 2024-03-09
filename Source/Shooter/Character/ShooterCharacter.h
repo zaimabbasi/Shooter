@@ -29,7 +29,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 
-	const float DefaultAnimationTransitionDuration = 0.2f;
+	const float DefaultAnimationTransitionDuration = 0.25f;
+	const float MaxLean = 15.0f;
 
 protected:
 	virtual void BeginPlay() override;
@@ -62,6 +63,9 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetLeanTransitionDuration(float TransitionDuration);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetLeaningRate(float Rate);
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
@@ -141,6 +145,9 @@ private:
 	UPROPERTY(Replicated)
 	float LeanTransitionDuration;
 
+	UPROPERTY(Replicated)
+	float LeaningRate;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
@@ -151,6 +158,7 @@ public:
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
 	FORCEINLINE ELeanDirection GetLeanDirection() const { return LeanDirection; }
 	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }
+	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
 	AWeapon* GetEquippedWeapon();
 
 };

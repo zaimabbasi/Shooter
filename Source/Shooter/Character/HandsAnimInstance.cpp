@@ -3,6 +3,7 @@
 
 #include "HandsAnimInstance.h"
 #include "Shooter/Data/WeaponDataAsset.h"
+#include "Shooter/Types/LeanDirection.h"
 #include "Shooter/Weapon/Weapon.h"
 #include "ShooterCharacter.h"
 
@@ -47,4 +48,29 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	AO_Yaw = ShooterCharacter->GetAO_Yaw();
 	AO_Pitch = ShooterCharacter->GetAO_Pitch();
 
+	ELeanDirection LeanDirection = ShooterCharacter->GetLeanDirection();
+	float TargetLean = 0.0f;
+	if (LeanDirection == ELeanDirection::LD_Left)
+	{
+		TargetLean = -ShooterCharacter->MaxLean;
+	}
+	else if (LeanDirection == ELeanDirection::LD_Right)
+	{
+		TargetLean = ShooterCharacter->MaxLean;
+	}
+	float DeltaLean = TargetLean - Lean;
+	float LeanStep = ShooterCharacter->GetLeaningRate() * DeltaSeconds;
+	if (FMath::Abs(DeltaLean) < LeanStep)
+	{
+		Lean = TargetLean;
+	}
+	else
+	{
+		if (DeltaLean < 0.0f)
+		{
+			LeanStep = -LeanStep;
+		}
+		Lean += LeanStep;
+	}
+	
 }

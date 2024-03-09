@@ -80,6 +80,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(AShooterCharacter, bIsSprinting);
 	DOREPLIFETIME(AShooterCharacter, LeanDirection);
 	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
+	DOREPLIFETIME(AShooterCharacter, LeaningRate);
 
 }
 
@@ -248,19 +249,25 @@ void AShooterCharacter::ToggleLeanLeft(const FInputActionValue& Value)
 	{
 		ELeanDirection NewLeanDirection = ELeanDirection::LD_Left;
 		float TransitionDuration = DefaultAnimationTransitionDuration;
+		float MaxLeanRotation = MaxLean;
 		if (LeanDirection == ELeanDirection::LD_Left)
 		{
 			NewLeanDirection = ELeanDirection::LD_None;
 		}
 		else if (LeanDirection == ELeanDirection::LD_Right)
 		{
-			TransitionDuration = DefaultAnimationTransitionDuration * 1.5f;;
+			TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
+			MaxLeanRotation = MaxLean * 2.0f;
 		}
 		LeanDirection = NewLeanDirection;
 		Server_SetLeanDirection(NewLeanDirection);
 
 		LeanTransitionDuration = TransitionDuration;
 		Server_SetLeanTransitionDuration(TransitionDuration);
+
+		const float Rate = MaxLeanRotation / LeanTransitionDuration;
+		LeaningRate = Rate;
+		Server_SetLeaningRate(Rate);
 	}
 }
 
@@ -271,19 +278,25 @@ void AShooterCharacter::ToggleLeanRight(const FInputActionValue& Value)
 	{
 		ELeanDirection NewLeanDirection = ELeanDirection::LD_Right;
 		float TransitionDuration = DefaultAnimationTransitionDuration;
+		float MaxLeanRotation = MaxLean;
 		if (LeanDirection == ELeanDirection::LD_Right)
 		{
 			NewLeanDirection = ELeanDirection::LD_None;
 		}
 		else if (LeanDirection == ELeanDirection::LD_Left)
 		{
-			TransitionDuration = DefaultAnimationTransitionDuration * 1.5f;
+			TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
+			MaxLeanRotation = MaxLean * 2.0f;
 		}
 		LeanDirection = NewLeanDirection;
 		Server_SetLeanDirection(NewLeanDirection);
 
 		LeanTransitionDuration = TransitionDuration;
 		Server_SetLeanTransitionDuration(TransitionDuration);
+
+		const float Rate = MaxLeanRotation / LeanTransitionDuration;
+		LeaningRate = Rate;
+		Server_SetLeaningRate(Rate);
 	}
 }
 
@@ -377,24 +390,9 @@ void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
 	}
 }
 
-void AShooterCharacter::Server_SetLeanTransitionDuration_Implementation(float TransitionDuration)
+void AShooterCharacter::Server_SetMovementInputVector_Implementation(FVector2D MovementInput)
 {
-	LeanTransitionDuration = TransitionDuration;
-}
-
-void AShooterCharacter::Server_SetLeanDirection_Implementation(ELeanDirection NewLeanDirection)
-{
-	LeanDirection = NewLeanDirection;
-}
-
-void AShooterCharacter::Server_SetIsSprinting_Implementation(bool bSprinting)
-{
-	bIsSprinting = bSprinting;
-}
-
-void AShooterCharacter::Server_SetIsSlow_Implementation(bool bSlow)
-{
-	bIsSlow = bSlow;
+	MovementInputVector.Set(MovementInput.X, MovementInput.Y);
 }
 
 void AShooterCharacter::Server_SetRemoteViewYaw_Implementation(float RemoteYaw)
@@ -402,9 +400,29 @@ void AShooterCharacter::Server_SetRemoteViewYaw_Implementation(float RemoteYaw)
 	RemoteViewYaw = RemoteYaw;
 }
 
-void AShooterCharacter::Server_SetMovementInputVector_Implementation(FVector2D MovementInput)
+void AShooterCharacter::Server_SetIsSlow_Implementation(bool bSlow)
 {
-	MovementInputVector.Set(MovementInput.X, MovementInput.Y);
+	bIsSlow = bSlow;
+}
+
+void AShooterCharacter::Server_SetIsSprinting_Implementation(bool bSprinting)
+{
+	bIsSprinting = bSprinting;
+}
+
+void AShooterCharacter::Server_SetLeanDirection_Implementation(ELeanDirection NewLeanDirection)
+{
+	LeanDirection = NewLeanDirection;
+}
+
+void AShooterCharacter::Server_SetLeanTransitionDuration_Implementation(float TransitionDuration)
+{
+	LeanTransitionDuration = TransitionDuration;
+}
+
+void AShooterCharacter::Server_SetLeaningRate_Implementation(float Rate)
+{
+	LeaningRate = Rate;
 }
 
 AWeapon* AShooterCharacter::GetEquippedWeapon()
