@@ -27,10 +27,18 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_SetEquippedWeapon(AWeapon* WeaponToEquip);
 
+	void SetIsAiming(bool bAiming);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetIsAiming(bool bAiming);
+
 private:
 	AShooterCharacter* OwningCharacter;
 
 	UPROPERTY(Replicated)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(Replicated)
+	bool bIsAiming;
 
 };

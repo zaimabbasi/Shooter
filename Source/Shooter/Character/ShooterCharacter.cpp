@@ -305,13 +305,10 @@ void AShooterCharacter::ToggleLeanRight(const FInputActionValue& Value)
 void AShooterCharacter::ToggleAim(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue)
+
+	if (CombatComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Aim: true"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Aim: false"));
+		CombatComponent->SetIsAiming(CurrentValue);
 	}
 }
 
