@@ -48,5 +48,6 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	FORCEINLINE UHandsAnimationDataAsset* GetHandsAnimationDataAsset() const { return HandsAnimationDataAsset; }
 	FORCEINLINE UWeaponAnimationDataAsset* GetWeaponAnimationDataAsset() const { return WeaponAnimationDataAsset; }
-
+	USkeletalMeshComponent* GetAimCameraSocketParentMesh();
+	FName GetAimCameraSocketName();
 };

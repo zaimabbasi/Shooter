@@ -63,3 +63,21 @@ void AWeapon::BeginPlay()
 
 }
 
+USkeletalMeshComponent* AWeapon::GetAimCameraSocketParentMesh()
+{
+	if (ModComponent == nullptr)
+	{
+		return nullptr;
+	}
+	return ModComponent->AimCameraSocketParentMesh;
+}
+
+FName AWeapon::GetAimCameraSocketName()
+{
+	if (ModComponent == nullptr)
+	{
+		return NAME_None;
+	}
+	return ModComponent->AimCameraSocketName;
+}
+

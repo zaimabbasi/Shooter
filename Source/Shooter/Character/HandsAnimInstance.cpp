@@ -72,5 +72,7 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		}
 		Lean += LeanStep;
 	}
+
+	InterpAimCameraSocketLocation = ShooterCharacter->GetInterpAimCameraSocketLocation();
 	
 }

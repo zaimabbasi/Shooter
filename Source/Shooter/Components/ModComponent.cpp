@@ -52,6 +52,9 @@ void UModComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(UModComponent, SightRear);
 	DOREPLIFETIME(UModComponent, Stock);
 	//DOREPLIFETIME(UModComponent, Tactical);
+
+	DOREPLIFETIME(UModComponent, AimCameraSocketParentMesh);
+	DOREPLIFETIME(UModComponent, AimCameraSocketName);
 }
 
 void UModComponent::BeginPlay()
@@ -138,11 +141,12 @@ void UModComponent::BeginPlay()
 				Tactical->SetOwner(OwningWeapon);
 			}*/
 		}
-		if (Barrel)
+
+		if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
 		{
-			FName BarrelSocketName = TEXT("mod_barrelSocket");
-			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
+			if (Barrel)
 			{
+				FName BarrelSocketName = TEXT("mod_barrelSocket");
 				if (WeaponMesh->DoesSocketExist(BarrelSocketName))
 				{
 					if (const USkeletalMeshSocket* BarrelSocket = WeaponMesh->GetSocketByName(BarrelSocketName))
@@ -151,12 +155,9 @@ void UModComponent::BeginPlay()
 					}
 				}
 			}
-		}
-		if (GasBlock)
-		{
-			FName GasBlockSocketName = TEXT("mod_gas_blockSocket");
-			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
+			if (GasBlock)
 			{
+				FName GasBlockSocketName = TEXT("mod_gas_blockSocket");
 				if (WeaponMesh->DoesSocketExist(GasBlockSocketName))
 				{
 					if (const USkeletalMeshSocket* GasBlockSocket = WeaponMesh->GetSocketByName(GasBlockSocketName))
@@ -165,12 +166,9 @@ void UModComponent::BeginPlay()
 					}
 				}
 			}
-		}
-		if (Handguard)
-		{
-			FName HandguardSocketName = TEXT("mod_handguardSocket");
-			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
+			if (Handguard)
 			{
+				FName HandguardSocketName = TEXT("mod_handguardSocket");
 				if (WeaponMesh->DoesSocketExist(HandguardSocketName))
 				{
 					if (const USkeletalMeshSocket* HandguardSocket = WeaponMesh->GetSocketByName(HandguardSocketName))
@@ -179,12 +177,9 @@ void UModComponent::BeginPlay()
 					}
 				}
 			}
-		}
-		if (Mag)
-		{
-			FName MagSocketName = TEXT("mod_magazineSocket");
-			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
+			if (Mag)
 			{
+				FName MagSocketName = TEXT("mod_magazineSocket");
 				if (WeaponMesh->DoesSocketExist(MagSocketName))
 				{
 					if (const USkeletalMeshSocket* MagSocket = WeaponMesh->GetSocketByName(MagSocketName))
@@ -193,12 +188,9 @@ void UModComponent::BeginPlay()
 					}
 				}
 			}
-		}
-		if (Muzzle)
-		{
-			FName MuzzleSocketName = TEXT("mod_muzzleSocket");
-			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
+			if (Muzzle)
 			{
+				FName MuzzleSocketName = TEXT("mod_muzzleSocket");
 				if (WeaponMesh->DoesSocketExist(MuzzleSocketName))
 				{
 					if (const USkeletalMeshSocket* MuzzleSocket = WeaponMesh->GetSocketByName(MuzzleSocketName))
@@ -207,12 +199,9 @@ void UModComponent::BeginPlay()
 					}
 				}
 			}
-		}
-		if (Pistolgrip)
-		{
-			FName PistolgripSocketName = TEXT("mod_pistol_gripSocket");
-			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
+			if (Pistolgrip)
 			{
+				FName PistolgripSocketName = TEXT("mod_pistol_gripSocket");
 				if (WeaponMesh->DoesSocketExist(PistolgripSocketName))
 				{
 					if (const USkeletalMeshSocket* PistolgripSocket = WeaponMesh->GetSocketByName(PistolgripSocketName))
@@ -221,12 +210,9 @@ void UModComponent::BeginPlay()
 					}
 				}
 			}
-		}
-		if (Reciever)
-		{
-			FName RecieverSocketName = TEXT("mod_recieverSocket");
-			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
+			if (Reciever)
 			{
+				FName RecieverSocketName = TEXT("mod_recieverSocket");
 				if (WeaponMesh->DoesSocketExist(RecieverSocketName))
 				{
 					if (const USkeletalMeshSocket* RecieverSocket = WeaponMesh->GetSocketByName(RecieverSocketName))
@@ -235,12 +221,9 @@ void UModComponent::BeginPlay()
 					}
 				}
 			}
-		}
-		if (SightFront)
-		{
-			FName SightFrontSocketName = TEXT("mod_sight_frontSocket");
-			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
+			if (SightFront)
 			{
+				FName SightFrontSocketName = TEXT("mod_sight_frontSocket");
 				if (WeaponMesh->DoesSocketExist(SightFrontSocketName))
 				{
 					if (const USkeletalMeshSocket* SightFrontSocket = WeaponMesh->GetSocketByName(SightFrontSocketName))
@@ -259,12 +242,9 @@ void UModComponent::BeginPlay()
 					}
 				}
 			}
-		}
-		if (SightRear)
-		{
-			FName SightRearSocketName = TEXT("mod_sight_rearSocket");
-			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
+			if (SightRear)
 			{
+				FName SightRearSocketName = TEXT("mod_sight_rearSocket");
 				if (WeaponMesh->DoesSocketExist(SightRearSocketName))
 				{
 					if (const USkeletalMeshSocket* SightRearSocket = WeaponMesh->GetSocketByName(SightRearSocketName))
@@ -283,18 +263,35 @@ void UModComponent::BeginPlay()
 					}
 				}
 			}
-		}
-		if (Stock)
-		{
-			FName StockSocketName = TEXT("mod_stockSocket");
-			if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
+			if (Stock)
 			{
+				FName StockSocketName = TEXT("mod_stockSocket");
 				if (WeaponMesh->DoesSocketExist(StockSocketName))
 				{
 					if (const USkeletalMeshSocket* StockSocket = WeaponMesh->GetSocketByName(StockSocketName))
 					{
 						StockSocket->AttachActor(Stock, WeaponMesh);
 					}
+				}
+			}
+		}
+		
+		if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
+		{
+			if (WeaponMesh->DoesSocketExist(TEXT("aim_camera")))
+			{
+				AimCameraSocketParentMesh = WeaponMesh;
+				AimCameraSocketName = TEXT("aim_camera");
+			}
+		}
+		if (SightRear)
+		{
+			if (USkeletalMeshComponent* SightRearMesh = SightRear->GetMesh())
+			{
+				if (SightRearMesh->DoesSocketExist(TEXT("mod_aim_camera")))
+				{
+					AimCameraSocketParentMesh = SightRearMesh;
+					AimCameraSocketName = TEXT("mod_aim_camera");
 				}
 			}
 		}

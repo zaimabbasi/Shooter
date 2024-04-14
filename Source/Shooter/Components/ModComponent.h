@@ -89,4 +89,10 @@ private:
 	/*UPROPERTY(Replicated)
 	ATactical* Tactical;*/
 
+	UPROPERTY(Replicated)
+	USkeletalMeshComponent* AimCameraSocketParentMesh;
+
+	UPROPERTY(Replicated)
+	FName AimCameraSocketName;
+
 };

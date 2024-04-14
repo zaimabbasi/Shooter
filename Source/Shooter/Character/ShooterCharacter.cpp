@@ -49,6 +49,8 @@ void AShooterCharacter::Tick(float DeltaTime)
 
 	ControlMovement(DeltaTime);
 
+	CalculateInterpAimCameraSocketLocation(DeltaTime);
+
 }
 
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -402,6 +404,32 @@ void AShooterCharacter::CalculateAO_Pitch(float DeltaTime)
 	}
 }
 
+void AShooterCharacter::CalculateInterpAimCameraSocketLocation(float DeltaTime)
+{
+	FVector AimCameraSocketLocation = GetAimCameraSocketTransform().GetLocation();
+	bool bIsAiming = GetIsAiming();
+	float AimSpeed = 10.0f;
+	FVector AimStep = FVector::ZeroVector;
+	if (bIsAiming)
+	{
+		AimStep = AimCameraSocketLocation * AimSpeed * DeltaTime;
+		if (AimCameraSocketLocation.Size() < AimStep.Size())
+		{
+			AimStep = AimCameraSocketLocation;
+		}
+		InterpAimCameraSocketLocation += AimStep;
+	}
+	else
+	{
+		AimStep = InterpAimCameraSocketLocation * AimSpeed * DeltaTime;
+		if (InterpAimCameraSocketLocation.Size() < AimStep.Size())
+		{
+			AimStep = InterpAimCameraSocketLocation;
+		}
+		InterpAimCameraSocketLocation -= AimStep;
+	}
+}
+
 void AShooterCharacter::Server_SetMovementInputVector_Implementation(FVector2D MovementInput)
 {
 	MovementInputVector.Set(MovementInput.X, MovementInput.Y);
@@ -444,4 +472,22 @@ AWeapon* AShooterCharacter::GetEquippedWeapon()
 		return nullptr;
 	}
 	return CombatComponent->EquippedWeapon;
+}
+
+bool AShooterCharacter::GetIsAiming()
+{
+	if (CombatComponent == nullptr)
+	{
+		return false;
+	}
+	return CombatComponent->bIsAiming;
+}
+
+FTransform AShooterCharacter::GetAimCameraSocketTransform()
+{
+	if (CombatComponent == nullptr)
+	{
+		return FTransform();
+	}
+	return CombatComponent->AimCameraSocketTransform;
 }

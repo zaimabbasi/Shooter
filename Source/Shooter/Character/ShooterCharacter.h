@@ -46,6 +46,7 @@ protected:
 	void ToggleAim(const FInputActionValue& Value);
 	void ControlMovement(float DeltaTime);
 	void CalculateAO_Pitch(float DeltaTime);
+	void CalculateInterpAimCameraSocketLocation(float DeltaTime);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetRemoteViewYaw(float RemoteYaw);
@@ -155,6 +156,8 @@ private:
 	UPROPERTY(Replicated)
 	float LeaningRate;
 
+	FVector InterpAimCameraSocketLocation;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
@@ -166,6 +169,9 @@ public:
 	FORCEINLINE ELeanDirection GetLeanDirection() const { return LeanDirection; }
 	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }
 	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
+	FORCEINLINE FVector GetInterpAimCameraSocketLocation() const { return InterpAimCameraSocketLocation; }
 	AWeapon* GetEquippedWeapon();
+	bool GetIsAiming();
+	FTransform GetAimCameraSocketTransform();
 
 };
