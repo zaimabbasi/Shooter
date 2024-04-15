@@ -39,10 +39,14 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh();
 	if (CharacterMesh && HandsMesh)
 	{
-		FTransform CharacterWeaponRootTransform = CharacterMesh->GetSocketTransform(TEXT("Weapon_root"), ERelativeTransformSpace::RTS_Component);
+		// Note: Maybe no longer required because of problems (Try sprinting character with this code)
+		/*FTransform CharacterWeaponRootTransform = CharacterMesh->GetSocketTransform(TEXT("Weapon_root"), ERelativeTransformSpace::RTS_Component);
 		FTransform HandsWeaponRootTransform = HandsMesh->GetSocketTransform(TEXT("Weapon_root"), ERelativeTransformSpace::RTS_Component);
 		FTransform DeltaWeaponRootTransform = HandsWeaponRootTransform.GetRelativeTransformReverse(CharacterWeaponRootTransform);
-		HandsMesh->SetRelativeLocation(DeltaWeaponRootTransform.GetLocation());
+		HandsMesh->SetRelativeLocation(DeltaWeaponRootTransform.GetLocation());*/
+
+		FTransform CharacterBaseHumanRibcageTransform = CharacterMesh->GetSocketTransform(TEXT("Base-HumanRibcage"), ERelativeTransformSpace::RTS_Component);
+		HandsMesh->SetRelativeLocation(CharacterBaseHumanRibcageTransform.GetLocation());
 	}
 
 	AO_Yaw = ShooterCharacter->GetAO_Yaw();
