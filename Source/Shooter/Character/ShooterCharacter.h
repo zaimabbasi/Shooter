@@ -32,6 +32,8 @@ public:
 	const float DefaultAnimationTransitionDuration = 0.25f;
 	const float MaxLean = 15.0f;
 
+	const float DefaultToAimCameraFOVPercentage = 0.8f;
+
 protected:
 	virtual void BeginPlay() override;
 	void Look(const FInputActionValue& Value);
@@ -47,6 +49,7 @@ protected:
 	void ControlMovement(float DeltaTime);
 	void CalculateAO_Pitch(float DeltaTime);
 	void CalculateInterpAimCameraSocketLocation(float DeltaTime);
+	void UpdateCameraFOV(float DeltaTime);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetRemoteViewYaw(float RemoteYaw);
@@ -157,6 +160,9 @@ private:
 	float LeaningRate;
 
 	FVector InterpAimCameraSocketLocation;
+
+	float DefaultCameraFOV;
+	float AimCameraFOV;
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }

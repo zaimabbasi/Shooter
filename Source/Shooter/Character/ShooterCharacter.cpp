@@ -51,6 +51,8 @@ void AShooterCharacter::Tick(float DeltaTime)
 
 	CalculateInterpAimCameraSocketLocation(DeltaTime);
 
+	UpdateCameraFOV(DeltaTime);
+
 }
 
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -102,6 +104,12 @@ void AShooterCharacter::PostInitializeComponents()
 	if (CombatComponent)
 	{
 		CombatComponent->OwningCharacter = this;
+	}
+
+	if (FirstPersonCamera)
+	{
+		DefaultCameraFOV = FirstPersonCamera->FieldOfView;
+		AimCameraFOV = DefaultToAimCameraFOVPercentage * DefaultCameraFOV;
 	}
 }
 
@@ -427,6 +435,41 @@ void AShooterCharacter::CalculateInterpAimCameraSocketLocation(float DeltaTime)
 			AimStep = InterpAimCameraSocketLocation;
 		}
 		InterpAimCameraSocketLocation -= AimStep;
+	}
+}
+
+void AShooterCharacter::UpdateCameraFOV(float DeltaTime)
+{
+	if (FirstPersonCamera == nullptr)
+	{
+		return;
+	}
+	bool bIsAiming = GetIsAiming();
+	if (!bIsAiming && FirstPersonCamera->FieldOfView == DefaultCameraFOV)
+	{
+		return;
+	}
+	if (bIsAiming && FirstPersonCamera->FieldOfView == AimCameraFOV)
+	{
+		return;
+	}
+	float AimSpeed = 50.0f;
+	float FOVStep = AimSpeed * DeltaTime;
+	if (bIsAiming)
+	{
+		FirstPersonCamera->FieldOfView -= FOVStep;
+		if (FirstPersonCamera->FieldOfView < AimCameraFOV)
+		{
+			FirstPersonCamera->FieldOfView = AimCameraFOV;
+		}
+	}
+	else
+	{
+		FirstPersonCamera->FieldOfView += FOVStep;
+		if (FirstPersonCamera->FieldOfView > DefaultCameraFOV)
+		{
+			FirstPersonCamera->FieldOfView = DefaultCameraFOV;
+		}
 	}
 }
 
