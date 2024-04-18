@@ -188,6 +188,17 @@ void UModComponent::BeginPlay()
 					}
 				}
 			}
+			/*if (Mount)
+			{
+				FName MountSocketName = TEXT("mod_mount_000Socket");
+				if (WeaponMesh->DoesSocketExist(MountSocketName))
+				{
+					if (const USkeletalMeshSocket* MountSocket = WeaponMesh->GetSocketByName(MountSocketName))
+					{
+						MountSocket->AttachActor(Mount, WeaponMesh);
+					}
+				}
+			}*/
 			if (Muzzle)
 			{
 				FName MuzzleSocketName = TEXT("mod_muzzleSocket");
