@@ -46,8 +46,12 @@ protected:
 	void ToggleLeanLeft(const FInputActionValue& Value);
 	void ToggleLeanRight(const FInputActionValue& Value);
 	void ToggleAim(const FInputActionValue& Value);
-	void ControlMovement(float DeltaTime);
-	void CalculateAO_Pitch(float DeltaTime);
+	void UpdateMovement(float DeltaTime);
+	/*void UpdateAO_Yaw(float DeltaTime);*/
+	void UpdateAO_Pitch(float DeltaTime);
+	void CalculateTurnDirection();
+	void TurnInPlace(float DeltaTime);
+	void OrientToMovement(float DeltaTime);
 	void CalculateInterpAimCameraSocketLocation(float DeltaTime);
 	void UpdateCameraFOV(float DeltaTime);
 
@@ -56,6 +60,9 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetMovementInputVector(FVector2D MovementInput);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetTurnDirection(ETurnDirection NewTurnDirection);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetIsSlow(bool bSlow);
@@ -131,18 +138,16 @@ private:
 	float AO_Yaw;
 	float AO_Pitch;
 
+	float LastAimRotationYaw;
+
 	UPROPERTY(Replicated)
 	float RemoteViewYaw;
 
 	UPROPERTY(Replicated)
 	FVector2D MovementInputVector;
 
-	FRotator LastAimRotation;
-	FRotator LastActorRotation;
-
+	UPROPERTY(Replicated)
 	ETurnDirection TurnDirection;
-
-	bool bIsTurning;
 
 	UPROPERTY(Replicated)
 	bool bIsSlow;
