@@ -47,11 +47,7 @@ protected:
 	void ToggleLeanRight(const FInputActionValue& Value);
 	void ToggleAim(const FInputActionValue& Value);
 	void UpdateMovement(float DeltaTime);
-	/*void UpdateAO_Yaw(float DeltaTime);*/
 	void UpdateAO_Pitch(float DeltaTime);
-	void CalculateTurnDirection();
-	void TurnInPlace(float DeltaTime);
-	void OrientToMovement(float DeltaTime);
 	void CalculateInterpAimCameraSocketLocation(float DeltaTime);
 	void UpdateCameraFOV(float DeltaTime);
 
@@ -131,14 +127,14 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	UCharacterDataAsset* CharacterDataAsset;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	UInventoryComponent* InventoryComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* CombatComponent;
 
 	float AO_Yaw;
 	float AO_Pitch;
-
-	float LastAimRotationYaw;
 
 	UPROPERTY(Replicated)
 	float RemoteViewYaw;

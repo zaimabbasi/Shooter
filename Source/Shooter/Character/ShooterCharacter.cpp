@@ -12,9 +12,7 @@
 #include "Shooter/Components/InventoryComponent.h"
 #include "Shooter/Weapon/Weapon.h"
 
-AShooterCharacter::AShooterCharacter() : 
-	TurnDirection(ETurnDirection::TD_None),
-	LeanDirection(ELeanDirection::LD_None)
+AShooterCharacter::AShooterCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
@@ -22,7 +20,7 @@ AShooterCharacter::AShooterCharacter() :
 	bUseControllerRotationYaw = false;
 
 	LegsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LegsMesh"));
-	LegsMesh->SetupAttachment(GetRootComponent());
+	LegsMesh->SetupAttachment(GetMesh());
 	LegsMesh->SetCastShadow(false);
 
 	HandsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandsMesh"));
@@ -40,6 +38,7 @@ AShooterCharacter::AShooterCharacter() :
 	CombatComponent->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	GetCharacterMovement()->RotationRate.Yaw = 180.0f;
 
 }
 
@@ -141,8 +140,6 @@ void AShooterCharacter::BeginPlay()
 			CharacterMesh->SetVisibility(false);
 			CharacterMesh->SetCastHiddenShadow(true);
 		}
-
-		LastAimRotationYaw = GetControlRotation().Yaw;
 	}
 	else
 	{
@@ -154,8 +151,6 @@ void AShooterCharacter::BeginPlay()
 		{
 			HandsMesh->SetVisibility(false);
 		}
-
-		LastAimRotationYaw = GetBaseAimRotation().Yaw;
 	}
 
 	if (HasAuthority())
@@ -166,7 +161,7 @@ void AShooterCharacter::BeginPlay()
 			InventoryComponent->Server_SetCurrentIndex(InventoryComponent->PRIMARY_WEAPON_INDEX);
 		}
 	}
-	
+
 }
 
 void AShooterCharacter::Look(const FInputActionValue& Value)
@@ -327,41 +322,71 @@ void AShooterCharacter::ToggleAim(const FInputActionValue& Value)
 
 void AShooterCharacter::UpdateMovement(float DeltaTime)
 {
-	float CurrentAimRotationYaw = IsLocallyControlled() ? GetControlRotation().Yaw : GetBaseAimRotation().Yaw;
-	AO_Yaw = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, CurrentAimRotationYaw, 0.0), FRotator(0.0, LastAimRotationYaw, 0.0)).Yaw;
-	if (!HasAuthority() && !IsLocallyControlled())
+	float bMovementInput = MovementInputVector.Size() > 0.0 ? true : false;
+	float CurrentYaw = UKismetMathLibrary::NormalizedDeltaRotator(GetControlRotation(), GetActorRotation()).Yaw;
+	if (Controller == nullptr)
 	{
-		AO_Yaw = RemoteViewYaw;
+		CurrentYaw = RemoteViewYaw;
 	}
 
-	CalculateTurnDirection();
-	
-	float ExceedingYaw = 0.0f;
-	if (AO_Yaw < -90.0f)
+	if (FMath::IsNearlyZero(CurrentYaw, UE_KINDA_SMALL_NUMBER) || bMovementInput)
 	{
-		ExceedingYaw = AO_Yaw - (-90.0f);
+		TurnDirection = ETurnDirection::TD_None;
 	}
-	else if (AO_Yaw > 90.0f)
+	else if (CurrentYaw < -90.0f)
 	{
-		ExceedingYaw = AO_Yaw - 90.0f;
+		TurnDirection = ETurnDirection::TD_Left;
 	}
-	if (FMath::Abs(ExceedingYaw) > 0.0f)
+	else if (CurrentYaw > 90.0f)
 	{
-		LastAimRotationYaw += ExceedingYaw;
+		TurnDirection = ETurnDirection::TD_Right;
+	}
+
+	if (TurnDirection != ETurnDirection::TD_None || bMovementInput)
+	{	
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
+		float ExceedingYaw = 0.0f;
+		if (CurrentYaw < -90.0f)
+		{
+			ExceedingYaw = CurrentYaw + 90.0f;
+		}
+		else if (CurrentYaw > 90.0f)
+		{
+			ExceedingYaw = CurrentYaw - 90.0f;
+		}
+
+		if (bMovementInput)
+		{
+			float YawRotationStep = GetCharacterMovement()->RotationRate.Yaw * DeltaTime;
+			if (FMath::Abs(CurrentYaw) < YawRotationStep)
+			{
+				YawRotationStep = CurrentYaw;
+			}
+			else if (CurrentYaw < 0.0)
+			{
+				YawRotationStep *= -1.0f;
+			}
+			ExceedingYaw += YawRotationStep;
+		}
+
 		AddActorLocalRotation(FRotator(0.0, ExceedingYaw, 0.0));
-		AO_Yaw -= ExceedingYaw;
+		CurrentYaw -= ExceedingYaw;
 	}
-
-	if (TurnDirection != ETurnDirection::TD_None)
+	else
 	{
-		TurnInPlace(DeltaTime);
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	}
 
-	if (MovementInputVector.Size() > 0.0)
+	if (IsLocallyControlled())
 	{
-		OrientToMovement(DeltaTime);
+		AO_Yaw = CurrentYaw;
 	}
-
+	else
+	{
+		AO_Yaw = FMath::FInterpTo(AO_Yaw, CurrentYaw, DeltaTime, 15.0f);
+	}
+	
 	if (IsLocallyControlled())
 	{
 		Server_SetRemoteViewYaw(AO_Yaw);
@@ -369,77 +394,6 @@ void AShooterCharacter::UpdateMovement(float DeltaTime)
 	}
 	
 }
-
-//void AShooterCharacter::ControlMovement(float DeltaTime)
-//{
-//	FRotator CurrentAimRotation = IsLocallyControlled() ? GetControlRotation() : GetBaseAimRotation();
-//	bool bInputMove = MovementInputVector.Size() > 0.0 ? true : false;
-//	if (bInputMove)
-//	{
-//		TurnDirection = ETurnDirection::TD_None;
-//	}
-//
-//	AO_Yaw = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, CurrentAimRotation.Yaw, 0.0), FRotator(0.0, LastAimRotation.Yaw, 0.0)).Yaw;
-//	if (HasAuthority() || IsLocallyControlled())
-//	{
-//		Server_SetRemoteViewYaw(AO_Yaw);
-//	}
-//	else
-//	{
-//		AO_Yaw = RemoteViewYaw;
-//	}
-//
-//	CalculateAO_Pitch(DeltaTime);
-//
-//	if (AO_Yaw < -90.0f)
-//	{
-//		TurnDirection = ETurnDirection::TD_Left;
-//	}
-//	else if (AO_Yaw > 90.0f)
-//	{
-//		TurnDirection = ETurnDirection::TD_Right;
-//	}
-//
-//	if (TurnDirection != ETurnDirection::TD_None)
-//	{
-//		float DeltaActorRotationYaw = UKismetMathLibrary::NormalizedDeltaRotator(GetActorRotation(), LastActorRotation).Yaw;
-//		LastAimRotation.Add(0.0, DeltaActorRotationYaw, 0.0);
-//		AO_Yaw -= DeltaActorRotationYaw;
-//		if (FMath::IsNearlyZero(DeltaActorRotationYaw))
-//		{
-//			if (!bIsTurning)
-//			{
-//				bIsTurning = true;
-//			}
-//			else
-//			{
-//				TurnDirection = ETurnDirection::TD_None;
-//			}
-//		}
-//	}
-//	else
-//	{
-//		bIsTurning = false;
-//	}
-//
-//	if (bInputMove)
-//	{
-//		float YawRotationRate = GetCharacterMovement()->RotationRate.Yaw * DeltaTime;
-//		if (FMath::Abs(AO_Yaw) < YawRotationRate)
-//		{
-//			YawRotationRate = AO_Yaw;
-//		}
-//		else if (AO_Yaw < 0.0)
-//		{
-//			YawRotationRate *= -1.0f;
-//		}
-//		LastAimRotation.Add(0.0, YawRotationRate, 0.0);
-//		AddActorLocalRotation(FRotator(0.0, YawRotationRate, 0.0));
-//		AO_Yaw -= YawRotationRate;
-//	}
-//
-//	LastActorRotation = GetActorRotation();
-//}
 
 void AShooterCharacter::UpdateAO_Pitch(float DeltaTime)
 {
@@ -457,66 +411,6 @@ void AShooterCharacter::UpdateAO_Pitch(float DeltaTime)
 		FVector2D OutRange = FVector2D(-90.0, 0.0);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
-}
-
-void AShooterCharacter::CalculateTurnDirection()
-{
-	if (MovementInputVector.Size() > 0.0f)
-	{
-		TurnDirection = ETurnDirection::TD_None;
-	}
-	else
-	{
-		if (AO_Yaw < -90.0f)
-		{
-			TurnDirection = ETurnDirection::TD_Left;
-		}
-		else if (AO_Yaw > 90.0f)
-		{
-			TurnDirection = ETurnDirection::TD_Right;
-		}
-	}
-}
-
-void AShooterCharacter::TurnInPlace(float DeltaTime)
-{
-	if (TurnDirection == ETurnDirection::TD_None)
-	{
-		return;
-	}
-	float YawRotationRate = GetCharacterMovement()->RotationRate.Yaw * DeltaTime;
-	if (FMath::Abs(AO_Yaw) < YawRotationRate)
-	{
-		YawRotationRate = AO_Yaw;
-		TurnDirection = ETurnDirection::TD_None;
-	}
-	else if (AO_Yaw < 0.0)
-	{
-		YawRotationRate *= -1.0f;
-	}
-	LastAimRotationYaw += YawRotationRate;
-	AddActorLocalRotation(FRotator(0.0, YawRotationRate, 0.0));
-	AO_Yaw -= YawRotationRate;
-}
-
-void AShooterCharacter::OrientToMovement(float DeltaTime)
-{
-	if (FMath::IsNearlyZero(MovementInputVector.Size()))
-	{
-		return;
-	}
-	float YawRotationRate = GetCharacterMovement()->RotationRate.Yaw * DeltaTime;
-	if (FMath::Abs(AO_Yaw) < YawRotationRate)
-	{
-		YawRotationRate = AO_Yaw;
-	}
-	else if (AO_Yaw < 0.0)
-	{
-		YawRotationRate *= -1.0f;
-	}
-	LastAimRotationYaw += YawRotationRate;
-	AddActorLocalRotation(FRotator(0.0, YawRotationRate, 0.0));
-	AO_Yaw -= YawRotationRate;
 }
 
 void AShooterCharacter::CalculateInterpAimCameraSocketLocation(float DeltaTime)
