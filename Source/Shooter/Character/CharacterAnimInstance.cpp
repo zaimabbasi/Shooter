@@ -4,6 +4,7 @@
 #include "CharacterAnimInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Shooter/Utility/ShooterUtility.h"
 #include "ShooterCharacter.h"
 
 void UCharacterAnimInstance::NativeInitializeAnimation()
@@ -30,18 +31,10 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	HandsMesh = ShooterCharacter->GetHandsMesh();
 	if (CharacterMesh && HandsMesh)
 	{
-		FVector LPalmOutLocation;
-		FRotator LPalmOutRotation;
-		FVector RPalmOutLocation;
-		FRotator RPalmOutRotation;
 		LPalmTransform = HandsMesh->GetSocketTransform(TEXT("Base-HumanLPalm"), ERelativeTransformSpace::RTS_World);
+		LPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, TEXT("IK_S_LPalm"), LPalmTransform);
 		RPalmTransform = HandsMesh->GetSocketTransform(TEXT("Base-HumanRPalm"), ERelativeTransformSpace::RTS_World);
-		CharacterMesh->TransformToBoneSpace(TEXT("IK_S_LPalm"), LPalmTransform.GetLocation(), FRotator(LPalmTransform.GetRotation()), LPalmOutLocation, LPalmOutRotation);
-		CharacterMesh->TransformToBoneSpace(TEXT("IK_S_RPalm"), RPalmTransform.GetLocation(), FRotator(RPalmTransform.GetRotation()), RPalmOutLocation, RPalmOutRotation);
-		LPalmTransform.SetLocation(LPalmOutLocation);
-		LPalmTransform.SetRotation(FQuat(LPalmOutRotation));
-		RPalmTransform.SetLocation(RPalmOutLocation);
-		RPalmTransform.SetRotation(FQuat(RPalmOutRotation));
+		RPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, TEXT("IK_S_RPalm"), RPalmTransform);
 	}
 
 	AO_Yaw = ShooterCharacter->GetAO_Yaw();
