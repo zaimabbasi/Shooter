@@ -71,16 +71,6 @@ void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponTo
 	EquippedWeapon = WeaponToEquip;
 }
 
-void UCombatComponent::SetIsAiming(bool bAiming)
-{
-	if (EquippedWeapon == nullptr)
-	{
-		return;
-	}
-	bIsAiming = bAiming;
-	Server_SetIsAiming(bAiming);
-}
-
 void UCombatComponent::Server_SetIsAiming_Implementation(bool bAiming)
 {
 	if (EquippedWeapon == nullptr)

@@ -42,8 +42,6 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	MovementInputVector = ShooterCharacter->GetMovementInputVector();
 
-	bIsCrouched = ShooterCharacter->bIsCrouched;
-
 	TurnDirection = ShooterCharacter->GetTurnDirection();
 
 	bIsSlow = ShooterCharacter->GetIsSlow();
@@ -55,5 +53,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	LeanTransitionDuration = ShooterCharacter->GetLeanTransitionDuration();
 
 	AnimationTransitionDuration = ShooterCharacter->DefaultAnimationTransitionDuration;
+
+	CurrentStance = ShooterCharacter->GetCurrentStance();
 
 }

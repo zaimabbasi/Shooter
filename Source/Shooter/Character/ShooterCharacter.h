@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "Shooter/Types/CharacterStance.h"
 #include "Shooter/Types/LeanDirection.h"
 #include "Shooter/Types/TurnDirection.h"
 #include "ShooterCharacter.generated.h"
@@ -36,16 +37,17 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	void Look(const FInputActionValue& Value);
-	void Move(const FInputActionValue& Value);
-	void EquipPrimaryWeapon(const FInputActionValue& Value);
-	void EquipSecondaryWeapon(const FInputActionValue& Value);
-	void ToggleCrouch(const FInputActionValue& Value);
-	void ToggleSlow(const FInputActionValue& Value);
-	void ToggleSprint(const FInputActionValue& Value);
-	void ToggleLeanLeft(const FInputActionValue& Value);
-	void ToggleLeanRight(const FInputActionValue& Value);
-	void ToggleAim(const FInputActionValue& Value);
+	void OnLookAction(const FInputActionValue& Value);
+	void OnMoveAction(const FInputActionValue& Value);
+	void OnEquipPrimaryWeaponAction(const FInputActionValue& Value);
+	void OnEquipSecondaryWeaponAction(const FInputActionValue& Value);
+	void OnToggleCrouchAction(const FInputActionValue& Value);
+	void OnToggleProneAction(const FInputActionValue& Value);
+	void OnToggleSlowAction(const FInputActionValue& Value);
+	void OnToggleSprintAction(const FInputActionValue& Value);
+	void OnToggleLeanLeftAction(const FInputActionValue& Value);
+	void OnToggleLeanRightAction(const FInputActionValue& Value);
+	void OnToggleAimAction(const FInputActionValue& Value);
 	void UpdateMovement(float DeltaTime);
 	void UpdateAO_Pitch(float DeltaTime);
 	void CalculateInterpAimCameraSocketLocation(float DeltaTime);
@@ -74,6 +76,9 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetLeaningRate(float Rate);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetCurrentStance(ECharacterStance NewStance);
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
@@ -108,6 +113,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* ToggleCrouchAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* ToggleProneAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* ToggleSlowAction;
@@ -165,6 +173,9 @@ private:
 	float DefaultCameraFOV;
 	float AimCameraFOV;
 
+	UPROPERTY(Replicated)
+	ECharacterStance CurrentStance;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
@@ -177,6 +188,7 @@ public:
 	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }
 	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
 	FORCEINLINE FVector GetInterpAimCameraSocketLocation() const { return InterpAimCameraSocketLocation; }
+	FORCEINLINE ECharacterStance GetCurrentStance() const { return CurrentStance; }
 	AWeapon* GetEquippedWeapon();
 	bool GetIsAiming();
 	FTransform GetAimCameraSocketTransform();
