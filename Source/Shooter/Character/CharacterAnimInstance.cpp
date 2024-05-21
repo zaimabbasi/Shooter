@@ -41,12 +41,14 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	AO_Pitch = ShooterCharacter->GetAO_Pitch();
 
 	MovementInputVector = ShooterCharacter->GetMovementInputVector();
+	bIsMoveInput = MovementInputVector.Size() > 0.0 ? true : false;
+	bIsMoveInputForward = MovementInputVector.Y == 1.0 ? true : false;
 
 	TurnDirection = ShooterCharacter->GetTurnDirection();
 
-	bIsSlow = ShooterCharacter->GetIsSlow();
+	bIsToggleSlow = ShooterCharacter->GetIsToggleSlow();
 
-	bIsSprinting = ShooterCharacter->GetIsSprinting();
+	bIsToggleSprint = ShooterCharacter->GetIsToggleSprint();
 
 	LeanDirection = ShooterCharacter->GetLeanDirection();
 

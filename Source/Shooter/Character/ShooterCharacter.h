@@ -38,7 +38,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	void OnLookAction(const FInputActionValue& Value);
-	void OnMoveAction(const FInputActionValue& Value);
+	void OnMoveForwardAction(const FInputActionValue& Value);
+	void OnMoveBackwardAction(const FInputActionValue& Value);
+	void OnMoveLeftAction(const FInputActionValue& Value);
+	void OnMoveRightAction(const FInputActionValue& Value);
 	void OnEquipPrimaryWeaponAction(const FInputActionValue& Value);
 	void OnEquipSecondaryWeaponAction(const FInputActionValue& Value);
 	void OnToggleCrouchAction(const FInputActionValue& Value);
@@ -63,10 +66,10 @@ protected:
 	void Server_SetTurnDirection(ETurnDirection NewTurnDirection);
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetIsSlow(bool bSlow);
+	void Server_SetIsToggleSlow(bool bToggleSlow);
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetIsSprinting(bool bSprinting);
+	void Server_SetIsToggleSprint(bool bToggleSprint);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetLeanDirection(ELeanDirection NewLeanDirection);
@@ -103,7 +106,16 @@ private:
 	UInputAction* LookAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveAction;
+	UInputAction* MoveForwardAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* MoveBackwardAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* MoveLeftAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* MoveRightAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* EquipPrimaryWeaponAction;
@@ -154,10 +166,10 @@ private:
 	ETurnDirection TurnDirection;
 
 	UPROPERTY(Replicated)
-	bool bIsSlow;
+	bool bIsToggleSlow;
 
 	UPROPERTY(Replicated)
-	bool bIsSprinting;
+	bool bIsToggleSprint;
 
 	UPROPERTY(Replicated)
 	ELeanDirection LeanDirection;
@@ -182,8 +194,8 @@ public:
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
 	FORCEINLINE ETurnDirection GetTurnDirection() const { return TurnDirection; }
-	FORCEINLINE bool GetIsSlow() const { return bIsSlow; }
-	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
+	FORCEINLINE bool GetIsToggleSlow() const { return bIsToggleSlow; }
+	FORCEINLINE bool GetIsToggleSprint() const { return bIsToggleSprint; }
 	FORCEINLINE ELeanDirection GetLeanDirection() const { return LeanDirection; }
 	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }
 	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
@@ -192,5 +204,6 @@ public:
 	AWeapon* GetEquippedWeapon();
 	bool GetIsAiming();
 	FTransform GetAimCameraSocketTransform();
+	bool IsSprinting() const;
 
 };

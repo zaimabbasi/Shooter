@@ -63,7 +63,10 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnLookAction);
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveAction);
+		EnhancedInputComponent->BindAction(MoveForwardAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveForwardAction);
+		EnhancedInputComponent->BindAction(MoveBackwardAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveBackwardAction);
+		EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveLeftAction);
+		EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveRightAction);
 		EnhancedInputComponent->BindAction(EquipPrimaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnEquipPrimaryWeaponAction);
 		EnhancedInputComponent->BindAction(EquipSecondaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnEquipSecondaryWeaponAction);
 		EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleCrouchAction);
@@ -84,8 +87,8 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(AShooterCharacter, RemoteViewYaw);
 	DOREPLIFETIME(AShooterCharacter, MovementInputVector);
 	DOREPLIFETIME(AShooterCharacter, TurnDirection);
-	DOREPLIFETIME(AShooterCharacter, bIsSlow);
-	DOREPLIFETIME(AShooterCharacter, bIsSprinting);
+	DOREPLIFETIME(AShooterCharacter, bIsToggleSlow);
+	DOREPLIFETIME(AShooterCharacter, bIsToggleSprint);
 	DOREPLIFETIME(AShooterCharacter, LeanDirection);
 	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
 	DOREPLIFETIME(AShooterCharacter, LeaningRate);
@@ -175,15 +178,134 @@ void AShooterCharacter::OnLookAction(const FInputActionValue& Value)
 
 }
 
-void AShooterCharacter::OnMoveAction(const FInputActionValue& Value)
+void AShooterCharacter::OnMoveForwardAction(const FInputActionValue& Value)
 {
-	const FVector2D CurrentValue = Value.Get<FVector2D>();
-	Server_SetMovementInputVector(CurrentValue);
-	
-	if (CurrentValue.Y < 1.0 && bIsSprinting)
+	const float CurrentValue = Value.Get<float>();
+	float MovementInputY = CurrentValue;
+	if (CurrentValue)
 	{
-		Server_SetIsSprinting(false);
+		if (MovementInputVector.Y < 0.0)
+		{
+			MovementInputY = 0.0f;
+		}
 	}
+	else
+	{
+		if (MovementInputVector.Y == 0.0)
+		{
+			MovementInputY = -1.0f;
+		}
+	}
+	MovementInputVector.Set(MovementInputVector.X, MovementInputY);
+	Server_SetMovementInputVector(FVector2D(MovementInputVector.X, MovementInputY));
+
+	if (MovementInputY == 1.0 && bIsToggleSprint)
+	{
+		if (CurrentStance == ECharacterStance::CS_Crouch)
+		{
+			UnCrouch();
+		}
+		Server_SetCurrentStance(ECharacterStance::CS_Stand);
+
+		if (GetIsAiming())
+		{
+			CombatComponent->Server_SetIsAiming(false);
+		}
+
+		if (LeanDirection != ELeanDirection::LD_None)
+		{
+			Server_SetLeanDirection(ELeanDirection::LD_None);
+			Server_SetLeanTransitionDuration(DefaultAnimationTransitionDuration);
+			Server_SetLeaningRate(MaxLean / DefaultAnimationTransitionDuration);
+		}
+	}
+}
+
+void AShooterCharacter::OnMoveBackwardAction(const FInputActionValue& Value)
+{
+	const float CurrentValue = Value.Get<float>();
+	float MovementInputY = CurrentValue;
+	if (CurrentValue)
+	{
+		if (MovementInputVector.Y > 0.0)
+		{
+			MovementInputY = 0.0f;
+		}
+	}
+	else
+	{
+		if (MovementInputVector.Y == 0.0)
+		{
+			MovementInputY = 1.0f;
+		}
+	}
+	MovementInputVector.Set(MovementInputVector.X, MovementInputY);
+	Server_SetMovementInputVector(FVector2D(MovementInputVector.X, MovementInputY));
+
+	if (MovementInputY == 1.0 && bIsToggleSprint)
+	{
+		if (CurrentStance == ECharacterStance::CS_Crouch)
+		{
+			UnCrouch();
+		}
+		Server_SetCurrentStance(ECharacterStance::CS_Stand);
+
+		if (GetIsAiming())
+		{
+			CombatComponent->Server_SetIsAiming(false);
+		}
+
+		if (LeanDirection != ELeanDirection::LD_None)
+		{
+			Server_SetLeanDirection(ELeanDirection::LD_None);
+			Server_SetLeanTransitionDuration(DefaultAnimationTransitionDuration);
+			Server_SetLeaningRate(MaxLean / DefaultAnimationTransitionDuration);
+		}
+	}
+}
+
+void AShooterCharacter::OnMoveLeftAction(const FInputActionValue& Value)
+{
+	const float CurrentValue = Value.Get<float>();
+	float MovementInputX = CurrentValue;
+	if (CurrentValue)
+	{
+		if (MovementInputVector.X > 0.0)
+		{
+			MovementInputX = 0.0f;
+		}
+	}
+	else
+	{
+		if (MovementInputVector.X == 0.0)
+		{
+			MovementInputX = 1.0f;
+		}
+	}
+	MovementInputVector.Set(MovementInputX, MovementInputVector.Y);
+	Server_SetMovementInputVector(FVector2D(MovementInputX, MovementInputVector.Y));
+}
+
+void AShooterCharacter::OnMoveRightAction(const FInputActionValue& Value)
+{
+	const float CurrentValue = Value.Get<float>();
+	float MovementInputX = CurrentValue;
+	if (CurrentValue)
+	{
+		if (MovementInputVector.X < 0.0)
+		{
+			MovementInputX = 0.0f;
+		}
+	}
+	else
+	{
+		if (MovementInputVector.X == 0.0)
+		{
+			MovementInputX = -1.0f;
+		}
+	}
+	MovementInputVector.Set(MovementInputX, MovementInputVector.Y);
+	Server_SetMovementInputVector(FVector2D(MovementInputX, MovementInputVector.Y));
 }
 
 void AShooterCharacter::OnEquipPrimaryWeaponAction(const FInputActionValue& Value)
@@ -229,25 +351,18 @@ void AShooterCharacter::OnToggleCrouchAction(const FInputActionValue& Value)
 		if (CurrentStance != ECharacterStance::CS_Crouch)
 		{
 			NewStance = ECharacterStance::CS_Crouch;
-		}
-		else
-		{
-			NewStance = ECharacterStance::CS_Stand;
-		}
-
-		if (NewStance == ECharacterStance::CS_Crouch)
-		{
 			Crouch();
 		}
 		else
 		{
+			NewStance = ECharacterStance::CS_Stand;
 			UnCrouch();
 		}
 		Server_SetCurrentStance(NewStance);
 
-		if (bIsSprinting)
+		if (bIsToggleSprint)
 		{
-			Server_SetIsSprinting(false);
+			Server_SetIsToggleSprint(false);
 		}
 	}
 }
@@ -261,20 +376,20 @@ void AShooterCharacter::OnToggleProneAction(const FInputActionValue& Value)
 		if (CurrentStance != ECharacterStance::CS_Prone)
 		{
 			NewStance = ECharacterStance::CS_Prone;
+			if (CurrentStance == ECharacterStance::CS_Crouch)
+			{
+				UnCrouch();
+			}
 		}
 		else
 		{
 			NewStance = ECharacterStance::CS_Stand;
 		}
-		if (CurrentStance == ECharacterStance::CS_Crouch)
-		{
-			UnCrouch();
-		}
 		Server_SetCurrentStance(NewStance);
 
-		if (bIsSprinting)
+		if (bIsToggleSprint)
 		{
-			Server_SetIsSprinting(false);
+			Server_SetIsToggleSprint(false);
 		}
 	}
 }
@@ -282,17 +397,20 @@ void AShooterCharacter::OnToggleProneAction(const FInputActionValue& Value)
 void AShooterCharacter::OnToggleSlowAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue)
+	Server_SetIsToggleSlow(CurrentValue);
+	
+	if (CurrentValue && bIsToggleSprint)
 	{
-		const bool bSlow = !bIsSlow;
-		Server_SetIsSlow(bSlow);
+		Server_SetIsToggleSprint(false);
 	}
 }
 
 void AShooterCharacter::OnToggleSprintAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && MovementInputVector.Y > 0.0)
+	Server_SetIsToggleSprint(CurrentValue);
+	
+	if (CurrentValue && MovementInputVector.Y == 1.0)
 	{
 		if (CurrentStance == ECharacterStance::CS_Crouch)
 		{
@@ -304,19 +422,20 @@ void AShooterCharacter::OnToggleSprintAction(const FInputActionValue& Value)
 		{
 			CombatComponent->Server_SetIsAiming(false);
 		}
-		
-		Server_SetIsSprinting(true);
-	}
-	else if (bIsSprinting)
-	{
-		Server_SetIsSprinting(false);
+
+		if (LeanDirection != ELeanDirection::LD_None)
+		{
+			Server_SetLeanDirection(ELeanDirection::LD_None);
+			Server_SetLeanTransitionDuration(DefaultAnimationTransitionDuration);
+			Server_SetLeaningRate(MaxLean / DefaultAnimationTransitionDuration);
+		}
 	}
 }
 
 void AShooterCharacter::OnToggleLeanLeftAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && !bIsSprinting)
+	if (CurrentValue && !IsSprinting())
 	{
 		ELeanDirection NewLeanDirection = ELeanDirection::LD_Left;
 		float TransitionDuration = DefaultAnimationTransitionDuration;
@@ -341,7 +460,7 @@ void AShooterCharacter::OnToggleLeanLeftAction(const FInputActionValue& Value)
 void AShooterCharacter::OnToggleLeanRightAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && !bIsSprinting)
+	if (CurrentValue && !IsSprinting())
 	{
 		ELeanDirection NewLeanDirection = ELeanDirection::LD_Right;
 		float TransitionDuration = DefaultAnimationTransitionDuration;
@@ -366,7 +485,7 @@ void AShooterCharacter::OnToggleLeanRightAction(const FInputActionValue& Value)
 void AShooterCharacter::OnToggleAimAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CombatComponent && !bIsSprinting)
+	if (CombatComponent && !IsSprinting())
 	{
 		CombatComponent->Server_SetIsAiming(CurrentValue);
 	}
@@ -541,14 +660,14 @@ void AShooterCharacter::Server_SetTurnDirection_Implementation(ETurnDirection Ne
 	TurnDirection = NewTurnDirection;
 }
 
-void AShooterCharacter::Server_SetIsSlow_Implementation(bool bSlow)
+void AShooterCharacter::Server_SetIsToggleSlow_Implementation(bool bToggleSlow)
 {
-	bIsSlow = bSlow;
+	bIsToggleSlow = bToggleSlow;
 }
 
-void AShooterCharacter::Server_SetIsSprinting_Implementation(bool bSprinting)
+void AShooterCharacter::Server_SetIsToggleSprint_Implementation(bool bToggleSprint)
 {
-	bIsSprinting = bSprinting;
+	bIsToggleSprint = bToggleSprint;
 }
 
 void AShooterCharacter::Server_SetLeanDirection_Implementation(ELeanDirection NewLeanDirection)
@@ -596,4 +715,9 @@ FTransform AShooterCharacter::GetAimCameraSocketTransform()
 		return FTransform();
 	}
 	return CombatComponent->AimCameraSocketTransform;
+}
+
+bool AShooterCharacter::IsSprinting() const
+{
+	return bIsToggleSprint && MovementInputVector.Y > 0.0;
 }
