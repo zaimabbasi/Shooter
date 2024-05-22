@@ -55,12 +55,22 @@ protected:
 	void UpdateAO_Pitch(float DeltaTime);
 	void CalculateInterpAimCameraSocketLocation(float DeltaTime);
 	void UpdateCameraFOV(float DeltaTime);
+	void TransitionToSprint();
+
+	void SetMovementInputVector(float MovementInputX, float MovementInputY);
+	/*void SetTurnDirection(ETurnDirection NewTurnDirection);*/
+	void SetIsToggleSlow(bool bToggleSlow);
+	void SetIsToggleSprint(bool bToggleSprint);
+	void SetLeanDirection(ELeanDirection NewLeanDirection);
+	void SetLeanTransitionDuration(float NewLeanTransitionDuration);
+	void SetLeaningRate(float NewLeaningRate);
+	void SetCurrentStance(ECharacterStance NewStance);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetRemoteViewYaw(float RemoteYaw);
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetMovementInputVector(FVector2D MovementInput);
+	void Server_SetMovementInputVector(float MovementInputX, float MovementInputY);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetTurnDirection(ETurnDirection NewTurnDirection);
@@ -75,7 +85,7 @@ protected:
 	void Server_SetLeanDirection(ELeanDirection NewLeanDirection);
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetLeanTransitionDuration(float TransitionDuration);
+	void Server_SetLeanTransitionDuration(float NewLeanTransitionDuration);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetLeaningRate(float Rate);
@@ -204,6 +214,5 @@ public:
 	AWeapon* GetEquippedWeapon();
 	bool GetIsAiming();
 	FTransform GetAimCameraSocketTransform();
-	bool IsSprinting() const;
 
 };

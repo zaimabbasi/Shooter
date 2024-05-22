@@ -23,6 +23,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	void SetIsAiming(bool bAiming);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetEquippedWeapon(AWeapon* WeaponToEquip);
