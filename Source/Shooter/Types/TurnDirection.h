@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "TurnDirection.generated.h"
 
-UENUM()
+UENUM(BlueprintType)
 enum class ETurnDirection : uint8
 {
 	TD_None UMETA(DisplayName = "None"),
