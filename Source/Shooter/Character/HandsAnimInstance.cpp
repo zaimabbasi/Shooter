@@ -32,6 +32,11 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		if (UHandsAnimationDataAsset* HandsAnimationDataAsset = EquippedWeapon->GetHandsAnimationDataAsset())
 		{
 			IdleAnim = HandsAnimationDataAsset->IdleAnim;
+			ActionEndAnim = HandsAnimationDataAsset->ActionEndAnim;
+			ActionStartAnim = HandsAnimationDataAsset->ActionStartAnim;
+			MagInAnim = HandsAnimationDataAsset->MagInAnim;
+			MagOutAnim = HandsAnimationDataAsset->MagOutAnim;
+			ReloadChargeAnim = HandsAnimationDataAsset->ReloadChargeAnim;
 		}
 	}
 

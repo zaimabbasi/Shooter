@@ -30,6 +30,11 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	if (UWeaponAnimationDataAsset* WeaponAnimationDataAsset = Weapon->GetWeaponAnimationDataAsset())
 	{
 		IdleAnim = WeaponAnimationDataAsset->IdleAnim;
+		ActionEndAnim = WeaponAnimationDataAsset->ActionEndAnim;
+		ActionStartAnim = WeaponAnimationDataAsset->ActionStartAnim;
+		MagInAnim = WeaponAnimationDataAsset->MagInAnim;
+		MagOutAnim = WeaponAnimationDataAsset->MagOutAnim;
+		ReloadChargeAnim = WeaponAnimationDataAsset->ReloadChargeAnim;
 	}
 
 }

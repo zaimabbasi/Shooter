@@ -84,6 +84,21 @@ public:
 	UPROPERTY(EditAnywhere)
 	UAnimSequence* IdleAnim;
 
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* ActionEndAnim;
+
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* ActionStartAnim;
+
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* MagInAnim;
+
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* MagOutAnim;
+
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* ReloadChargeAnim;
+
 };
 
 UCLASS()
@@ -94,6 +109,21 @@ class SHOOTER_API UWeaponAnimationDataAsset : public UDataAsset
 public:
 	UPROPERTY(EditAnywhere)
 	UAnimSequence* IdleAnim;
+
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* ActionEndAnim;
+
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* ActionStartAnim;
+
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* MagInAnim;
+
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* MagOutAnim;
+
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* ReloadChargeAnim;
 
 };
 
