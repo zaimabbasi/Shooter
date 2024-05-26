@@ -76,6 +76,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(ToggleLeanLeftAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleLeanLeftAction);
 		EnhancedInputComponent->BindAction(ToggleLeanRightAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleLeanRightAction);
 		EnhancedInputComponent->BindAction(ToggleAimAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleAimAction);
+		EnhancedInputComponent->BindAction(ReloadWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnReloadWeaponAction);
 	}
 
 }
@@ -432,6 +433,15 @@ void AShooterCharacter::OnToggleAimAction(const FInputActionValue& Value)
 	if (CombatComponent && !(bIsToggleSprint && MovementInputVector.Y == 1.0))
 	{
 		CombatComponent->SetIsAiming(CurrentValue);
+	}
+}
+
+void AShooterCharacter::OnReloadWeaponAction(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue && CombatComponent)
+	{
+		CombatComponent->ReloadWeapon();
 	}
 }
 

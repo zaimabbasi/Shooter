@@ -59,6 +59,15 @@ void UCombatComponent::SetIsAiming(bool bAiming)
 	Server_SetIsAiming(bAiming);
 }
 
+void UCombatComponent::ReloadWeapon()
+{
+	if (EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("ReloadWeapon"));
+}
+
 void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponToEquip)
 {
 	if (WeaponToEquip == nullptr || OwningCharacter == nullptr)

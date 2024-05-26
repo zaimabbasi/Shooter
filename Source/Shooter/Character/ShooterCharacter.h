@@ -51,6 +51,7 @@ protected:
 	void OnToggleLeanLeftAction(const FInputActionValue& Value);
 	void OnToggleLeanRightAction(const FInputActionValue& Value);
 	void OnToggleAimAction(const FInputActionValue& Value);
+	void OnReloadWeaponAction(const FInputActionValue& Value);
 	void UpdateMovement(float DeltaTime);
 	void UpdateAO_Pitch(float DeltaTime);
 	void CalculateInterpAimCameraSocketLocation(float DeltaTime);
@@ -153,6 +154,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* ToggleAimAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* ReloadWeaponAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	UCharacterDataAsset* CharacterDataAsset;
