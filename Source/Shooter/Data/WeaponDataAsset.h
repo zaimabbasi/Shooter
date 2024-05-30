@@ -76,58 +76,6 @@ public:
 };
 
 UCLASS()
-class SHOOTER_API UHandsAnimationDataAsset : public UDataAsset
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* IdleAnim;
-
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* ActionEndAnim;
-
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* ActionStartAnim;
-
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* MagInAnim;
-
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* MagOutAnim;
-
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* ReloadChargeAnim;
-
-};
-
-UCLASS()
-class SHOOTER_API UWeaponAnimationDataAsset : public UDataAsset
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* IdleAnim;
-
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* ActionEndAnim;
-
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* ActionStartAnim;
-
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* MagInAnim;
-
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* MagOutAnim;
-
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* ReloadChargeAnim;
-
-};
-
-UCLASS()
 class SHOOTER_API UWeaponDataAsset : public UDataAsset
 {
 	GENERATED_BODY()
@@ -135,11 +83,5 @@ class SHOOTER_API UWeaponDataAsset : public UDataAsset
 public:
 	UPROPERTY(EditAnywhere, category = "ModData")
 	FModData ModData;
-
-	UPROPERTY(EditAnywhere, category = "HandsAnimationDataAsset")
-	UHandsAnimationDataAsset* HandsAnimationDataAsset;
-
-	UPROPERTY(EditAnywhere, category = "WeaponAnimationDataAsset")
-	UWeaponAnimationDataAsset* WeaponAnimationDataAsset;
 
 };

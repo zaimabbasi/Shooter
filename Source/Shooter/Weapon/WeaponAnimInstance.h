@@ -21,22 +21,4 @@ public:
 private:
 	AWeapon* Weapon;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"));
-	UAnimSequence* IdleAnim;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"));
-	UAnimSequence* ActionEndAnim;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"));
-	UAnimSequence* ActionStartAnim;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"));
-	UAnimSequence* MagInAnim;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"));
-	UAnimSequence* MagOutAnim;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"));
-	UAnimSequence* ReloadChargeAnim;
-
 };

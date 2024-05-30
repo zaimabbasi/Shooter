@@ -27,19 +27,6 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
-	if (AWeapon* EquippedWeapon = ShooterCharacter->GetEquippedWeapon())
-	{
-		if (UHandsAnimationDataAsset* HandsAnimationDataAsset = EquippedWeapon->GetHandsAnimationDataAsset())
-		{
-			IdleAnim = HandsAnimationDataAsset->IdleAnim;
-			ActionEndAnim = HandsAnimationDataAsset->ActionEndAnim;
-			ActionStartAnim = HandsAnimationDataAsset->ActionStartAnim;
-			MagInAnim = HandsAnimationDataAsset->MagInAnim;
-			MagOutAnim = HandsAnimationDataAsset->MagOutAnim;
-			ReloadChargeAnim = HandsAnimationDataAsset->ReloadChargeAnim;
-		}
-	}
-
 	USkeletalMeshComponent* CharacterMesh = ShooterCharacter->GetMesh();
 	USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh();
 	if (CharacterMesh && HandsMesh)
