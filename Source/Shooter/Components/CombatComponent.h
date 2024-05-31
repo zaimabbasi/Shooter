@@ -25,6 +25,9 @@ protected:
 	virtual void BeginPlay() override;
 	void SetIsAiming(bool bAiming);
 	void ReloadWeapon();
+	
+	UFUNCTION()
+	void OnRep_EquippedWeapon();
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetEquippedWeapon(AWeapon* WeaponToEquip);
@@ -35,7 +38,7 @@ protected:
 private:
 	AShooterCharacter* OwningCharacter;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
 	UPROPERTY(Replicated)

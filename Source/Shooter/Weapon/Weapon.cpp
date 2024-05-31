@@ -58,6 +58,15 @@ void AWeapon::BeginPlay()
 
 }
 
+UClass* AWeapon::GetHandsAnimClass() const
+{
+	if (WeaponDataAsset == nullptr)
+	{
+		return nullptr;
+	}
+	return WeaponDataAsset->HandsAnimClass;
+}
+
 USkeletalMeshComponent* AWeapon::GetAimCameraSocketParentMesh()
 {
 	if (ModComponent == nullptr)

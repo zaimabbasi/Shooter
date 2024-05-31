@@ -81,7 +81,10 @@ class SHOOTER_API UWeaponDataAsset : public UDataAsset
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, category = "ModData")
+	UPROPERTY(EditAnywhere, Category = "ModData")
 	FModData ModData;
+
+	UPROPERTY(EditAnywhere, Category = "HandsAnimClass")
+	TSubclassOf<UAnimInstance> HandsAnimClass;
 
 };

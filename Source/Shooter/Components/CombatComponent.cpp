@@ -68,6 +68,17 @@ void UCombatComponent::ReloadWeapon()
 	UE_LOG(LogTemp, Warning, TEXT("ReloadWeapon"));
 }
 
+void UCombatComponent::OnRep_EquippedWeapon()
+{
+	if (EquippedWeapon && OwningCharacter)
+	{
+		if (USkeletalMeshComponent* HandsMesh = OwningCharacter->GetHandsMesh())
+		{
+			HandsMesh->SetAnimClass(EquippedWeapon->GetHandsAnimClass());
+		}
+	}
+}
+
 void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponToEquip)
 {
 	if (WeaponToEquip == nullptr || OwningCharacter == nullptr)
@@ -86,6 +97,7 @@ void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponTo
 			WeaponRootSocket->AttachActor(WeaponToEquip, HandsMesh);
 			WeaponToEquip->SetActorHiddenInGameWithChildren(false);
 		}
+		HandsMesh->SetAnimClass(WeaponToEquip->GetHandsAnimClass());
 	}
 	EquippedWeapon = WeaponToEquip;
 }

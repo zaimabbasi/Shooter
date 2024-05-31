@@ -42,6 +42,7 @@ protected:
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
+	UClass* GetHandsAnimClass() const;
 	USkeletalMeshComponent* GetAimCameraSocketParentMesh();
 	FName GetAimCameraSocketName();
 };
