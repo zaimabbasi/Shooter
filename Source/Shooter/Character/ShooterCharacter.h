@@ -67,6 +67,9 @@ protected:
 	void SetLeaningRate(float NewLeaningRate);
 	void SetCurrentStance(ECharacterStance NewStance);
 
+	UFUNCTION()
+	void OnWeaponsArrayReadyCallback();
+
 	UFUNCTION(Server, Reliable)
 	void Server_SetRemoteViewYaw(float RemoteYaw);
 

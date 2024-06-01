@@ -104,6 +104,7 @@ void AShooterCharacter::PostInitializeComponents()
 	if (InventoryComponent)
 	{
 		InventoryComponent->OwningCharacter = this;
+		InventoryComponent->OnWeaponsArrayReadyDelegate.BindUObject(this, &AShooterCharacter::OnWeaponsArrayReadyCallback);
 		if (CharacterDataAsset)
 		{
 			InventoryComponent->InventoryDataArray = CharacterDataAsset->InventoryDataArray;
@@ -156,15 +157,6 @@ void AShooterCharacter::BeginPlay()
 		if (HandsMesh)
 		{
 			HandsMesh->SetVisibility(false);
-		}
-	}
-
-	if (HasAuthority())
-	{
-		if (InventoryComponent && CombatComponent)
-		{
-			CombatComponent->Server_SetEquippedWeapon(InventoryComponent->GetWeaponAtIndex(InventoryComponent->PRIMARY_WEAPON_INDEX));
-			InventoryComponent->Server_SetCurrentIndex(InventoryComponent->PRIMARY_WEAPON_INDEX);
 		}
 	}
 
@@ -666,6 +658,19 @@ void AShooterCharacter::SetCurrentStance(ECharacterStance NewStance)
 {
 	CurrentStance = NewStance;
 	Server_SetCurrentStance(NewStance);
+}
+
+void AShooterCharacter::OnWeaponsArrayReadyCallback()
+{
+	if (InventoryComponent && CombatComponent)
+	{
+		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(InventoryComponent->PRIMARY_WEAPON_INDEX);
+		if (PrimaryWeapon && CombatComponent->EquippedWeapon != PrimaryWeapon)
+		{
+			CombatComponent->Server_SetEquippedWeapon(PrimaryWeapon);
+			InventoryComponent->Server_SetCurrentIndex(InventoryComponent->PRIMARY_WEAPON_INDEX);
+		}
+	}
 }
 
 void AShooterCharacter::Server_SetRemoteViewYaw_Implementation(float RemoteYaw)

@@ -10,6 +10,8 @@
 class AShooterCharacter;
 class AWeapon;
 
+DECLARE_DELEGATE(FOnWeaponsArrayReadyDelegate)
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SHOOTER_API UInventoryComponent : public UActorComponent
 {
@@ -25,8 +27,13 @@ public:
 	const uint8 PRIMARY_WEAPON_INDEX = 0;
 	const uint8 SECONDARY_WEAPON_INDEX = 1;
 
+	FOnWeaponsArrayReadyDelegate OnWeaponsArrayReadyDelegate;
+
 protected:
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void OnRep_WeaponsArray() const;
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetCurrentIndex(uint8 Index);
@@ -36,7 +43,7 @@ private:
 
 	TArray<FInventoryData> InventoryDataArray;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponsArray)
 	TArray<AWeapon*> WeaponsArray;
 
 	UPROPERTY(Replicated)

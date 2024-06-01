@@ -22,7 +22,7 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UInventoryComponent, WeaponsArray);
+	DOREPLIFETIME_CONDITION(UInventoryComponent, WeaponsArray, COND_OwnerOnly);
 	DOREPLIFETIME(UInventoryComponent, CurrentIndex);
 
 }
@@ -50,8 +50,18 @@ void UInventoryComponent::BeginPlay()
 				}
 			}
 		}
+
+		if (OwningCharacter->IsLocallyControlled())
+		{
+			OnWeaponsArrayReadyDelegate.Execute();
+		}
 	}
 
+}
+
+void UInventoryComponent::OnRep_WeaponsArray() const
+{
+	OnWeaponsArrayReadyDelegate.Execute();
 }
 
 void UInventoryComponent::Server_SetCurrentIndex_Implementation(uint8 Index)
