@@ -27,3 +27,14 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 }
+
+bool UWeaponAnimInstance::HandleNotify(const FAnimNotifyEvent& AnimNotifyEvent)
+{
+	Super::HandleNotify(AnimNotifyEvent);
+
+	if (Weapon == nullptr)
+	{
+		return false;
+	}
+	return Weapon->HandleAnimNotify(AnimNotifyEvent);
+}

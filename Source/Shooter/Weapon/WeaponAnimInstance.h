@@ -17,6 +17,7 @@ class SHOOTER_API UWeaponAnimInstance : public UAnimInstance
 public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	virtual bool HandleNotify(const FAnimNotifyEvent& AnimNotifyEvent) override;
 
 private:
 	AWeapon* Weapon;

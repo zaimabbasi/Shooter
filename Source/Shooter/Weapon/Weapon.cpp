@@ -43,6 +43,17 @@ void AWeapon::PostInitializeComponents()
 
 }
 
+bool AWeapon::HandleAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent)
+{
+	return true;
+}
+
+void AWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+}
+
 void AWeapon::SetActorHiddenInGameWithChildren(bool bNewHidden)
 {
 	SetActorHiddenInGame(bNewHidden);
@@ -50,12 +61,6 @@ void AWeapon::SetActorHiddenInGameWithChildren(bool bNewHidden)
 	{
 		ChildActor->SetActorHiddenInGame(bNewHidden);
 	}
-}
-
-void AWeapon::BeginPlay()
-{
-	Super::BeginPlay();
-
 }
 
 UClass* AWeapon::GetHandsAnimClass() const

@@ -16,6 +16,7 @@ class SHOOTER_API UHandsAnimInstance : public UAnimInstance
 public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	virtual bool HandleNotify(const FAnimNotifyEvent& AnimNotifyEvent) override;
 
 private:
 	AShooterCharacter* ShooterCharacter;

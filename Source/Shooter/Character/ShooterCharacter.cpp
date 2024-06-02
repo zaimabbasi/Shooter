@@ -122,6 +122,11 @@ void AShooterCharacter::PostInitializeComponents()
 	}
 }
 
+bool AShooterCharacter::HandleHandsAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent)
+{
+	return true;
+}
+
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();

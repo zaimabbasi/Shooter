@@ -72,3 +72,14 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	InterpAimCameraSocketLocation = ShooterCharacter->GetInterpAimCameraSocketLocation();
 	
 }
+
+bool UHandsAnimInstance::HandleNotify(const FAnimNotifyEvent& AnimNotifyEvent)
+{
+	Super::HandleNotify(AnimNotifyEvent);
+
+	if (ShooterCharacter == nullptr)
+	{
+		return false;
+	}
+	return ShooterCharacter->HandleHandsAnimNotify(AnimNotifyEvent);
+}

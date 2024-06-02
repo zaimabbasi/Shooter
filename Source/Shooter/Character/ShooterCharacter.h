@@ -29,6 +29,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+	virtual bool HandleHandsAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent);
 
 	const float DefaultAnimationTransitionDuration = 0.25f;
 	const float MaxLean = 15.0f;

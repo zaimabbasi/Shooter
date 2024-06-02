@@ -22,6 +22,7 @@ public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void PostInitializeComponents() override;
+	virtual bool HandleAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent);
 	void SetActorHiddenInGameWithChildren(bool bNewHidden);
 
 protected:
