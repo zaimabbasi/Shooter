@@ -3,6 +3,7 @@
 
 #include "Weapon.h"
 #include "Components/BoxComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "Shooter/Components/ModComponent.h"
 #include "Shooter/Data/WeaponDataAsset.h"
 
@@ -25,6 +26,14 @@ AWeapon::AWeapon()
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+}
+
+void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AWeapon, WeaponAction);
 
 }
 

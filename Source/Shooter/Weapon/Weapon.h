@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Shooter/Types/WeaponAction.h"
+#include "Shooter/Types/WeaponActionState.h"
 #include "Weapon.generated.h"
 
 class AShooterCharacter;
@@ -21,6 +23,7 @@ class SHOOTER_API AWeapon : public AActor
 public:	
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	virtual bool HandleAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent);
 	void SetActorHiddenInGameWithChildren(bool bNewHidden);
@@ -41,8 +44,12 @@ protected:
 
 	UModComponent* ModComponent;
 
+	UPROPERTY(Replicated)
+	EWeaponAction WeaponAction;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
+	FORCEINLINE EWeaponAction GetWeaponAction() const { return WeaponAction; }
 	UClass* GetHandsAnimClass() const;
 	USkeletalMeshComponent* GetAimCameraSocketParentMesh();
 	FName GetAimCameraSocketName();

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "Shooter/Types/WeaponAction.h"
 #include "WeaponAnimInstance.generated.h"
 
 class AShooterCharacter;
@@ -21,5 +22,8 @@ public:
 
 private:
 	AWeapon* Weapon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	EWeaponAction WeaponAction;
 
 };

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "Shooter/Types/WeaponAction.h"
 #include "HandsAnimInstance.generated.h"
 
 class AShooterCharacter;
@@ -32,5 +33,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	FVector InterpAimCameraSocketLocation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	EWeaponAction WeaponAction;
 
 };

@@ -26,6 +26,8 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
+	WeaponAction = Weapon->GetWeaponAction();
+
 }
 
 bool UWeaponAnimInstance::HandleNotify(const FAnimNotifyEvent& AnimNotifyEvent)
