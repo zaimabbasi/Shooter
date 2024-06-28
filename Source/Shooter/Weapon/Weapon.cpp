@@ -5,6 +5,7 @@
 #include "Components/BoxComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Shooter/Components/ModComponent.h"
+#include "Shooter/Data/ModDataAsset.h"
 #include "Shooter/Data/WeaponDataAsset.h"
 
 AWeapon::AWeapon()
@@ -43,10 +44,11 @@ void AWeapon::PostInitializeComponents()
 
 	if (ModComponent)
 	{
-		ModComponent->OwningWeapon = this;
+		ModComponent->OwningActor = this;
+		ModComponent->OwningActorMesh = Mesh;
 		if (WeaponDataAsset)
 		{
-			ModComponent->ModData = WeaponDataAsset->ModData;
+			ModComponent->ModDataArray = WeaponDataAsset->ModDataArray;
 		}
 	}
 
@@ -80,22 +82,3 @@ UClass* AWeapon::GetHandsAnimClass() const
 	}
 	return WeaponDataAsset->HandsAnimClass;
 }
-
-USkeletalMeshComponent* AWeapon::GetAimCameraSocketParentMesh()
-{
-	if (ModComponent == nullptr)
-	{
-		return nullptr;
-	}
-	return ModComponent->AimCameraSocketParentMesh;
-}
-
-FName AWeapon::GetAimCameraSocketName()
-{
-	if (ModComponent == nullptr)
-	{
-		return NAME_None;
-	}
-	return ModComponent->AimCameraSocketName;
-}
-

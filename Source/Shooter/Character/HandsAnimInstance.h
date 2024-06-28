@@ -32,9 +32,6 @@ private:
 	float Lean;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	FVector InterpAimCameraSocketLocation;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	EWeaponAction WeaponAction;
 
 };

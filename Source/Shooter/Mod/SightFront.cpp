@@ -5,6 +5,6 @@
 
 ASightFront::ASightFront()
 {
-
+	
 }
 

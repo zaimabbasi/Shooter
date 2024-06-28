@@ -4,24 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Shooter/Data/WeaponDataAsset.h"
+#include "Shooter/Data/ModData.h"
+#include "Shooter/Data/ModDataAsset.h"
 #include "ModComponent.generated.h"
 
-class ABarrel;
-//class AFlashlight;
-//class AForegrip;
-class AGasBlock;
-class AHandguard;
-class AMag;
-//class AMount;
-class AMuzzle;
-class APistolgrip;
-class AReciever;
-//class AScope;
-class ASightFront;
-class ASightRear;
-class AStock;
-//class ATactical;
+class AMod;
 class AWeapon;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -31,6 +18,7 @@ class SHOOTER_API UModComponent : public UActorComponent
 
 public:
 	friend class AWeapon;
+	friend class AMod;
 
 	UModComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -40,59 +28,13 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	AWeapon* OwningWeapon;
+	AActor* OwningActor;
 
-	FModData ModData;
-
-	UPROPERTY(Replicated)
-	ABarrel* Barrel;
-
-	/*UPROPERTY(Replicated)
-	AFlashlight* Flashlight;*/
-
-	/*UPROPERTY(Replicated)
-	AForegrip* Foregrip;*/
+	USkeletalMeshComponent* OwningActorMesh;
 
 	UPROPERTY(Replicated)
-	AGasBlock* GasBlock;
+	TArray<AMod*> ModArray;
 
-	UPROPERTY(Replicated)
-	AHandguard* Handguard;
-
-	UPROPERTY(Replicated)
-	AMag* Mag;
-
-	/*UPROPERTY(Replicated)
-	AMount* Mount;*/
-
-	UPROPERTY(Replicated)
-	AMuzzle* Muzzle;
-
-	UPROPERTY(Replicated)
-	APistolgrip* Pistolgrip;
-
-	UPROPERTY(Replicated)
-	AReciever* Reciever;
-
-	/*UPROPERTY(Replicated)
-	AScope* Scope;*/
-
-	UPROPERTY(Replicated)
-	ASightFront* SightFront;
-
-	UPROPERTY(Replicated)
-	ASightRear* SightRear;
-
-	UPROPERTY(Replicated)
-	AStock* Stock;
-
-	/*UPROPERTY(Replicated)
-	ATactical* Tactical;*/
-
-	UPROPERTY(Replicated)
-	USkeletalMeshComponent* AimCameraSocketParentMesh;
-
-	UPROPERTY(Replicated)
-	FName AimCameraSocketName;
+	TArray<FModData> ModDataArray;
 
 };

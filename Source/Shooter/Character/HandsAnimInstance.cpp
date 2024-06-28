@@ -29,7 +29,6 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	AO_Yaw = ShooterCharacter->GetAO_Yaw();
 	AO_Pitch = ShooterCharacter->GetAO_Pitch();
-	InterpAimCameraSocketLocation = ShooterCharacter->GetInterpAimCameraSocketLocation();
 	
 	USkeletalMeshComponent* CharacterMesh = ShooterCharacter->GetMesh();
 	USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh();

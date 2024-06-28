@@ -5,6 +5,6 @@
 
 AHandguard::AHandguard()
 {
-
+	
 }
 

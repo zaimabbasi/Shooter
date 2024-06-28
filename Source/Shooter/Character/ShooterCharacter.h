@@ -55,7 +55,6 @@ protected:
 	void OnReloadWeaponAction(const FInputActionValue& Value);
 	void UpdateMovement(float DeltaTime);
 	void UpdateAO_Pitch(float DeltaTime);
-	void CalculateInterpAimCameraSocketLocation(float DeltaTime);
 	void UpdateCameraFOV(float DeltaTime);
 	void TransitionToSprint();
 
@@ -198,8 +197,6 @@ private:
 	UPROPERTY(Replicated)
 	float LeaningRate;
 
-	FVector InterpAimCameraSocketLocation;
-
 	float DefaultCameraFOV;
 	float AimCameraFOV;
 
@@ -217,10 +214,8 @@ public:
 	FORCEINLINE ELeanDirection GetLeanDirection() const { return LeanDirection; }
 	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }
 	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
-	FORCEINLINE FVector GetInterpAimCameraSocketLocation() const { return InterpAimCameraSocketLocation; }
 	FORCEINLINE ECharacterStance GetCurrentStance() const { return CurrentStance; }
 	AWeapon* GetEquippedWeapon();
 	bool GetIsAiming();
-	FTransform GetAimCameraSocketTransform();
 
 };

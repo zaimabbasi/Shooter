@@ -5,11 +5,13 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
 #include "Shooter/Mod/Barrel.h"
+#include "Shooter/Mod/Charge.h"
 //#include "Shooter/Mod/Flashlight.h"
 //#include "Shooter/Mod/Foregrip.h"
 #include "Shooter/Mod/GasBlock.h"
 #include "Shooter/Mod/Handguard.h"
 #include "Shooter/Mod/Mag.h"
+#include "Shooter/Mod/Mod.h"
 //#include "Shooter/Mod/Mount.h"
 #include "Shooter/Mod/Muzzle.h"
 #include "Shooter/Mod/Reciever.h"
@@ -20,6 +22,7 @@
 #include "Shooter/Mod/Stock.h"
 //#include "Shooter/Mod/Tactical.h"
 #include "Shooter/Weapon/Weapon.h"
+#include "Shooter/Utility/ShooterUtility.h"
 
 UModComponent::UModComponent()
 {
@@ -37,275 +40,41 @@ void UModComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UModComponent, Barrel);
-	//DOREPLIFETIME(UModComponent, Flashlight);
-	//DOREPLIFETIME(UModComponent, Foregrip);
-	DOREPLIFETIME(UModComponent, GasBlock);
-	DOREPLIFETIME(UModComponent, Handguard);
-	DOREPLIFETIME(UModComponent, Mag);
-	//DOREPLIFETIME(UModComponent, Mount);
-	DOREPLIFETIME(UModComponent, Muzzle);
-	DOREPLIFETIME(UModComponent, Pistolgrip);
-	DOREPLIFETIME(UModComponent, Reciever);
-	//DOREPLIFETIME(UModComponent, Scope);
-	DOREPLIFETIME(UModComponent, SightFront);
-	DOREPLIFETIME(UModComponent, SightRear);
-	DOREPLIFETIME(UModComponent, Stock);
-	//DOREPLIFETIME(UModComponent, Tactical);
+	DOREPLIFETIME(UModComponent, ModArray);
 
-	DOREPLIFETIME(UModComponent, AimCameraSocketParentMesh);
-	DOREPLIFETIME(UModComponent, AimCameraSocketName);
 }
 
 void UModComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (OwningWeapon && OwningWeapon->HasAuthority())
+	if (OwningActor && OwningActor->HasAuthority())
 	{
 		if (UWorld* World = GetWorld())
 		{
-			if (const TSubclassOf<ABarrel>& BarrelClass = ModData.BarrelClass)
+			for (const FModData ModData : ModDataArray)
 			{
-				Barrel = World->SpawnActor<ABarrel>(BarrelClass);
-				Barrel->SetOwner(OwningWeapon);
-			}
-			/*if (const TSubclassOf<AFlashlight>& FlashlightClass = ModData.FlashlightClass)
-			{
-				Flashlight = World->SpawnActor<AFlashlight>(FlashlightClass);
-				Flashlight->SetOwner(OwningWeapon);
-			}*/
-			/*if (const TSubclassOf<AForegrip>& ForegripClass = ModData.ForegripClass)
-			{
-				Foregrip = World->SpawnActor<AForegrip>(ForegripClass);
-				Foregrip->SetOwner(OwningWeapon);
-			}*/
-			if (const TSubclassOf<AGasBlock>& GasBlockClass = ModData.GasBlockClass)
-			{
-				GasBlock = World->SpawnActor<AGasBlock>(GasBlockClass);
-				GasBlock->SetOwner(OwningWeapon);
-			}
-			if (const TSubclassOf<AHandguard>& HandguardClass = ModData.HandguardClass)
-			{
-				Handguard = World->SpawnActor<AHandguard>(HandguardClass);
-				Handguard->SetOwner(OwningWeapon);
-			}
-			if (const TSubclassOf<AMag>& MagClass = ModData.MagClass)
-			{
-				Mag = World->SpawnActor<AMag>(MagClass);
-				Mag->SetOwner(OwningWeapon);
-			}
-			/*if (const TSubclassOf<AMount>& MountClass = ModData.MountClass)
-			{
-				Mount = World->SpawnActor<AMount>(MountClass);
-				Mount->SetOwner(OwningWeapon);
-			}*/
-			if (const TSubclassOf<AMuzzle>& MuzzleClass = ModData.MuzzleClass)
-			{
-				Muzzle = World->SpawnActor<AMuzzle>(MuzzleClass);
-				Muzzle->SetOwner(OwningWeapon);
-			}
-			if (const TSubclassOf<APistolgrip>& PistolgripClass = ModData.PistolgripClass)
-			{
-				Pistolgrip = World->SpawnActor<APistolgrip>(PistolgripClass);
-				Pistolgrip->SetOwner(OwningWeapon);
-			}
-			if (const TSubclassOf<AReciever>& RecieverClass = ModData.RecieverClass)
-			{
-				Reciever = World->SpawnActor<AReciever>(RecieverClass);
-				Reciever->SetOwner(OwningWeapon);
-			}
-			/*if (const TSubclassOf<AScope>& ScopeClass = ModData.ScopeClass)
-			{
-				Scope = World->SpawnActor<AScope>(ScopeClass);
-				Scope->SetOwner(OwningWeapon);
-			}*/
-			if (const TSubclassOf<ASightFront>& SightFrontClass = ModData.SightFrontClass)
-			{
-				SightFront = World->SpawnActor<ASightFront>(SightFrontClass);
-				SightFront->SetOwner(OwningWeapon);
-			}
-			if (const TSubclassOf<ASightRear>& SightRearClass = ModData.SightRearClass)
-			{
-				SightRear = World->SpawnActor<ASightRear>(SightRearClass);
-				SightRear->SetOwner(OwningWeapon);
-			}
-			if (const TSubclassOf<AStock>& StockClass = ModData.StockClass)
-			{
-				Stock = World->SpawnActor<AStock>(StockClass);
-				Stock->SetOwner(OwningWeapon);
-			}
-			/*if (const TSubclassOf<ATactical>& TacticalClass = ModData.TacticalClass)
-			{
-				Tactical = World->SpawnActor<ATactical>(TacticalClass);
-				Tactical->SetOwner(OwningWeapon);
-			}*/
-		}
-
-		if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
-		{
-			if (Barrel)
-			{
-				FName BarrelSocketName = TEXT("mod_barrelSocket");
-				if (WeaponMesh->DoesSocketExist(BarrelSocketName))
+				if (const TSubclassOf<AMod>& ModClass = ModData.ModClass)
 				{
-					if (const USkeletalMeshSocket* BarrelSocket = WeaponMesh->GetSocketByName(BarrelSocketName))
+					if (AMod* SpawnedMod = World->SpawnActor<AMod>(ModClass))
 					{
-						BarrelSocket->AttachActor(Barrel, WeaponMesh);
-					}
-				}
-			}
-			if (GasBlock)
-			{
-				FName GasBlockSocketName = TEXT("mod_gas_blockSocket");
-				if (WeaponMesh->DoesSocketExist(GasBlockSocketName))
-				{
-					if (const USkeletalMeshSocket* GasBlockSocket = WeaponMesh->GetSocketByName(GasBlockSocketName))
-					{
-						GasBlockSocket->AttachActor(GasBlock, WeaponMesh);
-					}
-				}
-			}
-			if (Handguard)
-			{
-				FName HandguardSocketName = TEXT("mod_handguardSocket");
-				if (WeaponMesh->DoesSocketExist(HandguardSocketName))
-				{
-					if (const USkeletalMeshSocket* HandguardSocket = WeaponMesh->GetSocketByName(HandguardSocketName))
-					{
-						HandguardSocket->AttachActor(Handguard, WeaponMesh);
-					}
-				}
-			}
-			if (Mag)
-			{
-				FName MagSocketName = TEXT("mod_magazineSocket");
-				if (WeaponMesh->DoesSocketExist(MagSocketName))
-				{
-					if (const USkeletalMeshSocket* MagSocket = WeaponMesh->GetSocketByName(MagSocketName))
-					{
-						MagSocket->AttachActor(Mag, WeaponMesh);
-					}
-				}
-			}
-			/*if (Mount)
-			{
-				FName MountSocketName = TEXT("mod_mount_000Socket");
-				if (WeaponMesh->DoesSocketExist(MountSocketName))
-				{
-					if (const USkeletalMeshSocket* MountSocket = WeaponMesh->GetSocketByName(MountSocketName))
-					{
-						MountSocket->AttachActor(Mount, WeaponMesh);
-					}
-				}
-			}*/
-			if (Muzzle)
-			{
-				FName MuzzleSocketName = TEXT("mod_muzzleSocket");
-				if (WeaponMesh->DoesSocketExist(MuzzleSocketName))
-				{
-					if (const USkeletalMeshSocket* MuzzleSocket = WeaponMesh->GetSocketByName(MuzzleSocketName))
-					{
-						MuzzleSocket->AttachActor(Muzzle, WeaponMesh);
-					}
-				}
-			}
-			if (Pistolgrip)
-			{
-				FName PistolgripSocketName = TEXT("mod_pistol_gripSocket");
-				if (WeaponMesh->DoesSocketExist(PistolgripSocketName))
-				{
-					if (const USkeletalMeshSocket* PistolgripSocket = WeaponMesh->GetSocketByName(PistolgripSocketName))
-					{
-						PistolgripSocket->AttachActor(Pistolgrip, WeaponMesh);
-					}
-				}
-			}
-			if (Reciever)
-			{
-				FName RecieverSocketName = TEXT("mod_recieverSocket");
-				if (WeaponMesh->DoesSocketExist(RecieverSocketName))
-				{
-					if (const USkeletalMeshSocket* RecieverSocket = WeaponMesh->GetSocketByName(RecieverSocketName))
-					{
-						RecieverSocket->AttachActor(Reciever, WeaponMesh);
-					}
-				}
-			}
-			if (SightFront)
-			{
-				FName SightFrontSocketName = TEXT("mod_sight_frontSocket");
-				if (WeaponMesh->DoesSocketExist(SightFrontSocketName))
-				{
-					if (const USkeletalMeshSocket* SightFrontSocket = WeaponMesh->GetSocketByName(SightFrontSocketName))
-					{
-						SightFrontSocket->AttachActor(SightFront, WeaponMesh);
-					}
-				}
-				else if (Reciever)
-				{
-					if (USkeletalMeshComponent* RecieverMesh = Reciever->GetMesh())
-					{
-						if (const USkeletalMeshSocket* SightFrontSocket = RecieverMesh->GetSocketByName(SightFrontSocketName))
+						SpawnedMod->SetOwner(OwningActor);
+						SpawnedMod->SetModType(ModData.ModType);
+						if (OwningActorMesh)
 						{
-							SightFrontSocket->AttachActor(SightFront, RecieverMesh);
+							FName AttachmentSocketName = FShooterUtility::GetModAttachmentSocketName(ModData.ModType);
+							if (OwningActorMesh->DoesSocketExist(AttachmentSocketName))
+							{
+								if (const USkeletalMeshSocket* ModSocket = OwningActorMesh->GetSocketByName(AttachmentSocketName))
+								{
+									ModSocket->AttachActor(SpawnedMod, OwningActorMesh);
+								}
+							}
 						}
-					}
-				}
-			}
-			if (SightRear)
-			{
-				FName SightRearSocketName = TEXT("mod_sight_rearSocket");
-				if (WeaponMesh->DoesSocketExist(SightRearSocketName))
-				{
-					if (const USkeletalMeshSocket* SightRearSocket = WeaponMesh->GetSocketByName(SightRearSocketName))
-					{
-						SightRearSocket->AttachActor(SightRear, WeaponMesh);
-					}
-				}
-				else if (Reciever)
-				{
-					if (USkeletalMeshComponent* RecieverMesh = Reciever->GetMesh())
-					{
-						if (const USkeletalMeshSocket* SightRearSocket = RecieverMesh->GetSocketByName(SightRearSocketName))
-						{
-							SightRearSocket->AttachActor(SightRear, RecieverMesh);
-						}
-					}
-				}
-			}
-			if (Stock)
-			{
-				FName StockSocketName = TEXT("mod_stockSocket");
-				if (WeaponMesh->DoesSocketExist(StockSocketName))
-				{
-					if (const USkeletalMeshSocket* StockSocket = WeaponMesh->GetSocketByName(StockSocketName))
-					{
-						StockSocket->AttachActor(Stock, WeaponMesh);
-					}
-				}
-			}
-		}
-		
-		if (USkeletalMeshComponent* WeaponMesh = OwningWeapon->GetMesh())
-		{
-			if (WeaponMesh->DoesSocketExist(TEXT("aim_camera")))
-			{
-				AimCameraSocketParentMesh = WeaponMesh;
-				AimCameraSocketName = TEXT("aim_camera");
-			}
-		}
-		if (SightRear)
-		{
-			if (USkeletalMeshComponent* SightRearMesh = SightRear->GetMesh())
-			{
-				if (SightRearMesh->DoesSocketExist(TEXT("mod_aim_camera")))
-				{
-					AimCameraSocketParentMesh = SightRearMesh;
-					AimCameraSocketName = TEXT("mod_aim_camera");
+						ModArray.Add(SpawnedMod);
+					}	
 				}
 			}
 		}
 	}
-
 }

@@ -5,6 +5,6 @@
 
 AStock::AStock()
 {
-
+	
 }
 

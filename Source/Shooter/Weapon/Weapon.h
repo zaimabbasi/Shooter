@@ -13,6 +13,7 @@ class UBoxComponent;
 class UHandsAnimationDataAsset;
 class UModComponent;
 class UWeaponAnimationDataAsset;
+class UModDataAsset;
 class UWeaponDataAsset;
 
 UCLASS()
@@ -31,7 +32,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	AShooterCharacter* OwningCharacter;
+	//AShooterCharacter* OwningCharacter;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* Mesh;
@@ -51,6 +52,5 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	FORCEINLINE EWeaponAction GetWeaponAction() const { return WeaponAction; }
 	UClass* GetHandsAnimClass() const;
-	USkeletalMeshComponent* GetAimCameraSocketParentMesh();
-	FName GetAimCameraSocketName();
+
 };

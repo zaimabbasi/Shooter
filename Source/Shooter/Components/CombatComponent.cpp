@@ -9,29 +9,14 @@
 
 UCombatComponent::UCombatComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
-	if (OwningCharacter && EquippedWeapon && bIsAiming)
-	{
-		USkeletalMeshComponent* HandsMesh = OwningCharacter->GetHandsMesh();
-		USkeletalMeshComponent* AimCameraSocketParentMesh = EquippedWeapon->GetAimCameraSocketParentMesh();
-		FName AimCameraSocketName = EquippedWeapon->GetAimCameraSocketName();
-		if (HandsMesh && AimCameraSocketParentMesh)
-		{
-			FVector AimCameraSocketOutLocation;
-			FRotator AimCameraSocketOutRotation;
-			AimCameraSocketTransform = AimCameraSocketParentMesh->GetSocketTransform(AimCameraSocketName, ERelativeTransformSpace::RTS_World);
-			HandsMesh->TransformToBoneSpace(TEXT("Camera_animated"), AimCameraSocketTransform.GetLocation(), FRotator(AimCameraSocketTransform.GetRotation()), AimCameraSocketOutLocation, AimCameraSocketOutRotation);
-			AimCameraSocketTransform.SetLocation(AimCameraSocketOutLocation);
-			AimCameraSocketTransform.SetRotation(FQuat(AimCameraSocketOutRotation));
-		}
-	}
+
 }
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

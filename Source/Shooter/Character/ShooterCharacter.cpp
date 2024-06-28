@@ -49,8 +49,6 @@ void AShooterCharacter::Tick(float DeltaTime)
 	UpdateAO_Pitch(DeltaTime);
 
 	UpdateMovement(DeltaTime);
-	
-	CalculateInterpAimCameraSocketLocation(DeltaTime);
 
 	UpdateCameraFOV(DeltaTime);
 
@@ -535,32 +533,6 @@ void AShooterCharacter::UpdateAO_Pitch(float DeltaTime)
 	}
 }
 
-void AShooterCharacter::CalculateInterpAimCameraSocketLocation(float DeltaTime)
-{
-	FVector AimCameraSocketLocation = GetAimCameraSocketTransform().GetLocation();
-	bool bIsAiming = GetIsAiming();
-	float AimSpeed = 10.0f;
-	FVector AimStep = FVector::ZeroVector;
-	if (bIsAiming)
-	{
-		AimStep = AimCameraSocketLocation * AimSpeed * DeltaTime;
-		if (AimCameraSocketLocation.Size() < AimStep.Size())
-		{
-			AimStep = AimCameraSocketLocation;
-		}
-		InterpAimCameraSocketLocation += AimStep;
-	}
-	else
-	{
-		AimStep = InterpAimCameraSocketLocation * AimSpeed * DeltaTime;
-		if (InterpAimCameraSocketLocation.Size() < AimStep.Size())
-		{
-			AimStep = InterpAimCameraSocketLocation;
-		}
-		InterpAimCameraSocketLocation -= AimStep;
-	}
-}
-
 void AShooterCharacter::UpdateCameraFOV(float DeltaTime)
 {
 	if (FirstPersonCamera == nullptr)
@@ -739,13 +711,4 @@ bool AShooterCharacter::GetIsAiming()
 		return false;
 	}
 	return CombatComponent->bIsAiming;
-}
-
-FTransform AShooterCharacter::GetAimCameraSocketTransform()
-{
-	if (CombatComponent == nullptr)
-	{
-		return FTransform();
-	}
-	return CombatComponent->AimCameraSocketTransform;
 }

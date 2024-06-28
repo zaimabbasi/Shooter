@@ -44,6 +44,4 @@ private:
 	UPROPERTY(Replicated)
 	bool bIsAiming;
 
-	FTransform AimCameraSocketTransform;
-
 };

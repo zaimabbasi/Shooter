@@ -5,6 +5,6 @@
 
 AReciever::AReciever()
 {
-
+	
 }
 
