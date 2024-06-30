@@ -46,10 +46,7 @@ void AWeapon::PostInitializeComponents()
 	{
 		ModComponent->OwningActor = this;
 		ModComponent->OwningActorMesh = Mesh;
-		if (WeaponDataAsset)
-		{
-			ModComponent->ModDataArray = WeaponDataAsset->ModDataArray;
-		}
+		ModComponent->ModDataAsset = ModDataAsset;
 	}
 
 }

@@ -12,8 +12,8 @@ class AShooterCharacter;
 class UBoxComponent;
 class UHandsAnimationDataAsset;
 class UModComponent;
-class UWeaponAnimationDataAsset;
 class UModDataAsset;
+class UWeaponAnimationDataAsset;
 class UWeaponDataAsset;
 
 UCLASS()
@@ -32,8 +32,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	//AShooterCharacter* OwningCharacter;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* Mesh;
 
@@ -42,6 +40,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	UWeaponDataAsset* WeaponDataAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
+	UModDataAsset* ModDataAsset;
 
 	UModComponent* ModComponent;
 

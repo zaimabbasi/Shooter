@@ -35,16 +35,8 @@ void AMod::PostInitializeComponents()
 	{
 		ModComponent->OwningActor = this;
 		ModComponent->OwningActorMesh = Mesh;
-		if (ModDataAsset)
-		{
-			ModComponent->ModDataArray = ModDataAsset->ModDataArray;
-		}
+		ModComponent->ModDataAsset = ModDataAsset;
 	}
-}
-
-void AMod::SetModType(EModType Type)
-{
-	ModType = Type;
 }
 
 void AMod::BeginPlay()

@@ -4,12 +4,26 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Shooter/Data/ModData.h"
-#include "Shooter/Data/ModDataAsset.h"
 #include "ModComponent.generated.h"
 
-class AMod;
+class ABarrel;
+class ACharge;
+//class AFlashlight;
+//class AForegrip;
+class AGasBlock;
+class AHandguard;
+class AMag;
+//class AMount;
+class AMuzzle;
+class APistolgrip;
+class AReciever;
+//class AScope;
+class ASightFront;
+class ASightRear;
+class AStock;
+//class ATactical;
 class AWeapon;
+class UModDataAsset;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SHOOTER_API UModComponent : public UActorComponent
@@ -32,9 +46,41 @@ private:
 
 	USkeletalMeshComponent* OwningActorMesh;
 
-	UPROPERTY(Replicated)
-	TArray<AMod*> ModArray;
+	UModDataAsset* ModDataAsset;
 
-	TArray<FModData> ModDataArray;
+	UPROPERTY(Replicated)
+	ABarrel* Barrel;
+
+	UPROPERTY(Replicated)
+	ACharge* Charge;
+
+	UPROPERTY(Replicated)
+	AGasBlock* GasBlock;
+
+	UPROPERTY(Replicated)
+	AHandguard* Handguard;
+
+	UPROPERTY(Replicated)
+	AMag* Mag;
+
+	UPROPERTY(Replicated)
+	AMuzzle* Muzzle;
+
+	UPROPERTY(Replicated)
+	APistolgrip* Pistolgrip;
+
+	UPROPERTY(Replicated)
+	AReciever* Reciever;
+
+	UPROPERTY(Replicated)
+	ASightFront* SightFront;
+
+	UPROPERTY(Replicated)
+	ASightRear* SightRear;
+
+	UPROPERTY(Replicated)
+	AStock* Stock;
+
+	void AttachModToOwningActorSocket(AMod* Mod, FName ModSocketName);
 
 };
