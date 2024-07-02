@@ -17,6 +17,7 @@ class UCombatComponent;
 class UInputAction;
 class UInputMappingContext;
 class UInventoryComponent;
+class UInventoryDataAsset;
 
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
@@ -163,6 +164,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	UCharacterDataAsset* CharacterDataAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
+	UInventoryDataAsset* InventoryDataAsset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	UInventoryComponent* InventoryComponent;

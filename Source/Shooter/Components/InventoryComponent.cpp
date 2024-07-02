@@ -4,6 +4,8 @@
 #include "InventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Shooter/Character/ShooterCharacter.h"
+#include "Shooter/Data/InventoryDataAsset.h"
+#include "Shooter/Mod/Mag.h"
 #include "Shooter/Weapon/Weapon.h"
 
 UInventoryComponent::UInventoryComponent()
@@ -23,7 +25,7 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(UInventoryComponent, WeaponsArray, COND_OwnerOnly);
-	DOREPLIFETIME(UInventoryComponent, CurrentIndex);
+	DOREPLIFETIME(UInventoryComponent, WeaponsAmmoArray);
 
 }
 
@@ -33,24 +35,45 @@ void UInventoryComponent::BeginPlay()
 
 	if (OwningCharacter && OwningCharacter->HasAuthority())
 	{
-		for (const FInventoryData InventoryData : InventoryDataArray)
+		if (InventoryDataAsset)
 		{
-			const TSubclassOf<AWeapon>& WeaponClass = InventoryData.WeaponClass;
-			if (!WeaponClass)
-			{
-				continue;
-			}
 			if (UWorld* World = GetWorld())
 			{
-				if (AWeapon* SpawnedWeapon = World->SpawnActor<AWeapon>(WeaponClass))
+				if (const TSubclassOf<AWeapon>& PrimaryWeaponClass = InventoryDataAsset->PrimaryWeaponClass)
 				{
-					SpawnedWeapon->SetOwner(OwningCharacter);
-					SpawnedWeapon->SetActorHiddenInGameWithChildren(true);
-					WeaponsArray.Add(SpawnedWeapon);
+					if (AWeapon* SpawnedPrimaryWeapon = World->SpawnActor<AWeapon>(PrimaryWeaponClass))
+					{
+						SpawnedPrimaryWeapon->SetOwner(OwningCharacter);
+						SpawnedPrimaryWeapon->SetActorHiddenInGameWithChildren(true);
+						WeaponsArray.Add(SpawnedPrimaryWeapon);
+					}
+				}
+				if (const TSubclassOf<AWeapon>& SecondaryWeaponClass = InventoryDataAsset->SecondaryWeaponClass)
+				{
+					if (AWeapon* SpawnedSecondaryWeapon = World->SpawnActor<AWeapon>(SecondaryWeaponClass))
+					{
+						SpawnedSecondaryWeapon->SetOwner(OwningCharacter);
+						SpawnedSecondaryWeapon->SetActorHiddenInGameWithChildren(true);
+						WeaponsArray.Add(SpawnedSecondaryWeapon);
+					}
+				}
+			}
+
+			WeaponsAmmoArray.Add(InventoryDataAsset->PrimaryWeaponAmmo);
+			WeaponsAmmoArray.Add(InventoryDataAsset->SecondaryWeaponAmmo);
+		}
+
+		for (uint8 Index = 0; Index < WeaponsArray.Max(); ++Index)
+		{
+			if (AWeapon* Weapon = GetWeaponAtIndex(Index))
+			{
+				if (AMag* WeaponMag = Weapon->GetMag())
+				{
+					Server_AddAmmoInWeaponMag(WeaponMag->GetAmmoSpace(), Index);
 				}
 			}
 		}
-
+		
 		if (OwningCharacter->IsLocallyControlled())
 		{
 			OnWeaponsArrayReadyDelegate.Execute();
@@ -59,25 +82,38 @@ void UInventoryComponent::BeginPlay()
 
 }
 
+void UInventoryComponent::Server_AddAmmoInWeaponMag_Implementation(uint8 AmmoCount, uint8 WeaponIndex)
+{
+	if (AmmoCount == 0)
+	{
+		return;
+	}
+	if (AWeapon* Weapon = GetWeaponAtIndex(WeaponIndex))
+	{
+		if (AMag* WeaponMag = Weapon->GetMag())
+		{
+			uint8 WeaponAmmo = GetAmmoAtIndex(WeaponIndex);
+			uint8 WeaponMagAmmoSpace = WeaponMag->GetAmmoSpace();
+			if (WeaponAmmo > 0 && WeaponMagAmmoSpace > 0 && AmmoCount <= WeaponMagAmmoSpace && AmmoCount <= WeaponAmmo)
+			{
+				WeaponMag->AddAmmo(AmmoCount);
+				WeaponsAmmoArray[WeaponIndex] -= AmmoCount;
+			}
+		}
+	}
+}
+
 void UInventoryComponent::OnRep_WeaponsArray() const
 {
 	OnWeaponsArrayReadyDelegate.Execute();
 }
 
-void UInventoryComponent::Server_SetCurrentIndex_Implementation(uint8 Index)
+AWeapon* UInventoryComponent::GetWeaponAtIndex(uint8 Index)
 {
-	if (!WeaponsArray.IsValidIndex(Index))
-	{
-		return;
-	}
-	CurrentIndex = Index;
+	return WeaponsArray.IsValidIndex(Index) ? WeaponsArray[Index] : nullptr;
 }
 
-AWeapon* UInventoryComponent::GetWeaponAtIndex(uint32 Index)
+uint8 UInventoryComponent::GetAmmoAtIndex(uint8 Index)
 {
-	if (WeaponsArray.IsValidIndex(Index))
-	{
-		return WeaponsArray[Index];
-	}
-	return nullptr;
+	return WeaponsAmmoArray.IsValidIndex(Index) ? WeaponsAmmoArray[Index] : 0;
 }

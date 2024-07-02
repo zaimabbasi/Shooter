@@ -8,6 +8,8 @@
 #include "Shooter/Types/WeaponActionState.h"
 #include "Weapon.generated.h"
 
+class AAmmo;
+class AMag;
 class AShooterCharacter;
 class UBoxComponent;
 class UHandsAnimationDataAsset;
@@ -49,9 +51,12 @@ protected:
 	UPROPERTY(Replicated)
 	EWeaponAction WeaponAction;
 
+	AAmmo* AmmoInChamber;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	FORCEINLINE EWeaponAction GetWeaponAction() const { return WeaponAction; }
 	UClass* GetHandsAnimClass() const;
+	AMag* GetMag();
 
 };

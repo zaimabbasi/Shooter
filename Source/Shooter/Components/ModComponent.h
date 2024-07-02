@@ -83,4 +83,7 @@ private:
 
 	void AttachModToOwningActorSocket(AMod* Mod, FName ModSocketName);
 
+public:
+	FORCEINLINE AMag* GetMag() const { return Mag; }
+
 };

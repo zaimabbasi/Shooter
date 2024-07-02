@@ -68,6 +68,7 @@ void UModComponent::BeginPlay()
 				{
 					SpawnedBarrel->SetOwner(OwningActor);
 					AttachModToOwningActorSocket(SpawnedBarrel, TEXT("mod_barrelSocket"));
+					Barrel = SpawnedBarrel;
 				}	
 			}
 			if (const TSubclassOf<ACharge>& ChargeClass = ModDataAsset->ChargeClass)
@@ -76,6 +77,7 @@ void UModComponent::BeginPlay()
 				{
 					SpawnedCharge->SetOwner(OwningActor);
 					AttachModToOwningActorSocket(SpawnedCharge, TEXT("mod_chargeSocket"));
+					Charge = SpawnedCharge;
 				}
 			}
 			if (const TSubclassOf<AGasBlock>& GasBlockClass = ModDataAsset->GasBlockClass)
@@ -84,6 +86,7 @@ void UModComponent::BeginPlay()
 				{
 					SpawnedGasBlock->SetOwner(OwningActor);
 					AttachModToOwningActorSocket(SpawnedGasBlock, TEXT("mod_gas_blockSocket"));
+					GasBlock = SpawnedGasBlock;
 				}
 			}
 			if (const TSubclassOf<AHandguard>& HandguardClass = ModDataAsset->HandguardClass)
@@ -92,6 +95,7 @@ void UModComponent::BeginPlay()
 				{
 					SpawnedHandguard->SetOwner(OwningActor);
 					AttachModToOwningActorSocket(SpawnedHandguard, TEXT("mod_handguardSocket"));
+					Handguard = SpawnedHandguard;
 				}
 			}
 			if (const TSubclassOf<AMag>& MagClass = ModDataAsset->MagClass)
@@ -100,6 +104,7 @@ void UModComponent::BeginPlay()
 				{
 					SpawnedMag->SetOwner(OwningActor);
 					AttachModToOwningActorSocket(SpawnedMag, TEXT("mod_magazineSocket"));
+					Mag = SpawnedMag;
 				}
 			}
 			if (const TSubclassOf<AMuzzle>& MuzzleClass = ModDataAsset->MuzzleClass)
@@ -108,6 +113,7 @@ void UModComponent::BeginPlay()
 				{
 					SpawnedMuzzle->SetOwner(OwningActor);
 					AttachModToOwningActorSocket(SpawnedMuzzle, TEXT("mod_muzzleSocket"));
+					Muzzle = SpawnedMuzzle;
 				}
 			}
 			if (const TSubclassOf<APistolgrip>& PistolgripClass = ModDataAsset->PistolgripClass)
@@ -116,6 +122,7 @@ void UModComponent::BeginPlay()
 				{
 					SpawnedPistolgrip->SetOwner(OwningActor);
 					AttachModToOwningActorSocket(SpawnedPistolgrip, TEXT("mod_pistol_gripSocket"));
+					Pistolgrip = SpawnedPistolgrip;
 				}
 			}
 			if (const TSubclassOf<AReciever>& RecieverClass = ModDataAsset->RecieverClass)
@@ -124,6 +131,7 @@ void UModComponent::BeginPlay()
 				{
 					SpawnedReciever->SetOwner(OwningActor);
 					AttachModToOwningActorSocket(SpawnedReciever, TEXT("mod_recieverSocket"));
+					Reciever = SpawnedReciever;
 				}
 			}
 			if (const TSubclassOf<ASightFront>& SightFrontClass = ModDataAsset->SightFrontClass)
@@ -132,6 +140,7 @@ void UModComponent::BeginPlay()
 				{
 					SpawnedSightFront->SetOwner(OwningActor);
 					AttachModToOwningActorSocket(SpawnedSightFront, TEXT("mod_sight_frontSocket"));
+					SightFront = SpawnedSightFront;
 				}
 			}
 			if (const TSubclassOf<ASightRear>& SightRearClass = ModDataAsset->SightRearClass)
@@ -140,6 +149,7 @@ void UModComponent::BeginPlay()
 				{
 					SpawnedSightRear->SetOwner(OwningActor);
 					AttachModToOwningActorSocket(SpawnedSightRear, TEXT("mod_sight_rearSocket"));
+					SpawnedSightRear = SightRear;
 				}
 			}
 			if (const TSubclassOf<AStock>& StockClass = ModDataAsset->StockClass)
@@ -148,6 +158,7 @@ void UModComponent::BeginPlay()
 				{
 					SpawnedStock->SetOwner(OwningActor);
 					AttachModToOwningActorSocket(SpawnedStock, TEXT("mod_stockSocket"));
+					Stock = SpawnedStock;
 				}
 			}
 		}
@@ -156,7 +167,7 @@ void UModComponent::BeginPlay()
 
 void UModComponent::AttachModToOwningActorSocket(AMod* Mod, FName ModSocketName)
 {
-	if (OwningActorMesh == nullptr)
+	if (Mod == nullptr || OwningActorMesh == nullptr)
 	{
 		return;
 	}

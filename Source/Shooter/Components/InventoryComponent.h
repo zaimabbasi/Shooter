@@ -9,6 +9,7 @@
 
 class AShooterCharacter;
 class AWeapon;
+class UInventoryDataAsset;
 
 DECLARE_DELEGATE(FOnWeaponsArrayReadyDelegate)
 
@@ -32,24 +33,25 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION(Server, Reliable)
+	void Server_AddAmmoInWeaponMag(uint8 AmmoCount, uint8 WeaponIndex);
+
 	UFUNCTION()
 	void OnRep_WeaponsArray() const;
-
-	UFUNCTION(Server, Reliable)
-	void Server_SetCurrentIndex(uint8 Index);
 
 private:
 	AShooterCharacter* OwningCharacter;
 
-	TArray<FInventoryData> InventoryDataArray;
+	UInventoryDataAsset* InventoryDataAsset;
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponsArray)
 	TArray<AWeapon*> WeaponsArray;
 
 	UPROPERTY(Replicated)
-	uint8 CurrentIndex;
+	TArray<uint8> WeaponsAmmoArray;
 
 public:
-	AWeapon* GetWeaponAtIndex(uint32 Index);
+	AWeapon* GetWeaponAtIndex(uint8 Index);
+	uint8 GetAmmoAtIndex(uint8 Index);
 
 };

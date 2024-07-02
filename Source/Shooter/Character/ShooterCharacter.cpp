@@ -102,11 +102,8 @@ void AShooterCharacter::PostInitializeComponents()
 	if (InventoryComponent)
 	{
 		InventoryComponent->OwningCharacter = this;
+		InventoryComponent->InventoryDataAsset = InventoryDataAsset;
 		InventoryComponent->OnWeaponsArrayReadyDelegate.BindUObject(this, &AShooterCharacter::OnWeaponsArrayReadyCallback);
-		if (CharacterDataAsset)
-		{
-			InventoryComponent->InventoryDataArray = CharacterDataAsset->InventoryDataArray;
-		}
 	}
 	if (CombatComponent)
 	{
@@ -279,7 +276,6 @@ void AShooterCharacter::OnEquipPrimaryWeaponAction(const FInputActionValue& Valu
 			if (CombatComponent->EquippedWeapon != PrimaryWeapon)
 			{
 				CombatComponent->Server_SetEquippedWeapon(PrimaryWeapon);
-				InventoryComponent->Server_SetCurrentIndex(InventoryComponent->PRIMARY_WEAPON_INDEX);
 			}
 		}
 	}
@@ -296,7 +292,6 @@ void AShooterCharacter::OnEquipSecondaryWeaponAction(const FInputActionValue& Va
 			if (CombatComponent->EquippedWeapon != SecondaryWeapon)
 			{
 				CombatComponent->Server_SetEquippedWeapon(SecondaryWeapon);
-				InventoryComponent->Server_SetCurrentIndex(InventoryComponent->SECONDARY_WEAPON_INDEX);
 			}
 		}
 	}
@@ -645,7 +640,6 @@ void AShooterCharacter::OnWeaponsArrayReadyCallback()
 		if (PrimaryWeapon && CombatComponent->EquippedWeapon != PrimaryWeapon)
 		{
 			CombatComponent->Server_SetEquippedWeapon(PrimaryWeapon);
-			InventoryComponent->Server_SetCurrentIndex(InventoryComponent->PRIMARY_WEAPON_INDEX);
 		}
 	}
 }

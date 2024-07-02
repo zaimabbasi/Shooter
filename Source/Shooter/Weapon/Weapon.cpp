@@ -3,6 +3,7 @@
 
 #include "Weapon.h"
 #include "Components/BoxComponent.h"
+#include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
 #include "Shooter/Components/ModComponent.h"
 #include "Shooter/Data/ModDataAsset.h"
@@ -78,4 +79,13 @@ UClass* AWeapon::GetHandsAnimClass() const
 		return nullptr;
 	}
 	return WeaponDataAsset->HandsAnimClass;
+}
+
+AMag* AWeapon::GetMag()
+{
+	if (ModComponent == nullptr)
+	{
+		return nullptr;
+	}
+	return ModComponent->GetMag();
 }

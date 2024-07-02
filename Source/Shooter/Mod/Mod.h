@@ -15,7 +15,7 @@ class SHOOTER_API AMod : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
+public:
 	AMod();
 	virtual void Tick(float DeltaTime) override;
 	virtual void PostInitializeComponents() override;
