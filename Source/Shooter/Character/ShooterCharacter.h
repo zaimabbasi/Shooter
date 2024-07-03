@@ -31,6 +31,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	virtual bool HandleHandsAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent);
+	bool IsPrimaryWeapon(AWeapon* Weapon);
 
 	const float DefaultAnimationTransitionDuration = 0.25f;
 	const float MaxLean = 15.0f;

@@ -24,6 +24,7 @@ public:
 	UInventoryComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	bool IsPrimaryWeapon(AWeapon* Weapon);
 
 	const uint8 PRIMARY_WEAPON_INDEX = 0;
 	const uint8 SECONDARY_WEAPON_INDEX = 1;

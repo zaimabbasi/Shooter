@@ -122,6 +122,15 @@ bool AShooterCharacter::HandleHandsAnimNotify(const FAnimNotifyEvent& AnimNotify
 	return true;
 }
 
+bool AShooterCharacter::IsPrimaryWeapon(AWeapon* Weapon)
+{
+	if (InventoryComponent == nullptr)
+	{
+		return false;
+	}
+	return InventoryComponent->IsPrimaryWeapon(Weapon);
+}
+
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();

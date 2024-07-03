@@ -73,6 +73,22 @@ void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponTo
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+		FName WeaponHolsterSocketName = TEXT("weapon_holsterSocket");
+		if (EquippedWeapon->IsPistol())
+		{
+			WeaponHolsterSocketName = TEXT("pistol_holsterSocket");
+		}
+		else if (!OwningCharacter->IsPrimaryWeapon(EquippedWeapon))
+		{
+			WeaponHolsterSocketName = TEXT("weapon_holster1Socket");
+		}
+		if (USkeletalMeshComponent* CharacterMesh = OwningCharacter->GetMesh())
+		{
+			if (const USkeletalMeshSocket* WeaponHolsterSocket = CharacterMesh->GetSocketByName(WeaponHolsterSocketName))
+			{
+				WeaponHolsterSocket->AttachActor(EquippedWeapon, CharacterMesh);
+			}
+		}
 	}
 	if (USkeletalMeshComponent* HandsMesh = OwningCharacter->GetHandsMesh())
 	{

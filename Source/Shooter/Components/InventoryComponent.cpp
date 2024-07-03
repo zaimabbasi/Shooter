@@ -2,6 +2,7 @@
 
 
 #include "InventoryComponent.h"
+#include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
 #include "Shooter/Character/ShooterCharacter.h"
 #include "Shooter/Data/InventoryDataAsset.h"
@@ -27,6 +28,11 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME_CONDITION(UInventoryComponent, WeaponsArray, COND_OwnerOnly);
 	DOREPLIFETIME(UInventoryComponent, WeaponsAmmoArray);
 
+}
+
+bool UInventoryComponent::IsPrimaryWeapon(AWeapon* Weapon)
+{
+	return WeaponsArray.Find(Weapon) == PRIMARY_WEAPON_INDEX;
 }
 
 void UInventoryComponent::BeginPlay()
@@ -68,6 +74,29 @@ void UInventoryComponent::BeginPlay()
 				if (AMag* WeaponMag = Weapon->GetMag())
 				{
 					Server_AddAmmoInWeaponMag(WeaponMag->GetAmmoSpace(), Index);
+				}
+			}
+		}
+
+		for (uint8 Index = 0; Index < WeaponsArray.Num(); ++Index)
+		{
+			if (AWeapon* Weapon = GetWeaponAtIndex(Index))
+			{
+				FName WeaponHolsterSocketName = TEXT("weapon_holsterSocket");
+				if (Weapon->IsPistol())
+				{
+					WeaponHolsterSocketName = TEXT("pistol_holsterSocket");
+				}
+				else if (Index > 0)
+				{
+					WeaponHolsterSocketName = FName(*FString::Printf(TEXT("weapon_holster%uSocket"), Index));
+				}
+				if (USkeletalMeshComponent* Mesh = OwningCharacter->GetMesh())
+				{
+					if (const USkeletalMeshSocket* WeaponHolsterSocket = Mesh->GetSocketByName(WeaponHolsterSocketName))
+					{
+						WeaponHolsterSocket->AttachActor(Weapon, Mesh);
+					}
 				}
 			}
 		}

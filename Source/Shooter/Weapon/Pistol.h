@@ -13,5 +13,6 @@ class SHOOTER_API APistol : public AWeapon
 	
 public:
 	APistol();
+	virtual bool IsPistol() const override { return true; }
 
 };
