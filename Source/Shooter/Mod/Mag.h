@@ -30,7 +30,7 @@ private:
 	UPROPERTY(Replicated)
 	uint8 AmmoCount;
 
-	TArray<AAmmo*> AmmoArray;
+	TMap<FName, AAmmo*> AmmoMap;
 
 public:
 	FORCEINLINE uint8 GetAmmoCount() const { return AmmoCount; }

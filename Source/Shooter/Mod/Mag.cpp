@@ -3,6 +3,7 @@
 
 #include "Mag.h"
 #include "Net/UnrealNetwork.h"
+#include "Shooter/Ammo/Ammo.h"
 #include "Shooter/Data/MagDataAsset.h"
 
 AMag::AMag()
@@ -21,12 +22,6 @@ void AMag::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProp
 void AMag::AddAmmo(uint8 Count)
 {
 	Server_AddAmmo(Count);
-	/*if (GetAmmoSpace() < Count)
-	{
-		return false;
-	}
-	AmmoCount += Count;
-	return true;*/
 }
 
 void AMag::Server_AddAmmo_Implementation(uint8 Count)
@@ -35,11 +30,26 @@ void AMag::Server_AddAmmo_Implementation(uint8 Count)
 	{
 		return;
 	}
-	AmmoCount += Count;
 	if (MagDataAsset)
 	{
-		
+		if (UWorld* World = GetWorld())
+		{
+			for (uint8 Index = AmmoCount; Index < AmmoCount + Count; ++Index)
+			{
+				FName AmmoSocketName = FName(*FString::Printf(TEXT("patron_%03d"), Index + 1));
+				if (Mesh && Mesh->DoesSocketExist(AmmoSocketName))
+				{
+					if (AAmmo* SpawnedAmmo = World->SpawnActor<AAmmo>(MagDataAsset->AmmoClass))
+					{
+						SpawnedAmmo->SetOwner(this);
+						SpawnedAmmo->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform, AmmoSocketName);
+						AmmoMap.Add(AmmoSocketName, SpawnedAmmo);
+					}
+				}
+			}
+		}
 	}
+	AmmoCount += Count;
 }
 
 uint8 AMag::GetAmmoCapacity()

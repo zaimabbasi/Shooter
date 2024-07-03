@@ -2,7 +2,6 @@
 
 
 #include "ModComponent.h"
-#include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
 #include "Shooter/Data/ModDataAsset.h"
 #include "Shooter/Mod/Barrel.h"
@@ -67,17 +66,21 @@ void UModComponent::BeginPlay()
 				if (ABarrel* SpawnedBarrel = World->SpawnActor<ABarrel>(BarrelClass))
 				{
 					SpawnedBarrel->SetOwner(OwningActor);
-					AttachModToOwningActorSocket(SpawnedBarrel, TEXT("mod_barrelSocket"));
-					Barrel = SpawnedBarrel;
-				}	
+					if (SpawnedBarrel->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_barrel")))
+					{
+						Barrel = SpawnedBarrel;
+					}
+				}
 			}
 			if (const TSubclassOf<ACharge>& ChargeClass = ModDataAsset->ChargeClass)
 			{
 				if (ACharge* SpawnedCharge = World->SpawnActor<ACharge>(ChargeClass))
 				{
 					SpawnedCharge->SetOwner(OwningActor);
-					AttachModToOwningActorSocket(SpawnedCharge, TEXT("mod_chargeSocket"));
-					Charge = SpawnedCharge;
+					if (SpawnedCharge->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_charge")))
+					{
+						Charge = SpawnedCharge;
+					}
 				}
 			}
 			if (const TSubclassOf<AGasBlock>& GasBlockClass = ModDataAsset->GasBlockClass)
@@ -85,8 +88,10 @@ void UModComponent::BeginPlay()
 				if (AGasBlock* SpawnedGasBlock = World->SpawnActor<AGasBlock>(GasBlockClass))
 				{
 					SpawnedGasBlock->SetOwner(OwningActor);
-					AttachModToOwningActorSocket(SpawnedGasBlock, TEXT("mod_gas_blockSocket"));
-					GasBlock = SpawnedGasBlock;
+					if (SpawnedGasBlock->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_gas_block")))
+					{
+						GasBlock = SpawnedGasBlock;
+					}
 				}
 			}
 			if (const TSubclassOf<AHandguard>& HandguardClass = ModDataAsset->HandguardClass)
@@ -94,8 +99,10 @@ void UModComponent::BeginPlay()
 				if (AHandguard* SpawnedHandguard = World->SpawnActor<AHandguard>(HandguardClass))
 				{
 					SpawnedHandguard->SetOwner(OwningActor);
-					AttachModToOwningActorSocket(SpawnedHandguard, TEXT("mod_handguardSocket"));
-					Handguard = SpawnedHandguard;
+					if (SpawnedHandguard->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_handguard")))
+					{
+						Handguard = SpawnedHandguard;
+					}
 				}
 			}
 			if (const TSubclassOf<AMag>& MagClass = ModDataAsset->MagClass)
@@ -103,8 +110,10 @@ void UModComponent::BeginPlay()
 				if (AMag* SpawnedMag = World->SpawnActor<AMag>(MagClass))
 				{
 					SpawnedMag->SetOwner(OwningActor);
-					AttachModToOwningActorSocket(SpawnedMag, TEXT("mod_magazineSocket"));
-					Mag = SpawnedMag;
+					if (SpawnedMag->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_magazine")))
+					{
+						Mag = SpawnedMag;
+					}
 				}
 			}
 			if (const TSubclassOf<AMuzzle>& MuzzleClass = ModDataAsset->MuzzleClass)
@@ -112,8 +121,11 @@ void UModComponent::BeginPlay()
 				if (AMuzzle* SpawnedMuzzle = World->SpawnActor<AMuzzle>(MuzzleClass))
 				{
 					SpawnedMuzzle->SetOwner(OwningActor);
-					AttachModToOwningActorSocket(SpawnedMuzzle, TEXT("mod_muzzleSocket"));
-					Muzzle = SpawnedMuzzle;
+					if (SpawnedMuzzle->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_muzzle")))
+					{
+						Muzzle = SpawnedMuzzle;
+					}
+
 				}
 			}
 			if (const TSubclassOf<APistolgrip>& PistolgripClass = ModDataAsset->PistolgripClass)
@@ -121,8 +133,10 @@ void UModComponent::BeginPlay()
 				if (APistolgrip* SpawnedPistolgrip = World->SpawnActor<APistolgrip>(PistolgripClass))
 				{
 					SpawnedPistolgrip->SetOwner(OwningActor);
-					AttachModToOwningActorSocket(SpawnedPistolgrip, TEXT("mod_pistol_gripSocket"));
-					Pistolgrip = SpawnedPistolgrip;
+					if (SpawnedPistolgrip->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_pistol_grip")))
+					{
+						Pistolgrip = SpawnedPistolgrip;
+					}
 				}
 			}
 			if (const TSubclassOf<AReciever>& RecieverClass = ModDataAsset->RecieverClass)
@@ -130,8 +144,10 @@ void UModComponent::BeginPlay()
 				if (AReciever* SpawnedReciever = World->SpawnActor<AReciever>(RecieverClass))
 				{
 					SpawnedReciever->SetOwner(OwningActor);
-					AttachModToOwningActorSocket(SpawnedReciever, TEXT("mod_recieverSocket"));
-					Reciever = SpawnedReciever;
+					if (SpawnedReciever->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_reciever")))
+					{
+						Reciever = SpawnedReciever;
+					}
 				}
 			}
 			if (const TSubclassOf<ASightFront>& SightFrontClass = ModDataAsset->SightFrontClass)
@@ -139,8 +155,10 @@ void UModComponent::BeginPlay()
 				if (ASightFront* SpawnedSightFront = World->SpawnActor<ASightFront>(SightFrontClass))
 				{
 					SpawnedSightFront->SetOwner(OwningActor);
-					AttachModToOwningActorSocket(SpawnedSightFront, TEXT("mod_sight_frontSocket"));
-					SightFront = SpawnedSightFront;
+					if (SpawnedSightFront->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_sight_front")))
+					{
+						SightFront = SpawnedSightFront;
+					}
 				}
 			}
 			if (const TSubclassOf<ASightRear>& SightRearClass = ModDataAsset->SightRearClass)
@@ -148,8 +166,10 @@ void UModComponent::BeginPlay()
 				if (ASightRear* SpawnedSightRear = World->SpawnActor<ASightRear>(SightRearClass))
 				{
 					SpawnedSightRear->SetOwner(OwningActor);
-					AttachModToOwningActorSocket(SpawnedSightRear, TEXT("mod_sight_rearSocket"));
-					SpawnedSightRear = SightRear;
+					if (SpawnedSightRear->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_sight_rear")))
+					{
+						SpawnedSightRear = SightRear;
+					}
 				}
 			}
 			if (const TSubclassOf<AStock>& StockClass = ModDataAsset->StockClass)
@@ -157,25 +177,12 @@ void UModComponent::BeginPlay()
 				if (AStock* SpawnedStock = World->SpawnActor<AStock>(StockClass))
 				{
 					SpawnedStock->SetOwner(OwningActor);
-					AttachModToOwningActorSocket(SpawnedStock, TEXT("mod_stockSocket"));
-					Stock = SpawnedStock;
+					if (SpawnedStock->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_stock")))
+					{
+						Stock = SpawnedStock;
+					}
 				}
 			}
-		}
-	}
-}
-
-void UModComponent::AttachModToOwningActorSocket(AMod* Mod, FName ModSocketName)
-{
-	if (Mod == nullptr || OwningActorMesh == nullptr)
-	{
-		return;
-	}
-	if (OwningActorMesh->DoesSocketExist(ModSocketName))
-	{
-		if (const USkeletalMeshSocket* ModSocket = OwningActorMesh->GetSocketByName(ModSocketName))
-		{
-			ModSocket->AttachActor(Mod, OwningActorMesh);
 		}
 	}
 }

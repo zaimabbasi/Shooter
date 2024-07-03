@@ -44,7 +44,6 @@ void UInventoryComponent::BeginPlay()
 					if (AWeapon* SpawnedPrimaryWeapon = World->SpawnActor<AWeapon>(PrimaryWeaponClass))
 					{
 						SpawnedPrimaryWeapon->SetOwner(OwningCharacter);
-						SpawnedPrimaryWeapon->SetActorHiddenInGameWithChildren(true);
 						WeaponsArray.Add(SpawnedPrimaryWeapon);
 					}
 				}
@@ -53,7 +52,6 @@ void UInventoryComponent::BeginPlay()
 					if (AWeapon* SpawnedSecondaryWeapon = World->SpawnActor<AWeapon>(SecondaryWeaponClass))
 					{
 						SpawnedSecondaryWeapon->SetOwner(OwningCharacter);
-						SpawnedSecondaryWeapon->SetActorHiddenInGameWithChildren(true);
 						WeaponsArray.Add(SpawnedSecondaryWeapon);
 					}
 				}
@@ -63,7 +61,7 @@ void UInventoryComponent::BeginPlay()
 			WeaponsAmmoArray.Add(InventoryDataAsset->SecondaryWeaponAmmo);
 		}
 
-		for (uint8 Index = 0; Index < WeaponsArray.Max(); ++Index)
+		for (uint8 Index = 0; Index < WeaponsArray.Num(); ++Index)
 		{
 			if (AWeapon* Weapon = GetWeaponAtIndex(Index))
 			{

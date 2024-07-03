@@ -73,14 +73,12 @@ void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponTo
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
-		EquippedWeapon->SetActorHiddenInGameWithChildren(true);
 	}
 	if (USkeletalMeshComponent* HandsMesh = OwningCharacter->GetHandsMesh())
 	{
 		if (const USkeletalMeshSocket* WeaponRootSocket = HandsMesh->GetSocketByName(TEXT("Weapon_rootSocket")))
 		{
 			WeaponRootSocket->AttachActor(WeaponToEquip, HandsMesh);
-			WeaponToEquip->SetActorHiddenInGameWithChildren(false);
 		}
 		HandsMesh->SetAnimClass(WeaponToEquip->GetHandsAnimClass());
 	}

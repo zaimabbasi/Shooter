@@ -29,7 +29,6 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	virtual bool HandleAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent);
-	void SetActorHiddenInGameWithChildren(bool bNewHidden);
 
 protected:
 	virtual void BeginPlay() override;

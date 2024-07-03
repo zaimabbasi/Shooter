@@ -10,11 +10,8 @@ AMod::AMod()
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
-	USceneComponent* Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	SetRootComponent(Root);
-
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
-	Mesh->SetupAttachment(GetRootComponent());
+	SetRootComponent(Mesh);
 
 	ModComponent = CreateDefaultSubobject<UModComponent>(TEXT("ModComponent"));
 	ModComponent->SetIsReplicated(true);
@@ -34,7 +31,6 @@ void AMod::PostInitializeComponents()
 	if (ModComponent)
 	{
 		ModComponent->OwningActor = this;
-		ModComponent->OwningActorMesh = Mesh;
 		ModComponent->ModDataAsset = ModDataAsset;
 	}
 }

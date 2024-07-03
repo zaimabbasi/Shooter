@@ -44,8 +44,6 @@ protected:
 private:
 	AActor* OwningActor;
 
-	USkeletalMeshComponent* OwningActorMesh;
-
 	UModDataAsset* ModDataAsset;
 
 	UPROPERTY(Replicated)
@@ -80,8 +78,6 @@ private:
 
 	UPROPERTY(Replicated)
 	AStock* Stock;
-
-	void AttachModToOwningActorSocket(AMod* Mod, FName ModSocketName);
 
 public:
 	FORCEINLINE AMag* GetMag() const { return Mag; }

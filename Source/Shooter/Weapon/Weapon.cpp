@@ -46,7 +46,6 @@ void AWeapon::PostInitializeComponents()
 	if (ModComponent)
 	{
 		ModComponent->OwningActor = this;
-		ModComponent->OwningActorMesh = Mesh;
 		ModComponent->ModDataAsset = ModDataAsset;
 	}
 
@@ -61,15 +60,6 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-}
-
-void AWeapon::SetActorHiddenInGameWithChildren(bool bNewHidden)
-{
-	SetActorHiddenInGame(bNewHidden);
-	for (AActor* ChildActor : Children)
-	{
-		ChildActor->SetActorHiddenInGame(bNewHidden);
-	}
 }
 
 UClass* AWeapon::GetHandsAnimClass() const
