@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "Enum/WeaponAction.h"
 #include "WeaponAnimInstance.generated.h"
 
 class AShooterCharacter;
 class AWeapon;
+enum class EWeaponAction : uint8;
 
 UCLASS()
 class SHOOTER_API UWeaponAnimInstance : public UAnimInstance
@@ -21,7 +21,7 @@ public:
 	virtual bool HandleNotify(const FAnimNotifyEvent& AnimNotifyEvent) override;
 
 private:
-	AWeapon* Weapon;
+	TObjectPtr<AWeapon> Weapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	EWeaponAction WeaponAction;

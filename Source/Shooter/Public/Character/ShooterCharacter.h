@@ -4,10 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "InputActionValue.h"
-#include "Enum/CharacterStance.h"
-#include "Enum/LeanDirection.h"
-#include "Enum/TurnDirection.h"
 #include "ShooterCharacter.generated.h"
 
 class AWeapon;
@@ -17,7 +13,10 @@ class UCombatComponent;
 class UInputAction;
 class UInputMappingContext;
 class UInventoryComponent;
-class UInventoryDataAsset;
+enum class ECharacterStance : uint8;
+enum class ELeanDirection : uint8;
+enum class ETurnDirection : uint8;
+struct FInputActionValue;
 
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
@@ -30,16 +29,17 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
-	virtual bool HandleHandsAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent);
-	bool IsPrimaryWeapon(AWeapon* Weapon);
-
-	const float DefaultAnimationTransitionDuration = 0.25f;
-	const float MaxLean = 15.0f;
-
-	const float DefaultToAimCameraFOVPercentage = 0.8f;
 
 protected:
 	virtual void BeginPlay() override;
+
+public:
+	void Init();
+	virtual bool HandleHandsAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent);
+	AWeapon* GetEquippedWeapon();
+	bool GetIsAiming();
+
+private:
 	void OnLookAction(const FInputActionValue& Value);
 	void OnMoveForwardAction(const FInputActionValue& Value);
 	void OnMoveBackwardAction(const FInputActionValue& Value);
@@ -59,7 +59,6 @@ protected:
 	void UpdateAO_Pitch(float DeltaTime);
 	void UpdateCameraFOV(float DeltaTime);
 	void TransitionToSprint();
-
 	void SetMovementInputVector(float MovementInputX, float MovementInputY);
 	/*void SetTurnDirection(ETurnDirection NewTurnDirection);*/
 	void SetIsToggleSlow(bool bToggleSlow);
@@ -68,9 +67,12 @@ protected:
 	void SetLeanTransitionDuration(float NewLeanTransitionDuration);
 	void SetLeaningRate(float NewLeaningRate);
 	void SetCurrentStance(ECharacterStance NewStance);
+	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
+	FORCEINLINE FName GetHandsWeaponRootSocketName() const { return TEXT("weapon_rootSocket"); }
+	UClass* GetDefaultHandsAnimClass() const;
 
 	UFUNCTION()
-	void OnWeaponsArrayReadyCallback();
+	void Handle_OnRepEquippedWeapon(AWeapon* EquippedWeapon);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetRemoteViewYaw(float RemoteYaw);
@@ -100,80 +102,81 @@ protected:
 	void Server_SetCurrentStance(ECharacterStance NewStance);
 
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* LegsMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> LegsMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* HandsMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> HandsMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FirstPersonCamera;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCameraComponent> FirstPersonCamera;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* MovementMappingContext;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInventoryComponent> InventoryComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* InventoryMappingContext;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCombatComponent> CombatComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* CombatMappingContext;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputMapping", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputMappingContext> MovementMappingContext;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* LookAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputMapping", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputMappingContext> InventoryMappingContext;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveForwardAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputMapping", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputMappingContext> CombatMappingContext;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveBackwardAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> LookAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveLeftAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> MoveForwardAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveRightAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> MoveBackwardAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* EquipPrimaryWeaponAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> MoveLeftAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* EquipSecondaryWeaponAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> MoveRightAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* ToggleCrouchAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> EquipPrimaryWeaponAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* ToggleProneAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> EquipSecondaryWeaponAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* ToggleSlowAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> ToggleCrouchAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* ToggleSprintAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> ToggleProneAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* ToggleLeanLeftAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> ToggleSlowAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* ToggleLeanRightAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> ToggleSprintAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* ToggleAimAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> ToggleLeanLeftAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* ReloadWeaponAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> ToggleLeanRightAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> ToggleAimAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> ReloadWeaponAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
-	UCharacterDataAsset* CharacterDataAsset;
+	TSoftObjectPtr<UCharacterDataAsset> CharacterDataAsset;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
-	UInventoryDataAsset* InventoryDataAsset;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
-	UInventoryComponent* InventoryComponent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
-	UCombatComponent* CombatComponent;
+	const float DefaultAnimationTransitionDuration = 0.25f;
+	const float MaxLean = 15.0f;
+	const float DefaultToAimCameraFOVPercentage = 0.8f;
 
 	float AO_Yaw;
 	float AO_Pitch;
@@ -210,6 +213,9 @@ private:
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
+	FORCEINLINE float GetDefaultAnimationTransitionDuration() const { return DefaultAnimationTransitionDuration; }
+	FORCEINLINE float GetMaxLean() const { return MaxLean; }
+	FORCEINLINE float GetDefaultToAimCameraFOVPercentage() const { return DefaultToAimCameraFOVPercentage; }
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
@@ -220,7 +226,5 @@ public:
 	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }
 	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
 	FORCEINLINE ECharacterStance GetCurrentStance() const { return CurrentStance; }
-	AWeapon* GetEquippedWeapon();
-	bool GetIsAiming();
 
 };

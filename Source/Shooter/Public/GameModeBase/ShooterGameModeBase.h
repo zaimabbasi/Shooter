@@ -6,12 +6,12 @@
 #include "GameFramework/GameModeBase.h"
 #include "ShooterGameModeBase.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class SHOOTER_API AShooterGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	
+public:
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+
 };

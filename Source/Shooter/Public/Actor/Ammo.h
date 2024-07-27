@@ -17,22 +17,28 @@ public:
 	AAmmo();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	void SetIsEmpty(bool bEmpty);
-
+	
 protected:
 	virtual void BeginPlay() override;
 
-	UFUNCTION(Server, Reliable)
-	void Server_SetIsEmpty(bool bEmpty);
+private:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* Mesh;
+public:
+	void SetIsEmpty(bool bEmpty);
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> Mesh;
 
 	UPROPERTY(Replicated)
 	bool bIsEmpty;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
-	UAmmoDataAsset* AmmoDataAsset;
+	TSoftObjectPtr<UAmmoDataAsset> AmmoDataAsset;
+
+private:
+	UFUNCTION(Server, Reliable)
+	void Server_SetIsEmpty(bool bEmpty);
 
 public:
 	FORCEINLINE bool GetIsEmpty() const { return bIsEmpty; }

@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "Mod.generated.h"
 
-class AWeapon;
 class UModComponent;
 class UModDataAsset;
 
@@ -23,13 +22,18 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* Mesh;
+public:
+	virtual void Init();
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> Mesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UModComponent> ModComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
-	UModDataAsset* ModDataAsset;
-
-	UModComponent* ModComponent;
+	TSoftObjectPtr<UModDataAsset> ModDataAsset;
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }

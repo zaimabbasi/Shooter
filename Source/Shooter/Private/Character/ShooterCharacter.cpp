@@ -6,11 +6,19 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "InputAction.h"
+#include "InputMappingContext.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
+#include "Engine/SkeletalMeshSocket.h"
 #include "Actor/Weapon.h"
 #include "ActorComponent/CombatComponent.h"
 #include "ActorComponent/InventoryComponent.h"
+#include "DataAsset/CharacterDataAsset.h"
+#include "DataAsset/InventoryDataAsset.h"
+#include "Enum/CharacterStance.h"
+#include "Enum/LeanDirection.h"
+#include "Enum/TurnDirection.h"
 
 AShooterCharacter::AShooterCharacter()
 {
@@ -60,21 +68,21 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnLookAction);
-		EnhancedInputComponent->BindAction(MoveForwardAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveForwardAction);
-		EnhancedInputComponent->BindAction(MoveBackwardAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveBackwardAction);
-		EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveLeftAction);
-		EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveRightAction);
-		EnhancedInputComponent->BindAction(EquipPrimaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnEquipPrimaryWeaponAction);
-		EnhancedInputComponent->BindAction(EquipSecondaryWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnEquipSecondaryWeaponAction);
-		EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleCrouchAction);
-		EnhancedInputComponent->BindAction(ToggleProneAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleProneAction);
-		EnhancedInputComponent->BindAction(ToggleSlowAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleSlowAction);
-		EnhancedInputComponent->BindAction(ToggleSprintAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleSprintAction);
-		EnhancedInputComponent->BindAction(ToggleLeanLeftAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleLeanLeftAction);
-		EnhancedInputComponent->BindAction(ToggleLeanRightAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleLeanRightAction);
-		EnhancedInputComponent->BindAction(ToggleAimAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleAimAction);
-		EnhancedInputComponent->BindAction(ReloadWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::OnReloadWeaponAction);
+		EnhancedInputComponent->BindAction(LookAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnLookAction);
+		EnhancedInputComponent->BindAction(MoveForwardAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveForwardAction);
+		EnhancedInputComponent->BindAction(MoveBackwardAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveBackwardAction);
+		EnhancedInputComponent->BindAction(MoveLeftAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveLeftAction);
+		EnhancedInputComponent->BindAction(MoveRightAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveRightAction);
+		EnhancedInputComponent->BindAction(EquipPrimaryWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnEquipPrimaryWeaponAction);
+		EnhancedInputComponent->BindAction(EquipSecondaryWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnEquipSecondaryWeaponAction);
+		EnhancedInputComponent->BindAction(ToggleCrouchAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleCrouchAction);
+		EnhancedInputComponent->BindAction(ToggleProneAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleProneAction);
+		EnhancedInputComponent->BindAction(ToggleSlowAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleSlowAction);
+		EnhancedInputComponent->BindAction(ToggleSprintAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleSprintAction);
+		EnhancedInputComponent->BindAction(ToggleLeanLeftAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleLeanLeftAction);
+		EnhancedInputComponent->BindAction(ToggleLeanRightAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleLeanRightAction);
+		EnhancedInputComponent->BindAction(ToggleAimAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleAimAction);
+		EnhancedInputComponent->BindAction(ReloadWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnReloadWeaponAction);
 	}
 
 }
@@ -99,22 +107,61 @@ void AShooterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	if (InventoryComponent)
-	{
-		InventoryComponent->OwningCharacter = this;
-		InventoryComponent->InventoryDataAsset = InventoryDataAsset;
-		InventoryComponent->OnWeaponsArrayReadyDelegate.BindUObject(this, &AShooterCharacter::OnWeaponsArrayReadyCallback);
-	}
-	if (CombatComponent)
-	{
-		CombatComponent->OwningCharacter = this;
-	}
-
 	if (FirstPersonCamera)
 	{
 		DefaultCameraFOV = FirstPersonCamera->FieldOfView;
 		AimCameraFOV = DefaultToAimCameraFOVPercentage * DefaultCameraFOV;
 	}
+
+	if (CombatComponent)
+	{
+		CombatComponent->OnRepEquippedWeaponDelegate.AddDynamic(this, &AShooterCharacter::Handle_OnRepEquippedWeapon);
+	}
+}
+
+void AShooterCharacter::Init()
+{
+	if (InventoryComponent)
+	{
+		if (const UCharacterDataAsset* LoadedCharacterDataAsset = CharacterDataAsset.LoadSynchronous())
+		{
+			InventoryComponent->Init(LoadedCharacterDataAsset->InventoryDataAsset.LoadSynchronous());
+		}
+
+		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
+		{
+			InventoryComponent->LoadAmmoInWeaponMag(Weapon, Weapon->GetMagAmmoSpace());
+			Weapon->LoadAmmoInChamber();
+		}
+
+		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
+		{
+			if (USkeletalMeshComponent* CharacterMesh = GetMesh())
+			{
+				if (const USkeletalMeshSocket* WeaponHolsterSocket = CharacterMesh->GetSocketByName(GetCharacterWeaponHolsterSocketName(Weapon)))
+				{
+					WeaponHolsterSocket->AttachActor(Weapon, CharacterMesh);
+				}
+			}
+		}
+
+		if (AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(0))
+		{
+			if (CombatComponent)
+			{
+				CombatComponent->SetEquippedWeapon(PrimaryWeapon);
+				if (HandsMesh)
+				{
+					if (const USkeletalMeshSocket* WeaponRootSocket = HandsMesh->GetSocketByName(GetHandsWeaponRootSocketName()))
+					{
+						WeaponRootSocket->AttachActor(PrimaryWeapon, HandsMesh);
+					}
+					HandsMesh->SetAnimClass(PrimaryWeapon->GetHandsAnimClass());
+				}
+			}
+		}
+	}
+
 }
 
 bool AShooterCharacter::HandleHandsAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent)
@@ -122,13 +169,51 @@ bool AShooterCharacter::HandleHandsAnimNotify(const FAnimNotifyEvent& AnimNotify
 	return true;
 }
 
-bool AShooterCharacter::IsPrimaryWeapon(AWeapon* Weapon)
+FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const
 {
-	if (InventoryComponent == nullptr)
+	if (Weapon == nullptr || InventoryComponent == nullptr)
 	{
-		return false;
+		return NAME_None;
 	}
-	return InventoryComponent->IsPrimaryWeapon(Weapon);
+	const int8 WeaponIndex = InventoryComponent->FindWeapon(Weapon);
+	if (WeaponIndex == INDEX_NONE)
+	{
+		return NAME_None;
+	}
+	else if (WeaponIndex == 0)
+	{
+		return TEXT("weapon_holsterSocket");
+	}
+	else
+	{
+		if (Weapon->IsPistol())
+		{
+			return TEXT("pistol_holsterSocket");
+		}
+		else
+		{
+			return *FString::Printf(TEXT("weapon_holster%uSocket"), WeaponIndex);
+		}
+	}
+}
+
+UClass* AShooterCharacter::GetDefaultHandsAnimClass() const
+{
+	if (CharacterDataAsset.IsNull())
+	{
+		return nullptr;
+	}
+	return CharacterDataAsset.LoadSynchronous()->HandsAnimClass;
+}
+
+void AShooterCharacter::Handle_OnRepEquippedWeapon(AWeapon* EquippedWeapon)
+{ 
+	if (HandsMesh == nullptr)
+	{
+		return;
+	}
+	UClass* HandsAnimClass = EquippedWeapon == nullptr ? GetDefaultHandsAnimClass() : EquippedWeapon->GetHandsAnimClass();
+	HandsMesh->SetAnimClass(HandsAnimClass);
 }
 
 void AShooterCharacter::BeginPlay()
@@ -139,9 +224,9 @@ void AShooterCharacter::BeginPlay()
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* EnhancedInputLocalPlayerSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
-			EnhancedInputLocalPlayerSubsystem->AddMappingContext(MovementMappingContext, 0);
-			EnhancedInputLocalPlayerSubsystem->AddMappingContext(InventoryMappingContext, 0);
-			EnhancedInputLocalPlayerSubsystem->AddMappingContext(CombatMappingContext, 0);
+			EnhancedInputLocalPlayerSubsystem->AddMappingContext(MovementMappingContext.LoadSynchronous(), 0);
+			EnhancedInputLocalPlayerSubsystem->AddMappingContext(InventoryMappingContext.LoadSynchronous(), 0);
+			EnhancedInputLocalPlayerSubsystem->AddMappingContext(CombatMappingContext.LoadSynchronous(), 0);
 		}
 	}
 	
@@ -282,9 +367,9 @@ void AShooterCharacter::OnEquipPrimaryWeaponAction(const FInputActionValue& Valu
 		if (InventoryComponent && CombatComponent)
 		{
 			AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(InventoryComponent->PRIMARY_WEAPON_INDEX);
-			if (CombatComponent->EquippedWeapon != PrimaryWeapon)
+			if (CombatComponent->GetEquippedWeapon() != PrimaryWeapon)
 			{
-				CombatComponent->Server_SetEquippedWeapon(PrimaryWeapon);
+				CombatComponent->SetEquippedWeapon(PrimaryWeapon);
 			}
 		}
 	}
@@ -298,9 +383,9 @@ void AShooterCharacter::OnEquipSecondaryWeaponAction(const FInputActionValue& Va
 		if (InventoryComponent && CombatComponent)
 		{
 			AWeapon* SecondaryWeapon = InventoryComponent->GetWeaponAtIndex(InventoryComponent->SECONDARY_WEAPON_INDEX);
-			if (CombatComponent->EquippedWeapon != SecondaryWeapon)
+			if (CombatComponent->GetEquippedWeapon() != SecondaryWeapon)
 			{
-				CombatComponent->Server_SetEquippedWeapon(SecondaryWeapon);
+				CombatComponent->SetEquippedWeapon(SecondaryWeapon);
 			}
 		}
 	}
@@ -641,18 +726,6 @@ void AShooterCharacter::SetCurrentStance(ECharacterStance NewStance)
 	Server_SetCurrentStance(NewStance);
 }
 
-void AShooterCharacter::OnWeaponsArrayReadyCallback()
-{
-	if (InventoryComponent && CombatComponent)
-	{
-		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(InventoryComponent->PRIMARY_WEAPON_INDEX);
-		if (PrimaryWeapon && CombatComponent->EquippedWeapon != PrimaryWeapon)
-		{
-			CombatComponent->Server_SetEquippedWeapon(PrimaryWeapon);
-		}
-	}
-}
-
 void AShooterCharacter::Server_SetRemoteViewYaw_Implementation(float RemoteYaw)
 {
 	RemoteViewYaw = RemoteYaw;
@@ -704,7 +777,7 @@ AWeapon* AShooterCharacter::GetEquippedWeapon()
 	{
 		return nullptr;
 	}
-	return CombatComponent->EquippedWeapon;
+	return CombatComponent->GetEquippedWeapon();
 }
 
 bool AShooterCharacter::GetIsAiming()
@@ -713,5 +786,5 @@ bool AShooterCharacter::GetIsAiming()
 	{
 		return false;
 	}
-	return CombatComponent->bIsAiming;
+	return CombatComponent->GetIsAiming();
 }

@@ -19,18 +19,29 @@ void AMag::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProp
 
 }
 
-void AMag::AddAmmo(uint8 Count)
+void AMag::Server_RemoveAmmo_Implementation()
 {
-	Server_AddAmmo(Count);
+	if (AmmoCount == 0)
+	{
+		return;
+	}
+	FName AmmoSocketName = FName(*FString::Printf(TEXT("patron_%03d"), AmmoCount));
+	AAmmo* FoundAmmo = AmmoMap.FindRef(AmmoSocketName);
+	if (FoundAmmo)
+	{
+		AmmoMap.Remove(AmmoSocketName);
+	}
+	--AmmoCount;
+	OnAmmoRemovedDelegate.Broadcast(FoundAmmo);
 }
 
-void AMag::Server_AddAmmo_Implementation(uint8 Count)
+void AMag::Server_AddAmmo_Implementation(const uint8 Count)
 {
 	if (GetAmmoSpace() < Count)
 	{
 		return;
 	}
-	if (MagDataAsset)
+	if (const UMagDataAsset* LoadedMagDataAsset = MagDataAsset.LoadSynchronous())
 	{
 		if (UWorld* World = GetWorld())
 		{
@@ -39,7 +50,7 @@ void AMag::Server_AddAmmo_Implementation(uint8 Count)
 				FName AmmoSocketName = FName(*FString::Printf(TEXT("patron_%03d"), Index + 1));
 				if (Mesh && Mesh->DoesSocketExist(AmmoSocketName))
 				{
-					if (AAmmo* SpawnedAmmo = World->SpawnActor<AAmmo>(MagDataAsset->AmmoClass))
+					if (AAmmo* SpawnedAmmo = World->SpawnActor<AAmmo>(LoadedMagDataAsset->AmmoClass))
 					{
 						SpawnedAmmo->SetOwner(this);
 						SpawnedAmmo->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform, AmmoSocketName);
@@ -52,6 +63,24 @@ void AMag::Server_AddAmmo_Implementation(uint8 Count)
 	AmmoCount += Count;
 }
 
+void AMag::AddAmmo(const uint8 Count)
+{
+	if (GetAmmoSpace() < Count)
+	{
+		return;
+	}
+	Server_AddAmmo(Count);
+}
+
+void AMag::RemoveAmmo()
+{
+	if (AmmoCount == 0)
+	{
+		return;
+	}
+	Server_RemoveAmmo();
+}
+
 uint8 AMag::GetAmmoCapacity()
 {
 	return MagDataAsset == nullptr ? 0 : MagDataAsset->AmmoCapacity;
@@ -61,4 +90,3 @@ uint8 AMag::GetAmmoSpace()
 {
 	return GetAmmoCapacity() - AmmoCount;
 }
-

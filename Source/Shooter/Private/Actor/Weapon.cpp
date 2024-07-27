@@ -5,7 +5,10 @@
 #include "Components/BoxComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
+#include "Actor/Ammo.h"
+#include "Actor/Mag.h"
 #include "ActorComponent/ModComponent.h"
+#include "DataAsset/MagDataAsset.h"
 #include "DataAsset/ModDataAsset.h"
 #include "DataAsset/WeaponDataAsset.h"
 
@@ -43,17 +46,55 @@ void AWeapon::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	if (ModComponent)
-	{
-		ModComponent->OwningActor = this;
-		ModComponent->ModDataAsset = ModDataAsset;
-	}
-
 }
 
 bool AWeapon::HandleAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent)
 {
 	return true;
+}
+
+void AWeapon::Init()
+{
+	if (ModComponent)
+	{
+		if (const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous())
+		{
+			ModComponent->Init(LoadedWeaponDataAsset->ModDataAsset.LoadSynchronous());
+		}
+		if (AMag* Mag = ModComponent->GetMag())
+		{
+			Mag->OnAmmoRemovedDelegate.AddDynamic(this, &AWeapon::Handle_OnAmmoRemoved);
+		}
+	}
+}
+
+uint8 AWeapon::GetMagAmmoSpace() const
+{
+	if (ModComponent == nullptr)
+	{
+		return 0;
+	}
+	AMag* Mag = ModComponent->GetMag();
+	if (Mag == nullptr)
+	{
+		return 0;
+	}
+	return Mag->GetAmmoSpace();
+}
+
+void AWeapon::LoadAmmoInChamber()
+{
+	if (ModComponent == nullptr)
+	{
+		return;
+	}
+	if (!AmmoInChamber)
+	{
+		if (AMag* Mag = ModComponent->GetMag())
+		{
+			Mag->RemoveAmmo();
+		}
+	}
 }
 
 void AWeapon::BeginPlay()
@@ -62,13 +103,42 @@ void AWeapon::BeginPlay()
 
 }
 
+void AWeapon::Handle_OnAmmoRemoved(AAmmo* RemovedAmmo)
+{
+	if (RemovedAmmo == nullptr)
+	{
+		if (ModComponent)
+		{
+			if (AMag* Mag = ModComponent->GetMag())
+			{
+				if (const UMagDataAsset* MagDataAsset = Mag->GetMagDataAsset().LoadSynchronous())
+				{
+					if (UWorld* World = GetWorld())
+					{
+						RemovedAmmo = World->SpawnActor<AAmmo>(MagDataAsset->AmmoClass);
+					}
+				}
+			}
+		}
+		
+	}
+	if (Mesh)
+	{
+		if (const USkeletalMeshSocket* PatronInWeaponSocket = Mesh->GetSocketByName(TEXT("patron_in_weaponSocket")))
+		{
+			PatronInWeaponSocket->AttachActor(RemovedAmmo, Mesh);
+		}
+	}
+	AmmoInChamber = RemovedAmmo;
+}
+
 UClass* AWeapon::GetHandsAnimClass() const
 {
-	if (WeaponDataAsset == nullptr)
+	if (WeaponDataAsset.IsNull())
 	{
 		return nullptr;
 	}
-	return WeaponDataAsset->HandsAnimClass;
+	return WeaponDataAsset.LoadSynchronous()->HandsAnimClass;
 }
 
 AMag* AWeapon::GetMag()

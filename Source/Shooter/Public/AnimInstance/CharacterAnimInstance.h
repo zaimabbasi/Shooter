@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "Enum/CharacterStance.h"
-#include "Enum/LeanDirection.h"
-#include "Enum/TurnDirection.h"
 #include "CharacterAnimInstance.generated.h"
 
 class AShooterCharacter;
+enum class ECharacterStance : uint8;
+enum class ELeanDirection: uint8;
+enum class ETurnDirection: uint8;
 
 UCLASS()
 class SHOOTER_API UCharacterAnimInstance : public UAnimInstance
@@ -21,10 +21,10 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 private:
-	AShooterCharacter* ShooterCharacter;
+	TObjectPtr<AShooterCharacter> ShooterCharacter;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* HandsMesh;
+	TObjectPtr<USkeletalMeshComponent> HandsMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	FTransform LPalmTransform;

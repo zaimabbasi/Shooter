@@ -18,12 +18,12 @@ public:
 	TSubclassOf<AWeapon> PrimaryWeaponClass;
 
 	UPROPERTY(EditAnywhere)
-	uint8 PrimaryWeaponAmmo;
+	uint8 PrimaryWeaponMaxAmmo;
 
 	UPROPERTY(EditAnywhere, meta = (DisallowedClasses = "AssaultRifle"))
 	TSubclassOf<AWeapon> SecondaryWeaponClass;
 
 	UPROPERTY(EditAnywhere)
-	uint8 SecondaryWeaponAmmo;
+	uint8 SecondaryWeaponMaxAmmo;
 
 };

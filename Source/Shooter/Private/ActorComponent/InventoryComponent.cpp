@@ -2,7 +2,6 @@
 
 
 #include "ActorComponent/InventoryComponent.h"
-#include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
 #include "Actor/Mag.h"
 #include "Actor/Weapon.h"
@@ -25,122 +24,106 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(UInventoryComponent, WeaponsArray, COND_OwnerOnly);
-	DOREPLIFETIME(UInventoryComponent, WeaponsAmmoArray);
+	DOREPLIFETIME(UInventoryComponent, WeaponArray);
+	DOREPLIFETIME(UInventoryComponent, WeaponAmmoArray);
 
 }
 
-bool UInventoryComponent::IsPrimaryWeapon(AWeapon* Weapon)
+void UInventoryComponent::Init(const UInventoryDataAsset* InventoryDataAsset)
 {
-	return WeaponsArray.Find(Weapon) == PRIMARY_WEAPON_INDEX;
+	if (InventoryDataAsset == nullptr)
+	{
+		return;
+	}
+	if (UWorld* World = GetWorld())
+	{
+		AActor* OwningActor = GetOwner();
+		if (AWeapon* PrimaryWeapon = World->SpawnActor<AWeapon>(InventoryDataAsset->PrimaryWeaponClass))
+		{
+			PrimaryWeapon->SetOwner(OwningActor);
+			PrimaryWeapon->Init();
+			WeaponArray.Add(PrimaryWeapon);
+		}
+		if (AWeapon* SecondaryWeapon = World->SpawnActor<AWeapon>(InventoryDataAsset->SecondaryWeaponClass))
+		{
+			SecondaryWeapon->SetOwner(OwningActor);
+			SecondaryWeapon->Init();
+			WeaponArray.Add(SecondaryWeapon);
+		}
+	}
+	WeaponAmmoArray.Add(InventoryDataAsset->PrimaryWeaponMaxAmmo);
+	WeaponAmmoArray.Add(InventoryDataAsset->SecondaryWeaponMaxAmmo);
+
+}
+
+int8 UInventoryComponent::FindWeapon(AWeapon* &Weapon) const
+{
+	return WeaponArray.Find(Weapon);
+}
+
+void UInventoryComponent::LoadAmmoInWeaponMag(AWeapon* Weapon, const uint8 AmmoCount)
+{
+	if (Weapon == nullptr || AmmoCount == 0)
+	{
+		return;
+	}
+	Server_LoadAmmoInWeaponMag(Weapon, AmmoCount);
+}
+
+void UInventoryComponent::Server_LoadAmmoInWeaponMag_Implementation(AWeapon* Weapon, const uint8 AmmoCount)
+{
+	if (Weapon == nullptr || AmmoCount == 0)
+	{
+		return;
+	}
+	const int8 WeaponIndex = FindWeapon(Weapon);
+	if (WeaponAmmoArray.IsValidIndex(WeaponIndex))
+	{
+		const uint8 WeaponAmmo = WeaponAmmoArray[WeaponIndex];
+		if (WeaponAmmo >= AmmoCount)
+		{
+			if (AMag* WeaponMag = Weapon->GetMag())
+			{
+				WeaponMag->AddAmmo(AmmoCount);
+				WeaponAmmoArray[WeaponIndex] -= AmmoCount;
+			}
+		}
+	}
 }
 
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (OwningCharacter && OwningCharacter->HasAuthority())
-	{
-		if (InventoryDataAsset)
-		{
-			if (UWorld* World = GetWorld())
-			{
-				if (const TSubclassOf<AWeapon>& PrimaryWeaponClass = InventoryDataAsset->PrimaryWeaponClass)
-				{
-					if (AWeapon* SpawnedPrimaryWeapon = World->SpawnActor<AWeapon>(PrimaryWeaponClass))
-					{
-						SpawnedPrimaryWeapon->SetOwner(OwningCharacter);
-						WeaponsArray.Add(SpawnedPrimaryWeapon);
-					}
-				}
-				if (const TSubclassOf<AWeapon>& SecondaryWeaponClass = InventoryDataAsset->SecondaryWeaponClass)
-				{
-					if (AWeapon* SpawnedSecondaryWeapon = World->SpawnActor<AWeapon>(SecondaryWeaponClass))
-					{
-						SpawnedSecondaryWeapon->SetOwner(OwningCharacter);
-						WeaponsArray.Add(SpawnedSecondaryWeapon);
-					}
-				}
-			}
-
-			WeaponsAmmoArray.Add(InventoryDataAsset->PrimaryWeaponAmmo);
-			WeaponsAmmoArray.Add(InventoryDataAsset->SecondaryWeaponAmmo);
-		}
-
-		for (uint8 Index = 0; Index < WeaponsArray.Num(); ++Index)
-		{
-			if (AWeapon* Weapon = GetWeaponAtIndex(Index))
-			{
-				if (AMag* WeaponMag = Weapon->GetMag())
-				{
-					Server_AddAmmoInWeaponMag(WeaponMag->GetAmmoSpace(), Index);
-				}
-			}
-		}
-
-		for (uint8 Index = 0; Index < WeaponsArray.Num(); ++Index)
-		{
-			if (AWeapon* Weapon = GetWeaponAtIndex(Index))
-			{
-				FName WeaponHolsterSocketName = TEXT("weapon_holsterSocket");
-				if (Weapon->IsPistol())
-				{
-					WeaponHolsterSocketName = TEXT("pistol_holsterSocket");
-				}
-				else if (Index > 0)
-				{
-					WeaponHolsterSocketName = FName(*FString::Printf(TEXT("weapon_holster%uSocket"), Index));
-				}
-				if (USkeletalMeshComponent* Mesh = OwningCharacter->GetMesh())
-				{
-					if (const USkeletalMeshSocket* WeaponHolsterSocket = Mesh->GetSocketByName(WeaponHolsterSocketName))
-					{
-						WeaponHolsterSocket->AttachActor(Weapon, Mesh);
-					}
-				}
-			}
-		}
-		
-		if (OwningCharacter->IsLocallyControlled())
-		{
-			OnWeaponsArrayReadyDelegate.Execute();
-		}
-	}
-
 }
 
-void UInventoryComponent::Server_AddAmmoInWeaponMag_Implementation(uint8 AmmoCount, uint8 WeaponIndex)
-{
-	if (AmmoCount == 0)
-	{
-		return;
-	}
-	if (AWeapon* Weapon = GetWeaponAtIndex(WeaponIndex))
-	{
-		if (AMag* WeaponMag = Weapon->GetMag())
-		{
-			uint8 WeaponAmmo = GetAmmoAtIndex(WeaponIndex);
-			uint8 WeaponMagAmmoSpace = WeaponMag->GetAmmoSpace();
-			if (WeaponAmmo > 0 && WeaponMagAmmoSpace > 0 && AmmoCount <= WeaponMagAmmoSpace && AmmoCount <= WeaponAmmo)
-			{
-				WeaponMag->AddAmmo(AmmoCount);
-				WeaponsAmmoArray[WeaponIndex] -= AmmoCount;
-			}
-		}
-	}
-}
-
-void UInventoryComponent::OnRep_WeaponsArray() const
-{
-	OnWeaponsArrayReadyDelegate.Execute();
-}
+//void UInventoryComponent::Server_AddAmmoInWeaponMag_Implementation(uint8 AmmoCount, uint8 WeaponIndex)
+//{
+//	if (AmmoCount == 0)
+//	{
+//		return;
+//	}
+//	if (AWeapon* Weapon = GetWeaponAtIndex(WeaponIndex))
+//	{
+//		if (AMag* WeaponMag = Weapon->GetMag())
+//		{
+//			uint8 WeaponAmmo = GetAmmoAtIndex(WeaponIndex);
+//			uint8 WeaponMagAmmoSpace = WeaponMag->GetAmmoSpace();
+//			if (WeaponAmmo > 0 && WeaponMagAmmoSpace > 0 && AmmoCount <= WeaponMagAmmoSpace && AmmoCount <= WeaponAmmo)
+//			{
+//				WeaponMag->AddAmmo(AmmoCount);
+//				WeaponAmmoArray[WeaponIndex] -= AmmoCount;
+//			}
+//		}
+//	}
+//}
 
 AWeapon* UInventoryComponent::GetWeaponAtIndex(uint8 Index)
 {
-	return WeaponsArray.IsValidIndex(Index) ? WeaponsArray[Index] : nullptr;
+	return WeaponArray.IsValidIndex(Index) ? WeaponArray[Index] : nullptr;
 }
 
 uint8 UInventoryComponent::GetAmmoAtIndex(uint8 Index)
 {
-	return WeaponsAmmoArray.IsValidIndex(Index) ? WeaponsAmmoArray[Index] : 0;
+	return WeaponAmmoArray.IsValidIndex(Index) ? WeaponAmmoArray[Index] : 0;
 }

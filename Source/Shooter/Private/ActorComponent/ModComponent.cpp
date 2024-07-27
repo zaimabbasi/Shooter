@@ -53,11 +53,13 @@ void UModComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 }
 
-void UModComponent::BeginPlay()
+void UModComponent::Init(const UModDataAsset* ModDataAsset)
 {
-	Super::BeginPlay();
-	
-	if (OwningActor && OwningActor->HasAuthority() && ModDataAsset)
+	if (ModDataAsset == nullptr)
+	{
+		return;
+	}
+	if (AActor* OwningActor = GetOwner())
 	{
 		if (UWorld* World = GetWorld())
 		{
@@ -66,6 +68,7 @@ void UModComponent::BeginPlay()
 				if (ABarrel* SpawnedBarrel = World->SpawnActor<ABarrel>(BarrelClass))
 				{
 					SpawnedBarrel->SetOwner(OwningActor);
+					SpawnedBarrel->Init();
 					if (SpawnedBarrel->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_barrel")))
 					{
 						Barrel = SpawnedBarrel;
@@ -77,6 +80,7 @@ void UModComponent::BeginPlay()
 				if (ACharge* SpawnedCharge = World->SpawnActor<ACharge>(ChargeClass))
 				{
 					SpawnedCharge->SetOwner(OwningActor);
+					SpawnedCharge->Init();
 					if (SpawnedCharge->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_charge")))
 					{
 						Charge = SpawnedCharge;
@@ -88,6 +92,7 @@ void UModComponent::BeginPlay()
 				if (AGasBlock* SpawnedGasBlock = World->SpawnActor<AGasBlock>(GasBlockClass))
 				{
 					SpawnedGasBlock->SetOwner(OwningActor);
+					SpawnedGasBlock->Init();
 					if (SpawnedGasBlock->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_gas_block")))
 					{
 						GasBlock = SpawnedGasBlock;
@@ -99,6 +104,7 @@ void UModComponent::BeginPlay()
 				if (AHandguard* SpawnedHandguard = World->SpawnActor<AHandguard>(HandguardClass))
 				{
 					SpawnedHandguard->SetOwner(OwningActor);
+					SpawnedHandguard->Init();
 					if (SpawnedHandguard->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_handguard")))
 					{
 						Handguard = SpawnedHandguard;
@@ -110,6 +116,7 @@ void UModComponent::BeginPlay()
 				if (AMag* SpawnedMag = World->SpawnActor<AMag>(MagClass))
 				{
 					SpawnedMag->SetOwner(OwningActor);
+					SpawnedMag->Init();
 					if (SpawnedMag->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_magazine")))
 					{
 						Mag = SpawnedMag;
@@ -121,6 +128,7 @@ void UModComponent::BeginPlay()
 				if (AMuzzle* SpawnedMuzzle = World->SpawnActor<AMuzzle>(MuzzleClass))
 				{
 					SpawnedMuzzle->SetOwner(OwningActor);
+					SpawnedMuzzle->Init();
 					if (SpawnedMuzzle->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_muzzle")))
 					{
 						Muzzle = SpawnedMuzzle;
@@ -133,6 +141,7 @@ void UModComponent::BeginPlay()
 				if (APistolgrip* SpawnedPistolgrip = World->SpawnActor<APistolgrip>(PistolgripClass))
 				{
 					SpawnedPistolgrip->SetOwner(OwningActor);
+					SpawnedPistolgrip->Init();
 					if (SpawnedPistolgrip->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_pistol_grip")))
 					{
 						Pistolgrip = SpawnedPistolgrip;
@@ -144,6 +153,7 @@ void UModComponent::BeginPlay()
 				if (AReciever* SpawnedReciever = World->SpawnActor<AReciever>(RecieverClass))
 				{
 					SpawnedReciever->SetOwner(OwningActor);
+					SpawnedReciever->Init();
 					if (SpawnedReciever->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_reciever")))
 					{
 						Reciever = SpawnedReciever;
@@ -155,6 +165,7 @@ void UModComponent::BeginPlay()
 				if (ASightFront* SpawnedSightFront = World->SpawnActor<ASightFront>(SightFrontClass))
 				{
 					SpawnedSightFront->SetOwner(OwningActor);
+					SpawnedSightFront->Init();
 					if (SpawnedSightFront->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_sight_front")))
 					{
 						SightFront = SpawnedSightFront;
@@ -166,6 +177,7 @@ void UModComponent::BeginPlay()
 				if (ASightRear* SpawnedSightRear = World->SpawnActor<ASightRear>(SightRearClass))
 				{
 					SpawnedSightRear->SetOwner(OwningActor);
+					SpawnedSightRear->Init();
 					if (SpawnedSightRear->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_sight_rear")))
 					{
 						SpawnedSightRear = SightRear;
@@ -177,6 +189,7 @@ void UModComponent::BeginPlay()
 				if (AStock* SpawnedStock = World->SpawnActor<AStock>(StockClass))
 				{
 					SpawnedStock->SetOwner(OwningActor);
+					SpawnedStock->Init();
 					if (SpawnedStock->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_stock")))
 					{
 						Stock = SpawnedStock;
@@ -185,4 +198,10 @@ void UModComponent::BeginPlay()
 			}
 		}
 	}
+}
+
+void UModComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	
 }

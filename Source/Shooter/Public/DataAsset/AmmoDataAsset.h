@@ -13,9 +13,9 @@ class SHOOTER_API UAmmoDataAsset : public UDataAsset
 
 public:
 	UPROPERTY(EditAnywhere)
-	USkeletalMesh* FullMesh;
+	TObjectPtr<USkeletalMesh> FullMesh;
 
 	UPROPERTY(EditAnywhere)
-	USkeletalMesh* ShellMesh;
+	TObjectPtr<USkeletalMesh> ShellMesh;
 
 };

@@ -48,11 +48,11 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	float TargetLean = 0.0f;
 	if (LeanDirection == ELeanDirection::LD_Left)
 	{
-		TargetLean = -ShooterCharacter->MaxLean;
+		TargetLean = -ShooterCharacter->GetMaxLean();
 	}
 	else if (LeanDirection == ELeanDirection::LD_Right)
 	{
-		TargetLean = ShooterCharacter->MaxLean;
+		TargetLean = ShooterCharacter->GetMaxLean();
 	}
 	float DeltaLean = TargetLean - Lean;
 	float LeanStep = ShooterCharacter->GetLeaningRate() * DeltaSeconds;

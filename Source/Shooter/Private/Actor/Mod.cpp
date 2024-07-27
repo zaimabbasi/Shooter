@@ -28,10 +28,13 @@ void AMod::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
+}
+
+void AMod::Init()
+{
 	if (ModComponent)
 	{
-		ModComponent->OwningActor = this;
-		ModComponent->ModDataAsset = ModDataAsset;
+		ModComponent->Init(ModDataAsset.LoadSynchronous());
 	}
 }
 

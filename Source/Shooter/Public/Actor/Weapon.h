@@ -28,30 +28,42 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
-	virtual bool HandleAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent);
-	virtual bool IsPistol() const { return false; }
-
+	
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* Mesh;
+private:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision", meta = (AllowPrivateAccess = "true"))
-	UBoxComponent* BoxComponent;
+public:
+	virtual void Init();
+	virtual bool IsPistol() const { return false; }
+	virtual bool HandleAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent);
+	uint8 GetMagAmmoSpace() const;
+	void LoadAmmoInChamber();
+
+protected:
+	UFUNCTION()
+	void Handle_OnAmmoRemoved(AAmmo* RemovedAmmo);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> Mesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UBoxComponent> BoxComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UModComponent> ModComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
-	UWeaponDataAsset* WeaponDataAsset;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
-	UModDataAsset* ModDataAsset;
-
-	UModComponent* ModComponent;
+	TSoftObjectPtr<UWeaponDataAsset> WeaponDataAsset;
 
 	UPROPERTY(Replicated)
 	EWeaponAction WeaponAction;
 
-	AAmmo* AmmoInChamber;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<AAmmo> AmmoInChamber;
+
+private:
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }

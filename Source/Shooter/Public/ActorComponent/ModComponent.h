@@ -31,53 +31,49 @@ class SHOOTER_API UModComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	friend class AWeapon;
-	friend class AMod;
-
 	UModComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
+	
 protected:
 	virtual void BeginPlay() override;
 
+public:
+	void Init(const UModDataAsset* ModDataAsset);
+
 private:
-	AActor* OwningActor;
-
-	UModDataAsset* ModDataAsset;
+	UPROPERTY(Replicated)
+	TObjectPtr<ABarrel> Barrel;
 
 	UPROPERTY(Replicated)
-	ABarrel* Barrel;
+	TObjectPtr<ACharge> Charge;
 
 	UPROPERTY(Replicated)
-	ACharge* Charge;
+	TObjectPtr<AGasBlock> GasBlock;
 
 	UPROPERTY(Replicated)
-	AGasBlock* GasBlock;
+	TObjectPtr<AHandguard> Handguard;
 
 	UPROPERTY(Replicated)
-	AHandguard* Handguard;
+	TObjectPtr<AMag> Mag;
 
 	UPROPERTY(Replicated)
-	AMag* Mag;
+	TObjectPtr<AMuzzle> Muzzle;
 
 	UPROPERTY(Replicated)
-	AMuzzle* Muzzle;
+	TObjectPtr<APistolgrip> Pistolgrip;
 
 	UPROPERTY(Replicated)
-	APistolgrip* Pistolgrip;
+	TObjectPtr<AReciever> Reciever;
 
 	UPROPERTY(Replicated)
-	AReciever* Reciever;
+	TObjectPtr<ASightFront> SightFront;
 
 	UPROPERTY(Replicated)
-	ASightFront* SightFront;
+	TObjectPtr<ASightRear> SightRear;
 
 	UPROPERTY(Replicated)
-	ASightRear* SightRear;
-
-	UPROPERTY(Replicated)
-	AStock* Stock;
+	TObjectPtr<AStock> Stock;
 
 public:
 	FORCEINLINE AMag* GetMag() const { return Mag; }
