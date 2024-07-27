@@ -107,28 +107,18 @@ void AWeapon::Handle_OnAmmoRemoved(AAmmo* RemovedAmmo)
 {
 	if (RemovedAmmo == nullptr)
 	{
-		if (ModComponent)
+		if (AMag* Mag = GetMag())
 		{
-			if (AMag* Mag = ModComponent->GetMag())
+			if (const UMagDataAsset* MagDataAsset = Mag->GetMagDataAsset().LoadSynchronous())
 			{
-				if (const UMagDataAsset* MagDataAsset = Mag->GetMagDataAsset().LoadSynchronous())
+				if (UWorld* World = GetWorld())
 				{
-					if (UWorld* World = GetWorld())
-					{
-						RemovedAmmo = World->SpawnActor<AAmmo>(MagDataAsset->AmmoClass);
-					}
+					RemovedAmmo = World->SpawnActor<AAmmo>(MagDataAsset->AmmoClass);
 				}
 			}
 		}
-		
 	}
-	if (Mesh)
-	{
-		if (const USkeletalMeshSocket* PatronInWeaponSocket = Mesh->GetSocketByName(TEXT("patron_in_weaponSocket")))
-		{
-			PatronInWeaponSocket->AttachActor(RemovedAmmo, Mesh);
-		}
-	}
+	RemovedAmmo->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform, TEXT("patron_in_weapon"));
 	AmmoInChamber = RemovedAmmo;
 }
 
