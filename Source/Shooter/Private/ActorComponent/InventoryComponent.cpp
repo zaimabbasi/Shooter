@@ -5,8 +5,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Actor/Mag.h"
 #include "Actor/Weapon.h"
+#include "DataAsset/CharacterDataAsset.h"
 #include "Character/ShooterCharacter.h"
-#include "DataAsset/InventoryDataAsset.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -29,30 +29,26 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 }
 
-void UInventoryComponent::Init(const UInventoryDataAsset* InventoryDataAsset)
+void UInventoryComponent::Init(const FInventoryParams& InventoryParams)
 {
-	if (InventoryDataAsset == nullptr)
-	{
-		return;
-	}
 	if (UWorld* World = GetWorld())
 	{
 		AActor* OwningActor = GetOwner();
-		if (AWeapon* PrimaryWeapon = World->SpawnActor<AWeapon>(InventoryDataAsset->PrimaryWeaponClass))
+		if (AWeapon* PrimaryWeapon = World->SpawnActor<AWeapon>(InventoryParams.PrimaryWeaponClass))
 		{
 			PrimaryWeapon->SetOwner(OwningActor);
 			PrimaryWeapon->Init();
 			WeaponArray.Add(PrimaryWeapon);
 		}
-		if (AWeapon* SecondaryWeapon = World->SpawnActor<AWeapon>(InventoryDataAsset->SecondaryWeaponClass))
+		if (AWeapon* SecondaryWeapon = World->SpawnActor<AWeapon>(InventoryParams.SecondaryWeaponClass))
 		{
 			SecondaryWeapon->SetOwner(OwningActor);
 			SecondaryWeapon->Init();
 			WeaponArray.Add(SecondaryWeapon);
 		}
 	}
-	WeaponAmmoArray.Add(InventoryDataAsset->PrimaryWeaponMaxAmmo);
-	WeaponAmmoArray.Add(InventoryDataAsset->SecondaryWeaponMaxAmmo);
+	WeaponAmmoArray.Add(InventoryParams.PrimaryWeaponMaxAmmo);
+	WeaponAmmoArray.Add(InventoryParams.SecondaryWeaponMaxAmmo);
 
 }
 

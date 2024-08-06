@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "SkeletalMergingLibrary.h"
 #include "ShooterCharacter.generated.h"
 
 class AWeapon;
@@ -69,7 +70,6 @@ private:
 	void SetCurrentStance(ECharacterStance NewStance);
 	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
 	FORCEINLINE FName GetHandsWeaponRootSocketName() const { return TEXT("weapon_rootSocket"); }
-	UClass* GetDefaultHandsAnimClass() const;
 
 	UFUNCTION()
 	void Handle_OnRepEquippedWeapon(AWeapon* EquippedWeapon);
@@ -110,6 +110,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
+
+	UPROPERTY(EditAnywhere, Category = "SkeletalMeshMergeParams")
+	FSkeletalMeshMergeParams CharacterMeshMergeParams;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInventoryComponent> InventoryComponent;
@@ -173,6 +176,8 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCharacterDataAsset> CharacterDataAsset;
+
+	TSubclassOf<UAnimInstance> DefaultHandsAnimClass;
 
 	const float DefaultAnimationTransitionDuration = 0.25f;
 	const float MaxLean = 15.0f;

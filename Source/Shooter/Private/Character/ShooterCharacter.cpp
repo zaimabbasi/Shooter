@@ -15,7 +15,6 @@
 #include "ActorComponent/CombatComponent.h"
 #include "ActorComponent/InventoryComponent.h"
 #include "DataAsset/CharacterDataAsset.h"
-#include "DataAsset/InventoryDataAsset.h"
 #include "Enum/CharacterStance.h"
 #include "Enum/LeanDirection.h"
 #include "Enum/TurnDirection.h"
@@ -28,7 +27,7 @@ AShooterCharacter::AShooterCharacter()
 	bUseControllerRotationYaw = false;
 
 	LegsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LegsMesh"));
-	LegsMesh->SetupAttachment(GetMesh());
+	LegsMesh->SetupAttachment(GetRootComponent());
 	LegsMesh->SetCastShadow(false);
 
 	HandsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandsMesh"));
@@ -107,6 +106,15 @@ void AShooterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
+	if (USkeletalMeshComponent* CharacterMesh = GetMesh())
+	{
+		CharacterMesh->SetSkeletalMeshAsset(USkeletalMergingLibrary::MergeMeshes(CharacterMeshMergeParams));
+	}
+	if (HandsMesh)
+	{
+		DefaultHandsAnimClass = HandsMesh->GetAnimClass();
+	}
+
 	if (FirstPersonCamera)
 	{
 		DefaultCameraFOV = FirstPersonCamera->FieldOfView;
@@ -125,7 +133,7 @@ void AShooterCharacter::Init()
 	{
 		if (const UCharacterDataAsset* LoadedCharacterDataAsset = CharacterDataAsset.LoadSynchronous())
 		{
-			InventoryComponent->Init(LoadedCharacterDataAsset->InventoryDataAsset.LoadSynchronous());
+			InventoryComponent->Init(LoadedCharacterDataAsset->InventoryParams);
 		}
 
 		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
@@ -197,22 +205,13 @@ FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) co
 	}
 }
 
-UClass* AShooterCharacter::GetDefaultHandsAnimClass() const
-{
-	if (CharacterDataAsset.IsNull())
-	{
-		return nullptr;
-	}
-	return CharacterDataAsset.LoadSynchronous()->HandsAnimClass;
-}
-
 void AShooterCharacter::Handle_OnRepEquippedWeapon(AWeapon* EquippedWeapon)
 { 
 	if (HandsMesh == nullptr)
 	{
 		return;
 	}
-	UClass* HandsAnimClass = EquippedWeapon == nullptr ? GetDefaultHandsAnimClass() : EquippedWeapon->GetHandsAnimClass();
+	UClass* HandsAnimClass = EquippedWeapon == nullptr ? DefaultHandsAnimClass.Get() : EquippedWeapon->GetHandsAnimClass();
 	HandsMesh->SetAnimClass(HandsAnimClass);
 }
 
@@ -229,13 +228,9 @@ void AShooterCharacter::BeginPlay()
 			EnhancedInputLocalPlayerSubsystem->AddMappingContext(CombatMappingContext.LoadSynchronous(), 0);
 		}
 	}
-	
+
 	if (IsLocallyControlled())
 	{
-		if (LegsMesh)
-		{
-			LegsMesh->HideBoneByName(TEXT("Base-HumanSpine3"), EPhysBodyOp::PBO_None);
-		}
 		if (USkeletalMeshComponent* CharacterMesh = GetMesh())
 		{
 			CharacterMesh->SetVisibility(false);
@@ -253,7 +248,7 @@ void AShooterCharacter::BeginPlay()
 			HandsMesh->SetVisibility(false);
 		}
 	}
-
+	
 }
 
 void AShooterCharacter::OnLookAction(const FInputActionValue& Value)

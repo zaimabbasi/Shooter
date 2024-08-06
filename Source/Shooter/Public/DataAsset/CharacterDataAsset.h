@@ -7,7 +7,25 @@
 #include "CharacterDataAsset.generated.h"
 
 class AWeapon;
-class UInventoryDataAsset;
+
+USTRUCT()
+struct FInventoryParams
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, meta = (DisallowedClasses = "Pistol"))
+	TSubclassOf<AWeapon> PrimaryWeaponClass;
+
+	UPROPERTY(EditAnywhere)
+	uint8 PrimaryWeaponMaxAmmo;
+
+	UPROPERTY(EditAnywhere, meta = (DisallowedClasses = "AssaultRifle"))
+	TSubclassOf<AWeapon> SecondaryWeaponClass;
+
+	UPROPERTY(EditAnywhere)
+	uint8 SecondaryWeaponMaxAmmo;
+};
 
 UCLASS()
 class SHOOTER_API UCharacterDataAsset : public UDataAsset
@@ -15,10 +33,7 @@ class SHOOTER_API UCharacterDataAsset : public UDataAsset
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, Category = "DataAsset")
-	TSoftObjectPtr<UInventoryDataAsset> InventoryDataAsset;
-
-	UPROPERTY(EditAnywhere, Category = "HandsAnimClass")
-	TSubclassOf<UAnimInstance> HandsAnimClass;
+	UPROPERTY(EditAnywhere, Category = "InventoryParams")
+	FInventoryParams InventoryParams;
 
 };

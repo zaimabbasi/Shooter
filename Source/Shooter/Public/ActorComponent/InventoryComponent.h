@@ -7,7 +7,7 @@
 #include "InventoryComponent.generated.h"
 
 class AWeapon;
-class UInventoryDataAsset;
+struct FInventoryParams;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SHOOTER_API UInventoryComponent : public UActorComponent
@@ -26,7 +26,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	void Init(const UInventoryDataAsset* InventoryDataAsset);
+	void Init(const FInventoryParams& InventoryParams);
 	int8 FindWeapon(AWeapon*& Weapon) const;
 	void LoadAmmoInWeaponMag(AWeapon* Weapon, const uint8 AmmoCount);
 	AWeapon* GetWeaponAtIndex(uint8 Index);
