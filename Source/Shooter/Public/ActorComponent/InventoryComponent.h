@@ -9,6 +9,11 @@
 class AWeapon;
 struct FInventoryParams;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRepWeaponArraySignature);
+
+#define PRIMARY_WEAPON_INDEX	(0)
+#define SECONDARY_WEAPON_INDEX	(1)
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SHOOTER_API UInventoryComponent : public UActorComponent
 {
@@ -19,8 +24,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	const uint8 PRIMARY_WEAPON_INDEX = 0;
-	const uint8 SECONDARY_WEAPON_INDEX = 1;
+	FOnRepWeaponArraySignature OnRepWeaponArrayDelegate;
 
 protected:
 	virtual void BeginPlay() override;
@@ -36,8 +40,11 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_LoadAmmoInWeaponMag(AWeapon* Weapon, const uint8 AmmoCount);
 
+	UFUNCTION()
+	void OnRep_WeaponArray();
+
 private:
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponArray)
 	TArray<TObjectPtr<AWeapon>> WeaponArray;
 
 	UPROPERTY(Replicated)

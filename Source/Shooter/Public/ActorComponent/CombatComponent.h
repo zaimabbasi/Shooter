@@ -8,8 +8,6 @@
 
 class AWeapon;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRepEquippedWeaponDelegate, AWeapon*, EquippedWeapon);
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SHOOTER_API UCombatComponent : public UActorComponent
 {
@@ -19,8 +17,6 @@ public:
 	UCombatComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	FOnRepEquippedWeaponDelegate OnRepEquippedWeaponDelegate;
 
 protected:
 	virtual void BeginPlay() override;
@@ -37,11 +33,8 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_SetIsAiming(bool bAiming);
 
-	UFUNCTION()
-	void OnRep_EquippedWeapon();
-
 private:
-	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
+	UPROPERTY(Replicated)
 	TObjectPtr<AWeapon> EquippedWeapon;
 
 	UPROPERTY(Replicated)

@@ -24,7 +24,7 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UInventoryComponent, WeaponArray);
+	DOREPLIFETIME_CONDITION(UInventoryComponent, WeaponArray, COND_OwnerOnly);
 	DOREPLIFETIME(UInventoryComponent, WeaponAmmoArray);
 
 }
@@ -93,27 +93,6 @@ void UInventoryComponent::BeginPlay()
 
 }
 
-//void UInventoryComponent::Server_AddAmmoInWeaponMag_Implementation(uint8 AmmoCount, uint8 WeaponIndex)
-//{
-//	if (AmmoCount == 0)
-//	{
-//		return;
-//	}
-//	if (AWeapon* Weapon = GetWeaponAtIndex(WeaponIndex))
-//	{
-//		if (AMag* WeaponMag = Weapon->GetMag())
-//		{
-//			uint8 WeaponAmmo = GetAmmoAtIndex(WeaponIndex);
-//			uint8 WeaponMagAmmoSpace = WeaponMag->GetAmmoSpace();
-//			if (WeaponAmmo > 0 && WeaponMagAmmoSpace > 0 && AmmoCount <= WeaponMagAmmoSpace && AmmoCount <= WeaponAmmo)
-//			{
-//				WeaponMag->AddAmmo(AmmoCount);
-//				WeaponAmmoArray[WeaponIndex] -= AmmoCount;
-//			}
-//		}
-//	}
-//}
-
 AWeapon* UInventoryComponent::GetWeaponAtIndex(uint8 Index)
 {
 	return WeaponArray.IsValidIndex(Index) ? WeaponArray[Index] : nullptr;
@@ -122,4 +101,9 @@ AWeapon* UInventoryComponent::GetWeaponAtIndex(uint8 Index)
 uint8 UInventoryComponent::GetAmmoAtIndex(uint8 Index)
 {
 	return WeaponAmmoArray.IsValidIndex(Index) ? WeaponAmmoArray[Index] : 0;
+}
+
+void UInventoryComponent::OnRep_WeaponArray()
+{
+	OnRepWeaponArrayDelegate.Broadcast();
 }

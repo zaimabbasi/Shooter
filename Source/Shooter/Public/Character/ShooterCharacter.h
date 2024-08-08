@@ -72,7 +72,10 @@ private:
 	FORCEINLINE FName GetHandsWeaponRootSocketName() const { return TEXT("weapon_rootSocket"); }
 
 	UFUNCTION()
-	void Handle_OnRepEquippedWeapon(AWeapon* EquippedWeapon);
+	void Handle_OnRepWeaponArray();
+
+	UFUNCTION(Server, Reliable)
+	void Server_EquipWeapon(AWeapon* WeaponToEquip);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetRemoteViewYaw(float RemoteYaw);

@@ -23,7 +23,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(UCombatComponent, EquippedWeapon, COND_OwnerOnly);
+	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bIsAiming);
 
 }
@@ -63,11 +63,6 @@ void UCombatComponent::ReloadWeapon()
 	UE_LOG(LogTemp, Warning, TEXT("ReloadWeapon"));
 }
 
-void UCombatComponent::OnRep_EquippedWeapon()
-{
-	OnRepEquippedWeaponDelegate.Broadcast(EquippedWeapon);
-}
-
 void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponToEquip)
 {
 	if (WeaponToEquip == nullptr)
@@ -76,42 +71,6 @@ void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponTo
 	}
 	EquippedWeapon = WeaponToEquip;
 }
-//void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponToEquip)
-//{
-//	if (WeaponToEquip == nullptr || OwningCharacter == nullptr)
-//	{
-//		return;
-//	}
-//	if (EquippedWeapon)
-//	{
-//		EquippedWeapon->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
-//		FName WeaponHolsterSocketName = TEXT("weapon_holsterSocket");
-//		if (EquippedWeapon->IsPistol())
-//		{
-//			WeaponHolsterSocketName = TEXT("pistol_holsterSocket");
-//		}
-//		//else if (!OwningCharacter->IsPrimaryWeapon(EquippedWeapon))
-//		{
-//			WeaponHolsterSocketName = TEXT("weapon_holster1Socket");
-//		}
-//		if (USkeletalMeshComponent* CharacterMesh = OwningCharacter->GetMesh())
-//		{
-//			if (const USkeletalMeshSocket* WeaponHolsterSocket = CharacterMesh->GetSocketByName(WeaponHolsterSocketName))
-//			{
-//				WeaponHolsterSocket->AttachActor(EquippedWeapon, CharacterMesh);
-//			}
-//		}
-//	}
-//	if (USkeletalMeshComponent* HandsMesh = OwningCharacter->GetHandsMesh())
-//	{
-//		if (const USkeletalMeshSocket* WeaponRootSocket = HandsMesh->GetSocketByName(TEXT("Weapon_rootSocket")))
-//		{
-//			WeaponRootSocket->AttachActor(WeaponToEquip, HandsMesh);
-//		}
-//		HandsMesh->SetAnimClass(WeaponToEquip->GetHandsAnimClass());
-//	}
-//	EquippedWeapon = WeaponToEquip;
-//}
 
 void UCombatComponent::Server_SetIsAiming_Implementation(bool bAiming)
 {

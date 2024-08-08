@@ -114,17 +114,17 @@ void AShooterCharacter::PostInitializeComponents()
 	{
 		DefaultHandsAnimClass = HandsMesh->GetAnimClass();
 	}
-
 	if (FirstPersonCamera)
 	{
 		DefaultCameraFOV = FirstPersonCamera->FieldOfView;
 		AimCameraFOV = DefaultToAimCameraFOVPercentage * DefaultCameraFOV;
 	}
 
-	if (CombatComponent)
+	if (InventoryComponent)
 	{
-		CombatComponent->OnRepEquippedWeaponDelegate.AddDynamic(this, &AShooterCharacter::Handle_OnRepEquippedWeapon);
+		InventoryComponent->OnRepWeaponArrayDelegate.AddDynamic(this, &AShooterCharacter::Handle_OnRepWeaponArray);
 	}
+
 }
 
 void AShooterCharacter::Init()
@@ -152,21 +152,50 @@ void AShooterCharacter::Init()
 				}
 			}
 		}
+	}
 
-		if (AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(0))
+}
+
+void AShooterCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* EnhancedInputLocalPlayerSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
-			if (CombatComponent)
-			{
-				CombatComponent->SetEquippedWeapon(PrimaryWeapon);
-				if (HandsMesh)
-				{
-					if (const USkeletalMeshSocket* WeaponRootSocket = HandsMesh->GetSocketByName(GetHandsWeaponRootSocketName()))
-					{
-						WeaponRootSocket->AttachActor(PrimaryWeapon, HandsMesh);
-					}
-					HandsMesh->SetAnimClass(PrimaryWeapon->GetHandsAnimClass());
-				}
-			}
+			EnhancedInputLocalPlayerSubsystem->AddMappingContext(MovementMappingContext.LoadSynchronous(), 0);
+			EnhancedInputLocalPlayerSubsystem->AddMappingContext(InventoryMappingContext.LoadSynchronous(), 0);
+			EnhancedInputLocalPlayerSubsystem->AddMappingContext(CombatMappingContext.LoadSynchronous(), 0);
+		}
+	}
+
+	const bool bIsLocallyControlled = IsLocallyControlled();
+	if (bIsLocallyControlled)
+	{
+		if (USkeletalMeshComponent* CharacterMesh = GetMesh())
+		{
+			CharacterMesh->SetVisibility(false);
+			CharacterMesh->SetCastHiddenShadow(true);
+		}
+	}
+	else
+	{
+		if (LegsMesh)
+		{
+			LegsMesh->DestroyComponent();
+		}
+		if (GetHandsMesh())
+		{
+			GetHandsMesh()->SetVisibility(false);
+		}
+	}
+
+	if (bIsLocallyControlled && InventoryComponent)
+	{
+		if (AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX))
+		{
+			Server_EquipWeapon(PrimaryWeapon);
 		}
 	}
 
@@ -205,50 +234,39 @@ FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) co
 	}
 }
 
-void AShooterCharacter::Handle_OnRepEquippedWeapon(AWeapon* EquippedWeapon)
-{ 
-	if (HandsMesh == nullptr)
+void AShooterCharacter::Handle_OnRepWeaponArray()
+{
+	if (InventoryComponent)
+	{
+		if (AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX))
+		{
+			if (HandsMesh)
+			{
+				if (const USkeletalMeshSocket* WeaponRootSocket = HandsMesh->GetSocketByName(GetHandsWeaponRootSocketName()))
+				{
+					WeaponRootSocket->AttachActor(PrimaryWeapon, HandsMesh);
+				}
+				HandsMesh->SetAnimClass(PrimaryWeapon->GetHandsAnimClass());
+			}
+			Server_EquipWeapon(PrimaryWeapon);
+		}
+	}
+}
+
+void AShooterCharacter::Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip)
+{
+	if (WeaponToEquip == nullptr || CombatComponent == nullptr)
 	{
 		return;
 	}
-	UClass* HandsAnimClass = EquippedWeapon == nullptr ? DefaultHandsAnimClass.Get() : EquippedWeapon->GetHandsAnimClass();
-	HandsMesh->SetAnimClass(HandsAnimClass);
-}
-
-void AShooterCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	if (HandsMesh)
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* EnhancedInputLocalPlayerSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (const USkeletalMeshSocket* WeaponRootSocket = HandsMesh->GetSocketByName(GetHandsWeaponRootSocketName()))
 		{
-			EnhancedInputLocalPlayerSubsystem->AddMappingContext(MovementMappingContext.LoadSynchronous(), 0);
-			EnhancedInputLocalPlayerSubsystem->AddMappingContext(InventoryMappingContext.LoadSynchronous(), 0);
-			EnhancedInputLocalPlayerSubsystem->AddMappingContext(CombatMappingContext.LoadSynchronous(), 0);
+			WeaponRootSocket->AttachActor(WeaponToEquip, HandsMesh);
 		}
+		HandsMesh->SetAnimClass(WeaponToEquip->GetHandsAnimClass());
 	}
-
-	if (IsLocallyControlled())
-	{
-		if (USkeletalMeshComponent* CharacterMesh = GetMesh())
-		{
-			CharacterMesh->SetVisibility(false);
-			CharacterMesh->SetCastHiddenShadow(true);
-		}
-	}
-	else
-	{
-		if (LegsMesh)
-		{
-			LegsMesh->DestroyComponent();
-		}
-		if (HandsMesh)
-		{
-			HandsMesh->SetVisibility(false);
-		}
-	}
-	
 }
 
 void AShooterCharacter::OnLookAction(const FInputActionValue& Value)
@@ -361,7 +379,7 @@ void AShooterCharacter::OnEquipPrimaryWeaponAction(const FInputActionValue& Valu
 	{
 		if (InventoryComponent && CombatComponent)
 		{
-			AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(InventoryComponent->PRIMARY_WEAPON_INDEX);
+			AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
 			if (CombatComponent->GetEquippedWeapon() != PrimaryWeapon)
 			{
 				CombatComponent->SetEquippedWeapon(PrimaryWeapon);
@@ -377,7 +395,7 @@ void AShooterCharacter::OnEquipSecondaryWeaponAction(const FInputActionValue& Va
 	{
 		if (InventoryComponent && CombatComponent)
 		{
-			AWeapon* SecondaryWeapon = InventoryComponent->GetWeaponAtIndex(InventoryComponent->SECONDARY_WEAPON_INDEX);
+			AWeapon* SecondaryWeapon = InventoryComponent->GetWeaponAtIndex(SECONDARY_WEAPON_INDEX);
 			if (CombatComponent->GetEquippedWeapon() != SecondaryWeapon)
 			{
 				CombatComponent->SetEquippedWeapon(SecondaryWeapon);
