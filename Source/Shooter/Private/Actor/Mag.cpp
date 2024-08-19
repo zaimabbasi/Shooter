@@ -32,7 +32,7 @@ void AMag::Server_RemoveAmmo_Implementation()
 		AmmoMap.Remove(AmmoSocketName);
 	}
 	--AmmoCount;
-	OnAmmoRemovedDelegate.Broadcast(FoundAmmo);
+	OnMagAmmoRemoved.Broadcast(FoundAmmo);
 }
 
 void AMag::Server_AddAmmo_Implementation(const uint8 Count)

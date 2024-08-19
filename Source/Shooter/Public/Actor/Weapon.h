@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Enum/WeaponAction.h"
-#include "Enum/WeaponActionState.h"
 #include "Weapon.generated.h"
 
 class AAmmo;
@@ -18,6 +17,8 @@ class UModDataAsset;
 class UWeaponAnimationDataAsset;
 class UWeaponDataAsset;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAnimNotifySignature, AWeapon*, Weapon);
+
 UCLASS()
 class SHOOTER_API AWeapon : public AActor
 {
@@ -28,22 +29,47 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
-	
+
+	virtual void Init();
+	virtual bool IsPistol() const { return false; }
+	uint8 GetMagAmmoSpace() const;
+	void LoadAmmoInChamber();
+	void SetAnimInstance();
+	void ClearAnimInstance();
+	void SetAnimInstanceDelegateBindings();
+	void ClearAnimInstanceDelegateBindings();
+	void SetWeaponAction(EWeaponAction NewWeaponAction);
+
+	FOnWeaponAnimNotifySignature OnWeaponIdle;
+	FOnWeaponAnimNotifySignature OnWeaponIdleToOut;
+	FOnWeaponAnimNotifySignature OnWeaponOut;
+	FOnWeaponAnimNotifySignature OnWeaponOutToIdle;
+
+	UPROPERTY(Replicated)
+	EWeaponAction WeaponAction;
+
 protected:
 	virtual void BeginPlay() override;
 
-private:
+	UFUNCTION(Server, Reliable)
+	void Server_SetWeaponAction(EWeaponAction NewWeaponAction);
 
-public:
-	virtual void Init();
-	virtual bool IsPistol() const { return false; }
-	virtual bool HandleAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent);
-	uint8 GetMagAmmoSpace() const;
-	void LoadAmmoInChamber();
-
-protected:
 	UFUNCTION()
-	void Handle_OnAmmoRemoved(AAmmo* RemovedAmmo);
+	void Handle_OnMagAmmoRemoved(AAmmo* RemovedAmmo);
+
+	UFUNCTION()
+	void Handle_OnWeaponAnimInstanceIdle();
+
+	UFUNCTION()
+	void Handle_OnWeaponAnimInstanceIdleToOut();
+
+	UFUNCTION()
+	void Handle_OnWeaponAnimInstanceOut();
+
+	UFUNCTION()
+	void Handle_OnWeaponAnimInstanceOutToIdle();
+
+	FORCEINLINE FName GetPatronInWeaponSocketName() const { return TEXT("patron_in_weapon"); }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> Mesh;
@@ -57,17 +83,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UWeaponDataAsset> WeaponDataAsset;
 
-	UPROPERTY(Replicated)
-	EWeaponAction WeaponAction;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<AAmmo> AmmoInChamber;
 
-private:
+	TSubclassOf<UAnimInstance> AnimClass;
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
-	FORCEINLINE EWeaponAction GetWeaponAction() const { return WeaponAction; }
+	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
 	UClass* GetHandsAnimClass() const;
 	AMag* GetMag();
 

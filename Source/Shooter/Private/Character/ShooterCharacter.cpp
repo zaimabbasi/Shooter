@@ -18,6 +18,7 @@
 #include "Enum/CharacterStance.h"
 #include "Enum/LeanDirection.h"
 #include "Enum/TurnDirection.h"
+#include "Struct/ShooterUtility.h"
 
 AShooterCharacter::AShooterCharacter()
 {
@@ -112,7 +113,7 @@ void AShooterCharacter::PostInitializeComponents()
 	}
 	if (HandsMesh)
 	{
-		DefaultHandsAnimClass = HandsMesh->GetAnimClass();
+		HandsAnimClass = HandsMesh->GetAnimClass();
 	}
 	if (FirstPersonCamera)
 	{
@@ -120,9 +121,14 @@ void AShooterCharacter::PostInitializeComponents()
 		AimCameraFOV = DefaultToAimCameraFOVPercentage * DefaultCameraFOV;
 	}
 
+	if (CombatComponent)
+	{
+		CombatComponent->OnCombatComponentWeaponOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponOut);
+		CombatComponent->OnCombatComponentEquippedWeaponReplicated.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentEquippedWeaponReplicated);
+	}
 	if (InventoryComponent)
 	{
-		InventoryComponent->OnRepWeaponArrayDelegate.AddDynamic(this, &AShooterCharacter::Handle_OnRepWeaponArray);
+		InventoryComponent->OnInventoryComponentWeaponArrayReplicated.AddDynamic(this, &AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated);
 	}
 
 }
@@ -144,13 +150,8 @@ void AShooterCharacter::Init()
 
 		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
 		{
-			if (USkeletalMeshComponent* CharacterMesh = GetMesh())
-			{
-				if (const USkeletalMeshSocket* WeaponHolsterSocket = CharacterMesh->GetSocketByName(GetCharacterWeaponHolsterSocketName(Weapon)))
-				{
-					WeaponHolsterSocket->AttachActor(Weapon, CharacterMesh);
-				}
-			}
+			FName WeaponHolsterSocketName = GetCharacterWeaponHolsterSocketName(Weapon);
+			FShooterUtility::AttachActor(Weapon, GetMesh(), WeaponHolsterSocketName);
 		}
 	}
 
@@ -185,25 +186,78 @@ void AShooterCharacter::BeginPlay()
 		{
 			LegsMesh->DestroyComponent();
 		}
-		if (GetHandsMesh())
+		if (HandsMesh)
 		{
-			GetHandsMesh()->SetVisibility(false);
+			//HandsMesh->SetVisibility(false);
 		}
 	}
 
-	if (bIsLocallyControlled && InventoryComponent)
+	if (bIsLocallyControlled && InventoryComponent && CombatComponent)
 	{
-		if (AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX))
+		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
+		if (PrimaryWeapon)
 		{
-			Server_EquipWeapon(PrimaryWeapon);
+			CombatComponent->SetEquippedWeapon(PrimaryWeapon);
+			CombatComponent->WeaponAttach(HandsMesh, GetHandsWeaponRootSocketName());
+			SetHandsAnimInstance(PrimaryWeapon->GetHandsAnimClass());
 		}
 	}
 
 }
 
-bool AShooterCharacter::HandleHandsAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent)
+void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 {
-	return true;
+	if (InventoryComponent && CombatComponent)
+	{
+		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
+		if (PrimaryWeapon && !CombatComponent->GetEquippedWeapon())
+		{
+			CombatComponent->SetEquippedWeapon(PrimaryWeapon);
+			CombatComponent->WeaponAttach(HandsMesh, GetHandsWeaponRootSocketName());
+			SetHandsAnimInstance(PrimaryWeapon->GetHandsAnimClass());
+		}
+	}
+}
+
+void AShooterCharacter::Handle_OnCombatComponentWeaponOut(AWeapon* Weapon)
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	if (IsLocallyControlled() && CombatComponent)
+	{
+		CombatComponent->WeaponAttach(GetMesh(), GetCharacterWeaponHolsterSocketName(Weapon));
+		if (NextWeaponToEquip)
+		{
+			CombatComponent->SetEquippedWeapon(NextWeaponToEquip);
+			CombatComponent->WeaponAttach(HandsMesh, GetHandsWeaponRootSocketName());
+			SetHandsAnimInstance(NextWeaponToEquip->GetHandsAnimClass());
+			NextWeaponToEquip = nullptr;
+		}
+	}
+}
+
+void AShooterCharacter::Handle_OnCombatComponentEquippedWeaponReplicated(AWeapon* EquippedWeapon, AWeapon* PrevEquippedWeapon)
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	if (PrevEquippedWeapon)
+	{
+		
+	}
+	else
+	{
+		
+	}
+
+	if (EquippedWeapon)
+	{
+		if (HandsMesh)
+		{
+			HandsMesh->SetAnimClass(EquippedWeapon->GetHandsAnimClass());
+		}
+	}
+	else
+	{
+		
+	}
 }
 
 FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const
@@ -234,39 +288,23 @@ FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) co
 	}
 }
 
-void AShooterCharacter::Handle_OnRepWeaponArray()
+void AShooterCharacter::SetHandsAnimInstance(UClass* AnimClass)
 {
-	if (InventoryComponent)
-	{
-		if (AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX))
-		{
-			if (HandsMesh)
-			{
-				if (const USkeletalMeshSocket* WeaponRootSocket = HandsMesh->GetSocketByName(GetHandsWeaponRootSocketName()))
-				{
-					WeaponRootSocket->AttachActor(PrimaryWeapon, HandsMesh);
-				}
-				HandsMesh->SetAnimClass(PrimaryWeapon->GetHandsAnimClass());
-			}
-			Server_EquipWeapon(PrimaryWeapon);
-		}
-	}
-}
-
-void AShooterCharacter::Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip)
-{
-	if (WeaponToEquip == nullptr || CombatComponent == nullptr)
+	if (HandsMesh == nullptr)
 	{
 		return;
 	}
-	if (HandsMesh)
+	HandsMesh->SetAnimClass(AnimClass);
+	Server_SetHandsAnimInstance(AnimClass);
+}
+
+void AShooterCharacter::Server_SetHandsAnimInstance_Implementation(UClass* AnimClass)
+{
+	if (HandsMesh == nullptr)
 	{
-		if (const USkeletalMeshSocket* WeaponRootSocket = HandsMesh->GetSocketByName(GetHandsWeaponRootSocketName()))
-		{
-			WeaponRootSocket->AttachActor(WeaponToEquip, HandsMesh);
-		}
-		HandsMesh->SetAnimClass(WeaponToEquip->GetHandsAnimClass());
+		return;
 	}
+	HandsMesh->SetAnimClass(AnimClass);
 }
 
 void AShooterCharacter::OnLookAction(const FInputActionValue& Value)
@@ -373,17 +411,28 @@ void AShooterCharacter::OnMoveRightAction(const FInputActionValue& Value)
 }
 
 void AShooterCharacter::OnEquipPrimaryWeaponAction(const FInputActionValue& Value)
-{
+{	
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue)
+	if (CurrentValue && InventoryComponent && CombatComponent)
 	{
-		if (InventoryComponent && CombatComponent)
+		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
+		if (PrimaryWeapon)
 		{
-			AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-			if (CombatComponent->GetEquippedWeapon() != PrimaryWeapon)
+			if (AWeapon* EquippedWeapon = CombatComponent->GetEquippedWeapon())
+			{
+				if (PrimaryWeapon != EquippedWeapon)
+				{
+					NextWeaponToEquip = PrimaryWeapon;
+					CombatComponent->WeaponIdleToOut();
+				}
+			}
+			else
 			{
 				CombatComponent->SetEquippedWeapon(PrimaryWeapon);
+				CombatComponent->WeaponAttach(HandsMesh, GetHandsWeaponRootSocketName());
+				SetHandsAnimInstance(PrimaryWeapon->GetHandsAnimClass());
 			}
+			
 		}
 	}
 }
@@ -391,14 +440,24 @@ void AShooterCharacter::OnEquipPrimaryWeaponAction(const FInputActionValue& Valu
 void AShooterCharacter::OnEquipSecondaryWeaponAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue)
+	if (CurrentValue && InventoryComponent && CombatComponent)
 	{
-		if (InventoryComponent && CombatComponent)
+		AWeapon* SecondaryWeapon = InventoryComponent->GetWeaponAtIndex(SECONDARY_WEAPON_INDEX);
+		if (SecondaryWeapon)
 		{
-			AWeapon* SecondaryWeapon = InventoryComponent->GetWeaponAtIndex(SECONDARY_WEAPON_INDEX);
-			if (CombatComponent->GetEquippedWeapon() != SecondaryWeapon)
+			if (AWeapon* EquippedWeapon = CombatComponent->GetEquippedWeapon())
+			{
+				if (SecondaryWeapon != EquippedWeapon)
+				{
+					NextWeaponToEquip = SecondaryWeapon;
+					CombatComponent->WeaponIdleToOut();
+				}
+			}
+			else
 			{
 				CombatComponent->SetEquippedWeapon(SecondaryWeapon);
+				CombatComponent->WeaponAttach(HandsMesh, GetHandsWeaponRootSocketName());
+				SetHandsAnimInstance(SecondaryWeapon->GetHandsAnimClass());
 			}
 		}
 	}
@@ -784,7 +843,7 @@ void AShooterCharacter::Server_SetCurrentStance_Implementation(ECharacterStance 
 	CurrentStance = NewStance;
 }
 
-AWeapon* AShooterCharacter::GetEquippedWeapon()
+AWeapon* AShooterCharacter::GetEquippedWeapon() const
 {
 	if (CombatComponent == nullptr)
 	{
@@ -793,7 +852,7 @@ AWeapon* AShooterCharacter::GetEquippedWeapon()
 	return CombatComponent->GetEquippedWeapon();
 }
 
-bool AShooterCharacter::GetIsAiming()
+bool AShooterCharacter::GetIsAiming() const
 {
 	if (CombatComponent == nullptr)
 	{

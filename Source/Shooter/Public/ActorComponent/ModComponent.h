@@ -35,11 +35,10 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
+	void Init(const UModDataAsset* ModDataAsset);
+
 protected:
 	virtual void BeginPlay() override;
-
-public:
-	void Init(const UModDataAsset* ModDataAsset);
 
 private:
 	UPROPERTY(Replicated)

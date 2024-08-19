@@ -10,6 +10,8 @@ class AShooterCharacter;
 class AWeapon;
 enum class EWeaponAction : uint8;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponAnimInstanceAnimNotifySignature);
+
 UCLASS()
 class SHOOTER_API UWeaponAnimInstance : public UAnimInstance
 {
@@ -18,7 +20,24 @@ class SHOOTER_API UWeaponAnimInstance : public UAnimInstance
 public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
-	virtual bool HandleNotify(const FAnimNotifyEvent& AnimNotifyEvent) override;
+
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdle;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdleToOut;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOut;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOutToIdle;
+
+protected:
+	UFUNCTION()
+	void AnimNotify_Idle() const;
+
+	UFUNCTION()
+	void AnimNotify_IdleToOut() const;
+
+	UFUNCTION()
+	void AnimNotify_Out() const;
+
+	UFUNCTION()
+	void AnimNotify_OutToIdle() const;
 
 private:
 	TObjectPtr<AWeapon> Weapon;

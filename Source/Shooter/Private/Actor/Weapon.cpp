@@ -8,6 +8,7 @@
 #include "Actor/Ammo.h"
 #include "Actor/Mag.h"
 #include "ActorComponent/ModComponent.h"
+#include "AnimInstance/WeaponAnimInstance.h"
 #include "DataAsset/MagDataAsset.h"
 #include "DataAsset/ModDataAsset.h"
 #include "DataAsset/WeaponDataAsset.h"
@@ -25,6 +26,8 @@ AWeapon::AWeapon()
 
 	ModComponent = CreateDefaultSubobject<UModComponent>(TEXT("ModComponent"));
 	ModComponent->SetIsReplicated(true);
+
+	WeaponAction = EWeaponAction::WAS_OutToIdle;
 
 }
 
@@ -46,11 +49,12 @@ void AWeapon::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-}
+	if (Mesh)
+	{
+		AnimClass = Mesh->GetAnimClass();
+		Mesh->SetAnimClass(nullptr);
+	}
 
-bool AWeapon::HandleAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent)
-{
-	return true;
 }
 
 void AWeapon::Init()
@@ -63,9 +67,15 @@ void AWeapon::Init()
 		}
 		if (AMag* Mag = ModComponent->GetMag())
 		{
-			Mag->OnAmmoRemovedDelegate.AddDynamic(this, &AWeapon::Handle_OnAmmoRemoved);
+			Mag->OnMagAmmoRemoved.AddDynamic(this, &AWeapon::Handle_OnMagAmmoRemoved);
 		}
 	}
+}
+
+void AWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
 }
 
 uint8 AWeapon::GetMagAmmoSpace() const
@@ -97,13 +107,69 @@ void AWeapon::LoadAmmoInChamber()
 	}
 }
 
-void AWeapon::BeginPlay()
+void AWeapon::SetAnimInstance()
 {
-	Super::BeginPlay();
-
+	if (Mesh == nullptr)
+	{
+		return;
+	}
+	Mesh->SetAnimClass(AnimClass);
 }
 
-void AWeapon::Handle_OnAmmoRemoved(AAmmo* RemovedAmmo)
+void AWeapon::ClearAnimInstance()
+{
+	if (Mesh == nullptr)
+	{
+		return;
+	}
+	Mesh->SetAnimClass(nullptr);
+}
+
+void AWeapon::SetAnimInstanceDelegateBindings()
+{
+	if (Mesh == nullptr)
+	{
+		return;
+	}
+	if (UWeaponAnimInstance* WeaponAnimInstance = Cast<UWeaponAnimInstance>(Mesh->GetAnimInstance()))
+	{
+		WeaponAnimInstance->OnWeaponAnimInstanceIdle.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceIdle);
+		WeaponAnimInstance->OnWeaponAnimInstanceIdleToOut.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceIdleToOut);
+		WeaponAnimInstance->OnWeaponAnimInstanceOut.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOut);
+		WeaponAnimInstance->OnWeaponAnimInstanceOutToIdle.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOutToIdle);
+	}
+}
+
+void AWeapon::ClearAnimInstanceDelegateBindings()
+{
+	if (Mesh == nullptr)
+	{
+		return;
+	}
+	if (UWeaponAnimInstance* WeaponAnimInstance = Cast<UWeaponAnimInstance>(Mesh->GetAnimInstance()))
+	{
+		WeaponAnimInstance->OnWeaponAnimInstanceIdle.RemoveAll(this);
+		WeaponAnimInstance->OnWeaponAnimInstanceIdleToOut.RemoveAll(this);
+		WeaponAnimInstance->OnWeaponAnimInstanceOut.RemoveAll(this);
+		WeaponAnimInstance->OnWeaponAnimInstanceOutToIdle.RemoveAll(this);
+	}
+}
+
+void AWeapon::SetWeaponAction(EWeaponAction NewWeaponAction)
+{
+	if (!HasAuthority())
+	{
+		WeaponAction = NewWeaponAction;
+	}
+	Server_SetWeaponAction(NewWeaponAction);
+}
+
+void AWeapon::Server_SetWeaponAction_Implementation(EWeaponAction NewWeaponAction)
+{
+	WeaponAction = NewWeaponAction;
+}
+
+void AWeapon::Handle_OnMagAmmoRemoved(AAmmo* RemovedAmmo)
 {
 	if (RemovedAmmo == nullptr)
 	{
@@ -118,8 +184,32 @@ void AWeapon::Handle_OnAmmoRemoved(AAmmo* RemovedAmmo)
 			}
 		}
 	}
-	RemovedAmmo->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform, TEXT("patron_in_weapon"));
+	RemovedAmmo->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform, GetPatronInWeaponSocketName());
 	AmmoInChamber = RemovedAmmo;
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceIdle()
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	OnWeaponIdle.Broadcast(this);
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceIdleToOut()
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	OnWeaponIdleToOut.Broadcast(this);
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceOut()
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	OnWeaponOut.Broadcast(this);
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceOutToIdle()
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	OnWeaponOutToIdle.Broadcast(this);
 }
 
 UClass* AWeapon::GetHandsAnimClass() const

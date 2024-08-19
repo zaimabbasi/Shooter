@@ -11,6 +11,10 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 
 	Weapon = Cast<AWeapon>(GetOwningActor());
 
+	if (Weapon)
+	{
+		WeaponAction = Weapon->WeaponAction;
+	}
 }
 
 void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -26,17 +30,30 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
-	WeaponAction = Weapon->GetWeaponAction();
+	WeaponAction = Weapon->WeaponAction;
 
 }
 
-bool UWeaponAnimInstance::HandleNotify(const FAnimNotifyEvent& AnimNotifyEvent)
+void UWeaponAnimInstance::AnimNotify_Idle() const
 {
-	Super::HandleNotify(AnimNotifyEvent);
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	OnWeaponAnimInstanceIdle.Broadcast();
+}
 
-	if (Weapon == nullptr)
-	{
-		return false;
-	}
-	return Weapon->HandleAnimNotify(AnimNotifyEvent);
+void UWeaponAnimInstance::AnimNotify_IdleToOut() const
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	OnWeaponAnimInstanceIdleToOut.Broadcast();
+}
+
+void UWeaponAnimInstance::AnimNotify_Out() const
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	OnWeaponAnimInstanceOut.Broadcast();
+}
+
+void UWeaponAnimInstance::AnimNotify_OutToIdle() const
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	OnWeaponAnimInstanceOutToIdle.Broadcast();
 }

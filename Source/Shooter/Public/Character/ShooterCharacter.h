@@ -31,14 +31,12 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 
+	void Init();
+	AWeapon* GetEquippedWeapon() const;
+	bool GetIsAiming() const;
+
 protected:
 	virtual void BeginPlay() override;
-
-public:
-	void Init();
-	virtual bool HandleHandsAnimNotify(const FAnimNotifyEvent& AnimNotifyEvent);
-	AWeapon* GetEquippedWeapon();
-	bool GetIsAiming();
 
 private:
 	void OnLookAction(const FInputActionValue& Value);
@@ -56,10 +54,12 @@ private:
 	void OnToggleLeanRightAction(const FInputActionValue& Value);
 	void OnToggleAimAction(const FInputActionValue& Value);
 	void OnReloadWeaponAction(const FInputActionValue& Value);
+
 	void UpdateMovement(float DeltaTime);
 	void UpdateAO_Pitch(float DeltaTime);
 	void UpdateCameraFOV(float DeltaTime);
 	void TransitionToSprint();
+
 	void SetMovementInputVector(float MovementInputX, float MovementInputY);
 	/*void SetTurnDirection(ETurnDirection NewTurnDirection);*/
 	void SetIsToggleSlow(bool bToggleSlow);
@@ -68,14 +68,23 @@ private:
 	void SetLeanTransitionDuration(float NewLeanTransitionDuration);
 	void SetLeaningRate(float NewLeaningRate);
 	void SetCurrentStance(ECharacterStance NewStance);
+
 	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
 	FORCEINLINE FName GetHandsWeaponRootSocketName() const { return TEXT("weapon_rootSocket"); }
 
-	UFUNCTION()
-	void Handle_OnRepWeaponArray();
+	void SetHandsAnimInstance(UClass* AnimClass);
 
 	UFUNCTION(Server, Reliable)
-	void Server_EquipWeapon(AWeapon* WeaponToEquip);
+	void Server_SetHandsAnimInstance(UClass* AnimClass);
+
+	UFUNCTION()
+	void Handle_OnInventoryComponentWeaponArrayReplicated();
+
+	UFUNCTION()
+	void Handle_OnCombatComponentWeaponOut(AWeapon* Weapon);
+
+	UFUNCTION()
+	void Handle_OnCombatComponentEquippedWeaponReplicated(AWeapon* EquippedWeapon, AWeapon* PrevEquippedWeapon);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetRemoteViewYaw(float RemoteYaw);
@@ -104,7 +113,6 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_SetCurrentStance(ECharacterStance NewStance);
 
-private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> LegsMesh;
 
@@ -180,7 +188,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCharacterDataAsset> CharacterDataAsset;
 
-	TSubclassOf<UAnimInstance> DefaultHandsAnimClass;
+	TSubclassOf<UAnimInstance> HandsAnimClass;
+
+	TObjectPtr<AWeapon> NextWeaponToEquip;
 
 	const float DefaultAnimationTransitionDuration = 0.25f;
 	const float MaxLean = 15.0f;

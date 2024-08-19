@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/SkeletalMeshSocket.h"
 #include "ShooterUtility.generated.h"
 
 USTRUCT()
@@ -24,4 +25,16 @@ public:
 		return WorldTransform;
 	}
 
+	static bool AttachActor(AActor* Actor, USkeletalMeshComponent* SkelComp, FName InSocketName)
+	{
+		bool bAttached = false;
+		if (Actor && SkelComp)
+		{
+			if (const USkeletalMeshSocket* Socket = SkelComp->GetSocketByName(InSocketName))
+			{
+				bAttached = Socket->AttachActor(Actor, SkelComp);
+			}
+		}
+		return bAttached;
+	}
 };

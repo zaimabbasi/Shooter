@@ -9,7 +9,7 @@
 class AAmmo;
 class UMagDataAsset;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAmmoRemovedSignature, AAmmo*, RemovedAmmo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMagAmmoRemovedSignature, AAmmo*, RemovedAmmo);
 
 UCLASS()
 class SHOOTER_API AMag: public AMod
@@ -20,11 +20,10 @@ public:
 	AMag();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	FAmmoRemovedSignature OnAmmoRemovedDelegate;
-
-public:
 	void AddAmmo(const uint8 Count);
 	void RemoveAmmo();
+
+	FOnMagAmmoRemovedSignature OnMagAmmoRemoved;
 
 private:
 	UFUNCTION(Server, Reliable)
@@ -33,8 +32,6 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_RemoveAmmo();
 
-
-private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UMagDataAsset> MagDataAsset;
 

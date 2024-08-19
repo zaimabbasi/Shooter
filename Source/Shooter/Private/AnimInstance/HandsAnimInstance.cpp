@@ -4,7 +4,6 @@
 #include "AnimInstance/HandsAnimInstance.h"
 #include "Actor/Weapon.h"
 #include "Character/ShooterCharacter.h"
-#include "DataAsset/WeaponDataAsset.h"
 #include "Enum/LeanDirection.h"
 
 void UHandsAnimInstance::NativeInitializeAnimation()
@@ -72,18 +71,7 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	AWeapon* EquippedWeapon = ShooterCharacter->GetEquippedWeapon();
 	if (EquippedWeapon)
 	{
-		WeaponAction = EquippedWeapon->GetWeaponAction();
+		WeaponAction = EquippedWeapon->WeaponAction;
 	}
 	
-}
-
-bool UHandsAnimInstance::HandleNotify(const FAnimNotifyEvent& AnimNotifyEvent)
-{
-	Super::HandleNotify(AnimNotifyEvent);
-
-	if (ShooterCharacter == nullptr)
-	{
-		return false;
-	}
-	return ShooterCharacter->HandleHandsAnimNotify(AnimNotifyEvent);
 }

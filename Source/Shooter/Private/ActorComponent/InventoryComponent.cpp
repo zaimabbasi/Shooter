@@ -34,13 +34,13 @@ void UInventoryComponent::Init(const FInventoryParams& InventoryParams)
 	if (UWorld* World = GetWorld())
 	{
 		AActor* OwningActor = GetOwner();
-		if (AWeapon* PrimaryWeapon = World->SpawnActor<AWeapon>(InventoryParams.PrimaryWeaponClass))
+		if (AWeapon* const PrimaryWeapon  = World->SpawnActor<AWeapon>(InventoryParams.PrimaryWeaponClass))
 		{
 			PrimaryWeapon->SetOwner(OwningActor);
 			PrimaryWeapon->Init();
 			WeaponArray.Add(PrimaryWeapon);
 		}
-		if (AWeapon* SecondaryWeapon = World->SpawnActor<AWeapon>(InventoryParams.SecondaryWeaponClass))
+		if (AWeapon* const SecondaryWeapon = World->SpawnActor<AWeapon>(InventoryParams.SecondaryWeaponClass))
 		{
 			SecondaryWeapon->SetOwner(OwningActor);
 			SecondaryWeapon->Init();
@@ -103,7 +103,7 @@ uint8 UInventoryComponent::GetAmmoAtIndex(uint8 Index)
 	return WeaponAmmoArray.IsValidIndex(Index) ? WeaponAmmoArray[Index] : 0;
 }
 
-void UInventoryComponent::OnRep_WeaponArray()
+void UInventoryComponent::OnRep_WeaponArray() const
 {
-	OnRepWeaponArrayDelegate.Broadcast();
+	OnInventoryComponentWeaponArrayReplicated.Broadcast();
 }
