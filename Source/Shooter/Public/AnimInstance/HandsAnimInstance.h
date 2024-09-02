@@ -7,7 +7,9 @@
 #include "HandsAnimInstance.generated.h"
 
 class AShooterCharacter;
-enum class EWeaponAction : uint8;
+enum class ECombatAction : uint8;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHandsAnimInstanceAnimNotifySignature);
 
 UCLASS()
 class SHOOTER_API UHandsAnimInstance : public UAnimInstance
@@ -17,6 +19,24 @@ class SHOOTER_API UHandsAnimInstance : public UAnimInstance
 public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
+	FOnHandsAnimInstanceAnimNotifySignature OnHandsAnimInstanceIdle;
+	FOnHandsAnimInstanceAnimNotifySignature OnHandsAnimInstanceIdleToOut;
+	FOnHandsAnimInstanceAnimNotifySignature OnHandsAnimInstanceOut;
+	FOnHandsAnimInstanceAnimNotifySignature OnHandsAnimInstanceOutToIdle;
+
+protected:
+	UFUNCTION()
+	void AnimNotify_Idle() const;
+
+	UFUNCTION()
+	void AnimNotify_IdleToOut() const;
+
+	UFUNCTION()
+	void AnimNotify_Out() const;
+
+	UFUNCTION()
+	void AnimNotify_OutToIdle() const;
 
 private:
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
@@ -31,6 +51,12 @@ private:
 	float Lean;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	EWeaponAction WeaponAction;
+	ECombatAction CombatAction;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	bool bIsWeaponEquipped;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
 
 };

@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Enum/CombatAction.h"
 #include "CombatComponent.generated.h"
 
 class AWeapon;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatComponentWeaponAnimNotifySignature, AWeapon*, Weapon);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatComponentEquippedWeaponReplicatedSignature, AWeapon*, EquippedWeapon, AWeapon*, PrevEquippedWeapon);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SHOOTER_API UCombatComponent : public UActorComponent
@@ -22,20 +22,17 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void SetEquippedWeapon(AWeapon* WeaponToEquip);
-	void WeaponAttach(USkeletalMeshComponent* ParentSkeletalMesh, FName ParentSocketName);
+	void WeaponAttach(USkeletalMeshComponent* ParentSkeletalMesh, FName ParentSocketName = NAME_None);
 	void SetWeaponDelegateBindings(AWeapon* Weapon);
 	void ClearWeaponDelegateBindings(AWeapon* Weapon);
-	void WeaponIdleToOut();
-	void WeaponOutToIdle();
 	void SetIsAiming(bool bAiming);
 	void ReloadWeapon();
+	void SetCombatAction(ECombatAction Action);
 
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponIdle;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponIdleToOut;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOut;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOutToIdle;
-
-	FOnCombatComponentEquippedWeaponReplicatedSignature OnCombatComponentEquippedWeaponReplicated;
 
 protected:
 	virtual void BeginPlay() override;
@@ -45,10 +42,13 @@ private:
 	void Server_SetEquippedWeapon(AWeapon* WeaponToEquip);
 
 	UFUNCTION(Server, Reliable)
-	void Server_WeaponAttach(USkeletalMeshComponent* ParentSkeletalMesh, FName ParentSocketName);
+	void Server_WeaponAttach(USkeletalMeshComponent* ParentSkeletalMesh, FName ParentSocketName = NAME_None);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetIsAiming(bool bAiming);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetCombatAction(ECombatAction Action);
 
 	UFUNCTION()
 	void Handle_OnWeaponIdle(AWeapon* Weapon);
@@ -71,8 +71,12 @@ private:
 	UPROPERTY(Replicated)
 	bool bIsAiming;
 
+	UPROPERTY(Replicated)
+	ECombatAction CombatAction;
+
 public:
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
+	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
 

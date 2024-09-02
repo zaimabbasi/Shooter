@@ -8,7 +8,7 @@
 
 class AShooterCharacter;
 class AWeapon;
-enum class EWeaponAction : uint8;
+enum class ECombatAction : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponAnimInstanceAnimNotifySignature);
 
@@ -43,6 +43,6 @@ private:
 	TObjectPtr<AWeapon> Weapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	EWeaponAction WeaponAction;
+	ECombatAction CombatAction;
 
 };

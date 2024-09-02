@@ -14,11 +14,12 @@
 #include "Actor/Weapon.h"
 #include "ActorComponent/CombatComponent.h"
 #include "ActorComponent/InventoryComponent.h"
+#include "AnimInstance/HandsAnimInstance.h"
 #include "DataAsset/CharacterDataAsset.h"
 #include "Enum/CharacterStance.h"
 #include "Enum/LeanDirection.h"
 #include "Enum/TurnDirection.h"
-#include "Struct/ShooterUtility.h"
+#include "Type/ShooterNameType.h"
 
 AShooterCharacter::AShooterCharacter()
 {
@@ -75,6 +76,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(MoveRightAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveRightAction);
 		EnhancedInputComponent->BindAction(EquipPrimaryWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnEquipPrimaryWeaponAction);
 		EnhancedInputComponent->BindAction(EquipSecondaryWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnEquipSecondaryWeaponAction);
+		EnhancedInputComponent->BindAction(HolsterEquippedWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnHolsterEquippedWeaponAction);
 		EnhancedInputComponent->BindAction(ToggleCrouchAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleCrouchAction);
 		EnhancedInputComponent->BindAction(ToggleProneAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleProneAction);
 		EnhancedInputComponent->BindAction(ToggleSlowAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleSlowAction);
@@ -113,7 +115,13 @@ void AShooterCharacter::PostInitializeComponents()
 	}
 	if (HandsMesh)
 	{
-		HandsAnimClass = HandsMesh->GetAnimClass();
+		if (UHandsAnimInstance* HandsAnimInstance = Cast<UHandsAnimInstance>(HandsMesh->GetAnimInstance()))
+		{
+			HandsAnimInstance->OnHandsAnimInstanceIdle.AddDynamic(this, &AShooterCharacter::Handle_OnHandsAnimInstanceIdle);
+			HandsAnimInstance->OnHandsAnimInstanceIdleToOut.AddDynamic(this, &AShooterCharacter::Handle_OnHandsAnimInstanceIdleToOut);
+			HandsAnimInstance->OnHandsAnimInstanceOut.AddDynamic(this, &AShooterCharacter::Handle_OnHandsAnimInstanceOut);
+			HandsAnimInstance->OnHandsAnimInstanceOutToIdle.AddDynamic(this, &AShooterCharacter::Handle_OnHandsAnimInstanceOutToIdle);
+		}
 	}
 	if (FirstPersonCamera)
 	{
@@ -124,7 +132,6 @@ void AShooterCharacter::PostInitializeComponents()
 	if (CombatComponent)
 	{
 		CombatComponent->OnCombatComponentWeaponOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponOut);
-		CombatComponent->OnCombatComponentEquippedWeaponReplicated.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentEquippedWeaponReplicated);
 	}
 	if (InventoryComponent)
 	{
@@ -151,7 +158,7 @@ void AShooterCharacter::Init()
 		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
 		{
 			FName WeaponHolsterSocketName = GetCharacterWeaponHolsterSocketName(Weapon);
-			FShooterUtility::AttachActor(Weapon, GetMesh(), WeaponHolsterSocketName);
+			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponHolsterSocketName);
 		}
 	}
 
@@ -195,11 +202,10 @@ void AShooterCharacter::BeginPlay()
 	if (bIsLocallyControlled && InventoryComponent && CombatComponent)
 	{
 		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-		if (PrimaryWeapon)
+		if (PrimaryWeapon && PrimaryWeapon != CombatComponent->GetEquippedWeapon())
 		{
-			CombatComponent->SetEquippedWeapon(PrimaryWeapon);
-			CombatComponent->WeaponAttach(HandsMesh, GetHandsWeaponRootSocketName());
-			SetHandsAnimInstance(PrimaryWeapon->GetHandsAnimClass());
+			/*NextWeaponToEquip = PrimaryWeapon;
+			CombatComponent->SetCombatAction(ECombatAction::CA_IdleToOut);*/
 		}
 	}
 
@@ -210,11 +216,10 @@ void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 	if (InventoryComponent && CombatComponent)
 	{
 		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-		if (PrimaryWeapon && !CombatComponent->GetEquippedWeapon())
+		if (PrimaryWeapon && PrimaryWeapon != CombatComponent->GetEquippedWeapon())
 		{
-			CombatComponent->SetEquippedWeapon(PrimaryWeapon);
-			CombatComponent->WeaponAttach(HandsMesh, GetHandsWeaponRootSocketName());
-			SetHandsAnimInstance(PrimaryWeapon->GetHandsAnimClass());
+			/*NextWeaponToEquip = PrimaryWeapon;
+			CombatComponent->SetCombatAction(ECombatAction::CA_IdleToOut);*/
 		}
 	}
 }
@@ -225,86 +230,73 @@ void AShooterCharacter::Handle_OnCombatComponentWeaponOut(AWeapon* Weapon)
 	if (IsLocallyControlled() && CombatComponent)
 	{
 		CombatComponent->WeaponAttach(GetMesh(), GetCharacterWeaponHolsterSocketName(Weapon));
-		if (NextWeaponToEquip)
-		{
-			CombatComponent->SetEquippedWeapon(NextWeaponToEquip);
-			CombatComponent->WeaponAttach(HandsMesh, GetHandsWeaponRootSocketName());
-			SetHandsAnimInstance(NextWeaponToEquip->GetHandsAnimClass());
-			NextWeaponToEquip = nullptr;
-		}
+
+		CombatComponent->SetEquippedWeapon(NextWeaponToEquip);
+		CombatComponent->WeaponAttach(HandsMesh, CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME);
+		CombatComponent->SetCombatAction(ECombatAction::CA_OutToIdle);
+		NextWeaponToEquip = nullptr;
 	}
 }
 
-void AShooterCharacter::Handle_OnCombatComponentEquippedWeaponReplicated(AWeapon* EquippedWeapon, AWeapon* PrevEquippedWeapon)
+void AShooterCharacter::Handle_OnHandsAnimInstanceIdle()
 {
 	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-	if (PrevEquippedWeapon)
-	{
-		
-	}
-	else
-	{
-		
-	}
+}
 
-	if (EquippedWeapon)
+void AShooterCharacter::Handle_OnHandsAnimInstanceIdleToOut()
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	if (IsLocallyControlled() && CombatComponent)
 	{
-		if (HandsMesh)
-		{
-			HandsMesh->SetAnimClass(EquippedWeapon->GetHandsAnimClass());
-		}
+		CombatComponent->SetCombatAction(ECombatAction::CA_Out);
 	}
-	else
+}
+
+void AShooterCharacter::Handle_OnHandsAnimInstanceOut()
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	if (IsLocallyControlled() && CombatComponent && NextWeaponToEquip)
 	{
-		
+		CombatComponent->SetEquippedWeapon(NextWeaponToEquip);
+		CombatComponent->WeaponAttach(HandsMesh, CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME);
+		CombatComponent->SetCombatAction(ECombatAction::CA_OutToIdle);
+		NextWeaponToEquip = nullptr;
+	}
+}
+
+void AShooterCharacter::Handle_OnHandsAnimInstanceOutToIdle()
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	if (IsLocallyControlled() && CombatComponent)
+	{
+		CombatComponent->SetCombatAction(ECombatAction::CA_Idle);
 	}
 }
 
 FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const
 {
-	if (Weapon == nullptr || InventoryComponent == nullptr)
-	{
-		return NAME_None;
-	}
-	const int8 WeaponIndex = InventoryComponent->FindWeapon(Weapon);
-	if (WeaponIndex == INDEX_NONE)
-	{
-		return NAME_None;
-	}
-	else if (WeaponIndex == 0)
-	{
-		return TEXT("weapon_holsterSocket");
-	}
-	else
+	FName WeaponHolsterSocketName = NAME_None;
+	if (Weapon && InventoryComponent)
 	{
 		if (Weapon->IsPistol())
 		{
-			return TEXT("pistol_holsterSocket");
+			WeaponHolsterSocketName = CHARACTER_PISTOL_HOLSTER_SOCKET_NAME;
 		}
 		else
 		{
-			return *FString::Printf(TEXT("weapon_holster%uSocket"), WeaponIndex);
+			const int8 WeaponIndex = InventoryComponent->FindWeapon(Weapon);
+			if (WeaponIndex == PRIMARY_WEAPON_INDEX)
+			{
+				WeaponHolsterSocketName = CHARACTER_PRIMARY_WEAPON_HOLSTER_SOCKET_NAME;
+			}
+			else if (WeaponIndex != INDEX_NONE)
+			{
+				
+				WeaponHolsterSocketName = CHARACTER_SECONDARY_WEAPON_HOLSTER_SOCKET_NAME(WeaponIndex);
+			}
 		}
 	}
-}
-
-void AShooterCharacter::SetHandsAnimInstance(UClass* AnimClass)
-{
-	if (HandsMesh == nullptr)
-	{
-		return;
-	}
-	HandsMesh->SetAnimClass(AnimClass);
-	Server_SetHandsAnimInstance(AnimClass);
-}
-
-void AShooterCharacter::Server_SetHandsAnimInstance_Implementation(UClass* AnimClass)
-{
-	if (HandsMesh == nullptr)
-	{
-		return;
-	}
-	HandsMesh->SetAnimClass(AnimClass);
+	return WeaponHolsterSocketName;
 }
 
 void AShooterCharacter::OnLookAction(const FInputActionValue& Value)
@@ -411,28 +403,15 @@ void AShooterCharacter::OnMoveRightAction(const FInputActionValue& Value)
 }
 
 void AShooterCharacter::OnEquipPrimaryWeaponAction(const FInputActionValue& Value)
-{	
+{
 	const bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue && InventoryComponent && CombatComponent)
 	{
 		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-		if (PrimaryWeapon)
+		if (PrimaryWeapon && PrimaryWeapon != CombatComponent->GetEquippedWeapon())
 		{
-			if (AWeapon* EquippedWeapon = CombatComponent->GetEquippedWeapon())
-			{
-				if (PrimaryWeapon != EquippedWeapon)
-				{
-					NextWeaponToEquip = PrimaryWeapon;
-					CombatComponent->WeaponIdleToOut();
-				}
-			}
-			else
-			{
-				CombatComponent->SetEquippedWeapon(PrimaryWeapon);
-				CombatComponent->WeaponAttach(HandsMesh, GetHandsWeaponRootSocketName());
-				SetHandsAnimInstance(PrimaryWeapon->GetHandsAnimClass());
-			}
-			
+			NextWeaponToEquip = PrimaryWeapon;
+			CombatComponent->SetCombatAction(ECombatAction::CA_IdleToOut);
 		}
 	}
 }
@@ -443,23 +422,21 @@ void AShooterCharacter::OnEquipSecondaryWeaponAction(const FInputActionValue& Va
 	if (CurrentValue && InventoryComponent && CombatComponent)
 	{
 		AWeapon* SecondaryWeapon = InventoryComponent->GetWeaponAtIndex(SECONDARY_WEAPON_INDEX);
-		if (SecondaryWeapon)
+		if (SecondaryWeapon && SecondaryWeapon != CombatComponent->GetEquippedWeapon())
 		{
-			if (AWeapon* EquippedWeapon = CombatComponent->GetEquippedWeapon())
-			{
-				if (SecondaryWeapon != EquippedWeapon)
-				{
-					NextWeaponToEquip = SecondaryWeapon;
-					CombatComponent->WeaponIdleToOut();
-				}
-			}
-			else
-			{
-				CombatComponent->SetEquippedWeapon(SecondaryWeapon);
-				CombatComponent->WeaponAttach(HandsMesh, GetHandsWeaponRootSocketName());
-				SetHandsAnimInstance(SecondaryWeapon->GetHandsAnimClass());
-			}
+			NextWeaponToEquip = SecondaryWeapon;
+			CombatComponent->SetCombatAction(ECombatAction::CA_IdleToOut);
 		}
+	}
+}
+
+void AShooterCharacter::OnHolsterEquippedWeaponAction(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue && CombatComponent && CombatComponent->GetEquippedWeapon())
+	{
+		NextWeaponToEquip = nullptr;
+		CombatComponent->SetCombatAction(ECombatAction::CA_IdleToOut);
 	}
 }
 
@@ -859,4 +836,13 @@ bool AShooterCharacter::GetIsAiming() const
 		return false;
 	}
 	return CombatComponent->GetIsAiming();
+}
+
+ECombatAction AShooterCharacter::GetCombatAction() const
+{
+	if (CombatComponent == nullptr)
+	{
+		return ECombatAction::CA_None;
+	}
+	return CombatComponent->GetCombatAction();
 }

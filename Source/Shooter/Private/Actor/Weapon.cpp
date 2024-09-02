@@ -13,7 +13,8 @@
 #include "DataAsset/ModDataAsset.h"
 #include "DataAsset/WeaponDataAsset.h"
 
-AWeapon::AWeapon()
+AWeapon::AWeapon() :
+	CombatAction(ECombatAction::CA_Out)
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
@@ -27,8 +28,6 @@ AWeapon::AWeapon()
 	ModComponent = CreateDefaultSubobject<UModComponent>(TEXT("ModComponent"));
 	ModComponent->SetIsReplicated(true);
 
-	WeaponAction = EWeaponAction::WAS_OutToIdle;
-
 }
 
 void AWeapon::Tick(float DeltaTime)
@@ -41,8 +40,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AWeapon, WeaponAction);
-
+	DOREPLIFETIME(AWeapon, CombatAction);
 }
 
 void AWeapon::PostInitializeComponents()
@@ -51,8 +49,13 @@ void AWeapon::PostInitializeComponents()
 
 	if (Mesh)
 	{
-		AnimClass = Mesh->GetAnimClass();
-		Mesh->SetAnimClass(nullptr);
+		if (UWeaponAnimInstance* WeaponAnimInstance = Cast<UWeaponAnimInstance>(Mesh->GetAnimInstance()))
+		{
+			WeaponAnimInstance->OnWeaponAnimInstanceIdle.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceIdle);
+			WeaponAnimInstance->OnWeaponAnimInstanceIdleToOut.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceIdleToOut);
+			WeaponAnimInstance->OnWeaponAnimInstanceOut.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOut);
+			WeaponAnimInstance->OnWeaponAnimInstanceOutToIdle.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOutToIdle);
+		}
 	}
 
 }
@@ -107,66 +110,9 @@ void AWeapon::LoadAmmoInChamber()
 	}
 }
 
-void AWeapon::SetAnimInstance()
+void AWeapon::SetCombatAction(ECombatAction Action)
 {
-	if (Mesh == nullptr)
-	{
-		return;
-	}
-	Mesh->SetAnimClass(AnimClass);
-}
-
-void AWeapon::ClearAnimInstance()
-{
-	if (Mesh == nullptr)
-	{
-		return;
-	}
-	Mesh->SetAnimClass(nullptr);
-}
-
-void AWeapon::SetAnimInstanceDelegateBindings()
-{
-	if (Mesh == nullptr)
-	{
-		return;
-	}
-	if (UWeaponAnimInstance* WeaponAnimInstance = Cast<UWeaponAnimInstance>(Mesh->GetAnimInstance()))
-	{
-		WeaponAnimInstance->OnWeaponAnimInstanceIdle.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceIdle);
-		WeaponAnimInstance->OnWeaponAnimInstanceIdleToOut.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceIdleToOut);
-		WeaponAnimInstance->OnWeaponAnimInstanceOut.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOut);
-		WeaponAnimInstance->OnWeaponAnimInstanceOutToIdle.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOutToIdle);
-	}
-}
-
-void AWeapon::ClearAnimInstanceDelegateBindings()
-{
-	if (Mesh == nullptr)
-	{
-		return;
-	}
-	if (UWeaponAnimInstance* WeaponAnimInstance = Cast<UWeaponAnimInstance>(Mesh->GetAnimInstance()))
-	{
-		WeaponAnimInstance->OnWeaponAnimInstanceIdle.RemoveAll(this);
-		WeaponAnimInstance->OnWeaponAnimInstanceIdleToOut.RemoveAll(this);
-		WeaponAnimInstance->OnWeaponAnimInstanceOut.RemoveAll(this);
-		WeaponAnimInstance->OnWeaponAnimInstanceOutToIdle.RemoveAll(this);
-	}
-}
-
-void AWeapon::SetWeaponAction(EWeaponAction NewWeaponAction)
-{
-	if (!HasAuthority())
-	{
-		WeaponAction = NewWeaponAction;
-	}
-	Server_SetWeaponAction(NewWeaponAction);
-}
-
-void AWeapon::Server_SetWeaponAction_Implementation(EWeaponAction NewWeaponAction)
-{
-	WeaponAction = NewWeaponAction;
+	CombatAction = Action;
 }
 
 void AWeapon::Handle_OnMagAmmoRemoved(AAmmo* RemovedAmmo)
@@ -210,15 +156,6 @@ void AWeapon::Handle_OnWeaponAnimInstanceOutToIdle()
 {
 	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnWeaponOutToIdle.Broadcast(this);
-}
-
-UClass* AWeapon::GetHandsAnimClass() const
-{
-	if (WeaponDataAsset.IsNull())
-	{
-		return nullptr;
-	}
-	return WeaponDataAsset.LoadSynchronous()->HandsAnimClass;
 }
 
 AMag* AWeapon::GetMag()

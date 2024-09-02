@@ -13,7 +13,7 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 
 	if (Weapon)
 	{
-		WeaponAction = Weapon->WeaponAction;
+		CombatAction = Weapon->GetCombatAction();
 	}
 }
 
@@ -30,7 +30,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
-	WeaponAction = Weapon->WeaponAction;
+	CombatAction = Weapon->GetCombatAction();
 
 }
 

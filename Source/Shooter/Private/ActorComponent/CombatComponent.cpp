@@ -6,10 +6,10 @@
 #include "Net/UnrealNetwork.h"
 #include "Actor/Weapon.h"
 #include "Character/ShooterCharacter.h"
-#include "Struct/ShooterUtility.h"
 
 UCombatComponent::UCombatComponent() :
-	EquippedWeapon(nullptr)
+	EquippedWeapon(nullptr),
+	CombatAction(ECombatAction::CA_Idle)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
@@ -27,6 +27,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bIsAiming);
+	DOREPLIFETIME(UCombatComponent, CombatAction);
 
 }
 
@@ -43,14 +44,9 @@ void UCombatComponent::SetEquippedWeapon(AWeapon* WeaponToEquip)
 		if (EquippedWeapon)
 		{
 			ClearWeaponDelegateBindings(EquippedWeapon);
-			EquippedWeapon->ClearAnimInstanceDelegateBindings();
-			EquippedWeapon->ClearAnimInstance();
 		}
 		if (WeaponToEquip)
 		{
-			WeaponToEquip->WeaponAction = EWeaponAction::WAS_OutToIdle;
-			WeaponToEquip->SetAnimInstance();
-			WeaponToEquip->SetAnimInstanceDelegateBindings();
 			SetWeaponDelegateBindings(WeaponToEquip);
 		}
 		EquippedWeapon = WeaponToEquip;
@@ -63,14 +59,9 @@ void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponTo
 	if (EquippedWeapon)
 	{
 		ClearWeaponDelegateBindings(EquippedWeapon);
-		EquippedWeapon->ClearAnimInstanceDelegateBindings();
-		EquippedWeapon->ClearAnimInstance();
 	}
 	if (WeaponToEquip)
 	{
-		WeaponToEquip->WeaponAction = EWeaponAction::WAS_OutToIdle;
-		WeaponToEquip->SetAnimInstance();
-		WeaponToEquip->SetAnimInstanceDelegateBindings();
 		SetWeaponDelegateBindings(WeaponToEquip);
 	}
 	EquippedWeapon = WeaponToEquip;
@@ -84,7 +75,7 @@ void UCombatComponent::WeaponAttach(USkeletalMeshComponent* ParentSkeletalMesh, 
 	}
 	if (!HasAuthority())
 	{
-		FShooterUtility::AttachActor(EquippedWeapon, ParentSkeletalMesh, ParentSocketName);
+		EquippedWeapon->AttachToComponent(ParentSkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform, ParentSocketName);
 	}
 	Server_WeaponAttach(ParentSkeletalMesh, ParentSocketName);
 }
@@ -95,7 +86,7 @@ void UCombatComponent::Server_WeaponAttach_Implementation(USkeletalMeshComponent
 	{
 		return;
 	}
-	FShooterUtility::AttachActor(EquippedWeapon, ParentSkeletalMesh, ParentSocketName);
+	EquippedWeapon->AttachToComponent(ParentSkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform, ParentSocketName);
 }
 
 void UCombatComponent::SetWeaponDelegateBindings(AWeapon* Weapon)
@@ -124,24 +115,6 @@ void UCombatComponent::ClearWeaponDelegateBindings(AWeapon* Weapon)
 	
 }
 
-void UCombatComponent::WeaponIdleToOut()
-{
-	if (EquippedWeapon == nullptr)
-	{
-		return;
-	}
-	EquippedWeapon->SetWeaponAction(EWeaponAction::WAS_IdleToOut);
-}
-
-void UCombatComponent::WeaponOutToIdle()
-{
-	if (EquippedWeapon == nullptr)
-	{
-		return;
-	}
-	EquippedWeapon->SetWeaponAction(EWeaponAction::WAS_OutToIdle);
-}
-
 void UCombatComponent::SetIsAiming(bool bAiming)
 {
 	if (EquippedWeapon == nullptr)
@@ -157,6 +130,28 @@ void UCombatComponent::ReloadWeapon()
 	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 }
 
+void UCombatComponent::SetCombatAction(ECombatAction Action)
+{
+	if (!HasAuthority())
+	{
+		CombatAction = Action;
+		if (EquippedWeapon)
+		{
+			EquippedWeapon->SetCombatAction(Action);
+		}
+	}
+	Server_SetCombatAction(Action);
+}
+
+void UCombatComponent::Server_SetCombatAction_Implementation(ECombatAction Action)
+{
+	CombatAction = Action;
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->SetCombatAction(Action);
+	}
+}
+
 void UCombatComponent::Handle_OnWeaponIdle(AWeapon* Weapon)
 {
 	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
@@ -165,10 +160,7 @@ void UCombatComponent::Handle_OnWeaponIdle(AWeapon* Weapon)
 void UCombatComponent::Handle_OnWeaponIdleToOut(AWeapon* Weapon)
 {
 	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-	if (Weapon)
-	{
-		Weapon->WeaponAction = EWeaponAction::WAS_Out;
-	}
+	SetCombatAction(ECombatAction::CA_Out);
 }
 
 void UCombatComponent::Handle_OnWeaponOut(AWeapon* Weapon)
@@ -181,26 +173,12 @@ void UCombatComponent::Handle_OnWeaponOut(AWeapon* Weapon)
 void UCombatComponent::Handle_OnWeaponOutToIdle(AWeapon* Weapon)
 {
 	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-	if (Weapon)
-	{
-		Weapon->WeaponAction = EWeaponAction::WAS_Idle;
-	}
+	SetCombatAction(ECombatAction::CA_Idle);
 }
 
 void UCombatComponent::OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-	if (PrevEquippedWeapon)
-	{
-		PrevEquippedWeapon->ClearAnimInstance();
-	}
-	if (EquippedWeapon)
-	{
-		EquippedWeapon->WeaponAction = EWeaponAction::WAS_OutToIdle;
-		EquippedWeapon->SetAnimInstance();
-	}
-	
-	OnCombatComponentEquippedWeaponReplicated.Broadcast(EquippedWeapon, PrevEquippedWeapon);
+
 }
 
 void UCombatComponent::Server_SetIsAiming_Implementation(bool bAiming)

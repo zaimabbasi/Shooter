@@ -15,6 +15,7 @@ class UInputAction;
 class UInputMappingContext;
 class UInventoryComponent;
 enum class ECharacterStance : uint8;
+enum class ECombatAction : uint8;
 enum class ELeanDirection : uint8;
 enum class ETurnDirection : uint8;
 struct FInputActionValue;
@@ -34,6 +35,7 @@ public:
 	void Init();
 	AWeapon* GetEquippedWeapon() const;
 	bool GetIsAiming() const;
+	ECombatAction GetCombatAction() const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -46,6 +48,7 @@ private:
 	void OnMoveRightAction(const FInputActionValue& Value);
 	void OnEquipPrimaryWeaponAction(const FInputActionValue& Value);
 	void OnEquipSecondaryWeaponAction(const FInputActionValue& Value);
+	void OnHolsterEquippedWeaponAction(const FInputActionValue& Value);
 	void OnToggleCrouchAction(const FInputActionValue& Value);
 	void OnToggleProneAction(const FInputActionValue& Value);
 	void OnToggleSlowAction(const FInputActionValue& Value);
@@ -70,12 +73,6 @@ private:
 	void SetCurrentStance(ECharacterStance NewStance);
 
 	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
-	FORCEINLINE FName GetHandsWeaponRootSocketName() const { return TEXT("weapon_rootSocket"); }
-
-	void SetHandsAnimInstance(UClass* AnimClass);
-
-	UFUNCTION(Server, Reliable)
-	void Server_SetHandsAnimInstance(UClass* AnimClass);
 
 	UFUNCTION()
 	void Handle_OnInventoryComponentWeaponArrayReplicated();
@@ -84,7 +81,16 @@ private:
 	void Handle_OnCombatComponentWeaponOut(AWeapon* Weapon);
 
 	UFUNCTION()
-	void Handle_OnCombatComponentEquippedWeaponReplicated(AWeapon* EquippedWeapon, AWeapon* PrevEquippedWeapon);
+	void Handle_OnHandsAnimInstanceIdle();
+
+	UFUNCTION()
+	void Handle_OnHandsAnimInstanceIdleToOut();
+
+	UFUNCTION()
+	void Handle_OnHandsAnimInstanceOut();
+
+	UFUNCTION()
+	void Handle_OnHandsAnimInstanceOutToIdle();
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetRemoteViewYaw(float RemoteYaw);
@@ -162,6 +168,9 @@ private:
 	TSoftObjectPtr<UInputAction> EquipSecondaryWeaponAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> HolsterEquippedWeaponAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> ToggleCrouchAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
@@ -187,8 +196,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCharacterDataAsset> CharacterDataAsset;
-
-	TSubclassOf<UAnimInstance> HandsAnimClass;
 
 	TObjectPtr<AWeapon> NextWeaponToEquip;
 

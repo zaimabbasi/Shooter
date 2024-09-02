@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Enum/WeaponAction.h"
+#include "Enum/CombatAction.h"
 #include "Weapon.generated.h"
 
 class AAmmo;
@@ -34,25 +34,15 @@ public:
 	virtual bool IsPistol() const { return false; }
 	uint8 GetMagAmmoSpace() const;
 	void LoadAmmoInChamber();
-	void SetAnimInstance();
-	void ClearAnimInstance();
-	void SetAnimInstanceDelegateBindings();
-	void ClearAnimInstanceDelegateBindings();
-	void SetWeaponAction(EWeaponAction NewWeaponAction);
+	void SetCombatAction(ECombatAction Action);
 
 	FOnWeaponAnimNotifySignature OnWeaponIdle;
 	FOnWeaponAnimNotifySignature OnWeaponIdleToOut;
 	FOnWeaponAnimNotifySignature OnWeaponOut;
 	FOnWeaponAnimNotifySignature OnWeaponOutToIdle;
 
-	UPROPERTY(Replicated)
-	EWeaponAction WeaponAction;
-
 protected:
 	virtual void BeginPlay() override;
-
-	UFUNCTION(Server, Reliable)
-	void Server_SetWeaponAction(EWeaponAction NewWeaponAction);
 
 	UFUNCTION()
 	void Handle_OnMagAmmoRemoved(AAmmo* RemovedAmmo);
@@ -86,12 +76,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<AAmmo> AmmoInChamber;
 
-	TSubclassOf<UAnimInstance> AnimClass;
+	UPROPERTY(Replicated)
+	ECombatAction CombatAction;
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
+	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }
 	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
-	UClass* GetHandsAnimClass() const;
 	AMag* GetMag();
 
 };

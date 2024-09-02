@@ -17,7 +17,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "DataAsset")
 	TSoftObjectPtr<UModDataAsset> ModDataAsset;
 
-	UPROPERTY(EditAnywhere, Category = "HandsAnimClass")
-	TSubclassOf<UAnimInstance> HandsAnimClass;
+	/*UPROPERTY(EditAnywhere, Category = "HandsAnimClass")
+	TSubclassOf<UAnimInstance> HandsAnimClass;*/
 
 };

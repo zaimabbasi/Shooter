@@ -24,17 +24,4 @@ public:
 
 		return WorldTransform;
 	}
-
-	static bool AttachActor(AActor* Actor, USkeletalMeshComponent* SkelComp, FName InSocketName)
-	{
-		bool bAttached = false;
-		if (Actor && SkelComp)
-		{
-			if (const USkeletalMeshSocket* Socket = SkelComp->GetSocketByName(InSocketName))
-			{
-				bAttached = Socket->AttachActor(Actor, SkelComp);
-			}
-		}
-		return bAttached;
-	}
 };
