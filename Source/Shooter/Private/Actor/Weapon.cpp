@@ -4,6 +4,7 @@
 #include "Actor/Weapon.h"
 #include "Components/BoxComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Actor/Ammo.h"
 #include "Actor/Mag.h"
@@ -41,6 +42,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, CombatAction);
+	DOREPLIFETIME(AWeapon, bIsHolster);
 }
 
 void AWeapon::PostInitializeComponents()
@@ -112,7 +114,30 @@ void AWeapon::LoadAmmoInChamber()
 
 void AWeapon::SetCombatAction(ECombatAction Action)
 {
+	if (!HasAuthority())
+	{
+		CombatAction = Action;
+	}
+	Server_SetCombatAction(Action);
+}
+
+void AWeapon::Server_SetCombatAction_Implementation(ECombatAction Action)
+{
 	CombatAction = Action;
+}
+
+void AWeapon::SetIsHolster(const bool bHolster)
+{
+	if (!HasAuthority())
+	{
+		bIsHolster = bHolster;
+	}
+	Server_SetIsHolster(bHolster);
+}
+
+void AWeapon::Server_SetIsHolster_Implementation(const bool bHolster)
+{
+	bIsHolster = bHolster;
 }
 
 void AWeapon::Handle_OnMagAmmoRemoved(AAmmo* RemovedAmmo)

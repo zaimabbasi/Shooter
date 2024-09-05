@@ -160,7 +160,8 @@ void UCombatComponent::Handle_OnWeaponIdle(AWeapon* Weapon)
 void UCombatComponent::Handle_OnWeaponIdleToOut(AWeapon* Weapon)
 {
 	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-	SetCombatAction(ECombatAction::CA_Out);
+	//SetCombatAction(ECombatAction::CA_Out);
+	OnCombatComponentWeaponIdleToOut.Broadcast(Weapon);
 }
 
 void UCombatComponent::Handle_OnWeaponOut(AWeapon* Weapon)

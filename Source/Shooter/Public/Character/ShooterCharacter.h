@@ -78,6 +78,9 @@ private:
 	void Handle_OnInventoryComponentWeaponArrayReplicated();
 
 	UFUNCTION()
+	void Handle_OnCombatComponentWeaponIdleToOut(AWeapon* Weapon);
+
+	UFUNCTION()
 	void Handle_OnCombatComponentWeaponOut(AWeapon* Weapon);
 
 	UFUNCTION()

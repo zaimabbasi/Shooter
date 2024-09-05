@@ -31,6 +31,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	CombatAction = Weapon->GetCombatAction();
+	bIsHolster = Weapon->GetIsHolster();
 
 }
 

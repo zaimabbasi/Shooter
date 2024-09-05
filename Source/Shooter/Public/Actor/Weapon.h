@@ -35,6 +35,7 @@ public:
 	uint8 GetMagAmmoSpace() const;
 	void LoadAmmoInChamber();
 	void SetCombatAction(ECombatAction Action);
+	void SetIsHolster(const bool bHolster);
 
 	FOnWeaponAnimNotifySignature OnWeaponIdle;
 	FOnWeaponAnimNotifySignature OnWeaponIdleToOut;
@@ -43,6 +44,12 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetCombatAction(ECombatAction Action);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetIsHolster(const bool bHolster);
 
 	UFUNCTION()
 	void Handle_OnMagAmmoRemoved(AAmmo* RemovedAmmo);
@@ -79,9 +86,13 @@ protected:
 	UPROPERTY(Replicated)
 	ECombatAction CombatAction;
 
+	UPROPERTY(Replicated)
+	bool bIsHolster;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }
+	FORCEINLINE bool GetIsHolster() const { return bIsHolster; }
 	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
 	AMag* GetMag();
 

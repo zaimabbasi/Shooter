@@ -131,6 +131,7 @@ void AShooterCharacter::PostInitializeComponents()
 
 	if (CombatComponent)
 	{
+		CombatComponent->OnCombatComponentWeaponIdleToOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponIdleToOut);
 		CombatComponent->OnCombatComponentWeaponOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponOut);
 	}
 	if (InventoryComponent)
@@ -159,6 +160,7 @@ void AShooterCharacter::Init()
 		{
 			FName WeaponHolsterSocketName = GetCharacterWeaponHolsterSocketName(Weapon);
 			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponHolsterSocketName);
+			Weapon->SetIsHolster(true);
 		}
 	}
 
@@ -224,10 +226,33 @@ void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 	}
 }
 
-void AShooterCharacter::Handle_OnCombatComponentWeaponOut(AWeapon* Weapon)
+void AShooterCharacter::Handle_OnCombatComponentWeaponIdleToOut(AWeapon* Weapon)
 {
 	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	if (IsLocallyControlled() && CombatComponent)
+	{
+		CombatComponent->WeaponAttach(GetMesh(), GetCharacterWeaponHolsterSocketName(Weapon));
+		if (Weapon)
+		{
+			Weapon->SetIsHolster(true);
+			Weapon->SetCombatAction(ECombatAction::CA_Out);
+		}
+
+		CombatComponent->SetEquippedWeapon(NextWeaponToEquip);
+		CombatComponent->WeaponAttach(HandsMesh, CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME);
+		if (NextWeaponToEquip)
+		{
+			NextWeaponToEquip->SetIsHolster(false);
+		}
+		CombatComponent->SetCombatAction(ECombatAction::CA_OutToIdle);
+		NextWeaponToEquip = nullptr;
+	}
+}
+
+void AShooterCharacter::Handle_OnCombatComponentWeaponOut(AWeapon* Weapon)
+{
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	/*if (IsLocallyControlled() && CombatComponent)
 	{
 		CombatComponent->WeaponAttach(GetMesh(), GetCharacterWeaponHolsterSocketName(Weapon));
 
@@ -235,7 +260,7 @@ void AShooterCharacter::Handle_OnCombatComponentWeaponOut(AWeapon* Weapon)
 		CombatComponent->WeaponAttach(HandsMesh, CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME);
 		CombatComponent->SetCombatAction(ECombatAction::CA_OutToIdle);
 		NextWeaponToEquip = nullptr;
-	}
+	}*/
 }
 
 void AShooterCharacter::Handle_OnHandsAnimInstanceIdle()
@@ -259,6 +284,7 @@ void AShooterCharacter::Handle_OnHandsAnimInstanceOut()
 	{
 		CombatComponent->SetEquippedWeapon(NextWeaponToEquip);
 		CombatComponent->WeaponAttach(HandsMesh, CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME);
+		NextWeaponToEquip->SetIsHolster(false);
 		CombatComponent->SetCombatAction(ECombatAction::CA_OutToIdle);
 		NextWeaponToEquip = nullptr;
 	}
