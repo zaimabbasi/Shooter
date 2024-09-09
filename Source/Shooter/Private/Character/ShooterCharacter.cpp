@@ -131,8 +131,10 @@ void AShooterCharacter::PostInitializeComponents()
 
 	if (CombatComponent)
 	{
+		CombatComponent->OnCombatComponentWeaponIdle.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponIdle);
 		CombatComponent->OnCombatComponentWeaponIdleToOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponIdleToOut);
 		CombatComponent->OnCombatComponentWeaponOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponOut);
+		CombatComponent->OnCombatComponentWeaponOutToIdle.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponOutToIdle);
 	}
 	if (InventoryComponent)
 	{
@@ -160,7 +162,7 @@ void AShooterCharacter::Init()
 		{
 			FName WeaponHolsterSocketName = GetCharacterWeaponHolsterSocketName(Weapon);
 			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponHolsterSocketName);
-			Weapon->SetIsHolster(true);
+			Weapon->Server_SetIsHolster(true);
 		}
 	}
 
@@ -206,8 +208,7 @@ void AShooterCharacter::BeginPlay()
 		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
 		if (PrimaryWeapon && PrimaryWeapon != CombatComponent->GetEquippedWeapon())
 		{
-			/*NextWeaponToEquip = PrimaryWeapon;
-			CombatComponent->SetCombatAction(ECombatAction::CA_IdleToOut);*/
+			Server_EquipWeaponProgressive(PrimaryWeapon);
 		}
 	}
 
@@ -220,82 +221,77 @@ void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
 		if (PrimaryWeapon && PrimaryWeapon != CombatComponent->GetEquippedWeapon())
 		{
-			/*NextWeaponToEquip = PrimaryWeapon;
-			CombatComponent->SetCombatAction(ECombatAction::CA_IdleToOut);*/
+			Server_EquipWeaponProgressive(PrimaryWeapon);
 		}
 	}
 }
 
+void AShooterCharacter::Handle_OnCombatComponentWeaponIdle(AWeapon* Weapon)
+{
+
+}
+
 void AShooterCharacter::Handle_OnCombatComponentWeaponIdleToOut(AWeapon* Weapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-	if (IsLocallyControlled() && CombatComponent)
+	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->WeaponAttach(GetMesh(), GetCharacterWeaponHolsterSocketName(Weapon));
-		if (Weapon)
-		{
-			Weapon->SetIsHolster(true);
-			Weapon->SetCombatAction(ECombatAction::CA_Out);
-		}
-
-		CombatComponent->SetEquippedWeapon(NextWeaponToEquip);
-		CombatComponent->WeaponAttach(HandsMesh, CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME);
-		if (NextWeaponToEquip)
-		{
-			NextWeaponToEquip->SetIsHolster(false);
-		}
-		CombatComponent->SetCombatAction(ECombatAction::CA_OutToIdle);
-		NextWeaponToEquip = nullptr;
+		CombatComponent->Server_WeaponOut();
 	}
 }
 
 void AShooterCharacter::Handle_OnCombatComponentWeaponOut(AWeapon* Weapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-	/*if (IsLocallyControlled() && CombatComponent)
+	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->WeaponAttach(GetMesh(), GetCharacterWeaponHolsterSocketName(Weapon));
+		if (CombatComponent->GetEquippedWeapon())
+		{
+			CombatComponent->Server_UnequipWeapon(GetMesh(), GetCharacterWeaponHolsterSocketName(CombatComponent->GetEquippedWeapon()));
+		}
+		if (NextWeaponToEquip)
+		{
+			Server_EquipWeaponProgressive(NextWeaponToEquip);
+		}
+		else
+		{
+			Server_HolsterWeaponProgressive();
+		}
+	}
+}
 
-		CombatComponent->SetEquippedWeapon(NextWeaponToEquip);
-		CombatComponent->WeaponAttach(HandsMesh, CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME);
-		CombatComponent->SetCombatAction(ECombatAction::CA_OutToIdle);
-		NextWeaponToEquip = nullptr;
-	}*/
+void AShooterCharacter::Handle_OnCombatComponentWeaponOutToIdle(AWeapon* Weapon)
+{
+	if (HasAuthority() && CombatComponent)
+	{
+		CombatComponent->Server_WeaponIdle();
+	}
 }
 
 void AShooterCharacter::Handle_OnHandsAnimInstanceIdle()
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+
 }
 
 void AShooterCharacter::Handle_OnHandsAnimInstanceIdleToOut()
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-	if (IsLocallyControlled() && CombatComponent)
+	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->SetCombatAction(ECombatAction::CA_Out);
+		CombatComponent->Server_WeaponOut();
 	}
 }
 
 void AShooterCharacter::Handle_OnHandsAnimInstanceOut()
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-	if (IsLocallyControlled() && CombatComponent && NextWeaponToEquip)
+	if (HasAuthority() && NextWeaponToEquip)
 	{
-		CombatComponent->SetEquippedWeapon(NextWeaponToEquip);
-		CombatComponent->WeaponAttach(HandsMesh, CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME);
-		NextWeaponToEquip->SetIsHolster(false);
-		CombatComponent->SetCombatAction(ECombatAction::CA_OutToIdle);
-		NextWeaponToEquip = nullptr;
+		Server_EquipWeaponProgressive(NextWeaponToEquip);
 	}
 }
 
 void AShooterCharacter::Handle_OnHandsAnimInstanceOutToIdle()
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-	if (IsLocallyControlled() && CombatComponent)
+	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->SetCombatAction(ECombatAction::CA_Idle);
+		CombatComponent->Server_WeaponIdle();
 	}
 }
 
@@ -323,6 +319,44 @@ FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) co
 		}
 	}
 	return WeaponHolsterSocketName;
+}
+
+void AShooterCharacter::Server_EquipWeaponProgressive_Implementation(AWeapon* WeaponToEquip)
+{
+	if (WeaponToEquip == nullptr || CombatComponent == nullptr)
+	{
+		return;
+	}
+	const ECombatAction CombatAction = GetCombatAction();
+	if (NextWeaponToEquip == nullptr && CombatAction == ECombatAction::CA_Idle)
+	{
+		NextWeaponToEquip = WeaponToEquip;
+		CombatComponent->Server_WeaponIdleToOut();
+	}
+	else if (NextWeaponToEquip && CombatAction == ECombatAction::CA_Out)
+	{
+		CombatComponent->Server_EquipWeapon(NextWeaponToEquip, HandsMesh, CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME);
+		CombatComponent->Server_WeaponOutToIdle();
+		NextWeaponToEquip = nullptr;
+	}
+}
+
+void AShooterCharacter::Server_HolsterWeaponProgressive_Implementation()
+{
+	if (CombatComponent == nullptr)
+	{
+		return;
+	}
+	const ECombatAction CombatAction = GetCombatAction();
+	if (CombatAction == ECombatAction::CA_Idle)
+	{
+		NextWeaponToEquip = nullptr;
+		CombatComponent->Server_WeaponIdleToOut();
+	}
+	else if (NextWeaponToEquip == nullptr && CombatAction == ECombatAction::CA_Out)
+	{
+		CombatComponent->Server_WeaponOutToIdle();
+	}
 }
 
 void AShooterCharacter::OnLookAction(const FInputActionValue& Value)
@@ -436,8 +470,7 @@ void AShooterCharacter::OnEquipPrimaryWeaponAction(const FInputActionValue& Valu
 		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
 		if (PrimaryWeapon && PrimaryWeapon != CombatComponent->GetEquippedWeapon())
 		{
-			NextWeaponToEquip = PrimaryWeapon;
-			CombatComponent->SetCombatAction(ECombatAction::CA_IdleToOut);
+			Server_EquipWeaponProgressive(PrimaryWeapon);
 		}
 	}
 }
@@ -450,8 +483,7 @@ void AShooterCharacter::OnEquipSecondaryWeaponAction(const FInputActionValue& Va
 		AWeapon* SecondaryWeapon = InventoryComponent->GetWeaponAtIndex(SECONDARY_WEAPON_INDEX);
 		if (SecondaryWeapon && SecondaryWeapon != CombatComponent->GetEquippedWeapon())
 		{
-			NextWeaponToEquip = SecondaryWeapon;
-			CombatComponent->SetCombatAction(ECombatAction::CA_IdleToOut);
+			Server_EquipWeaponProgressive(SecondaryWeapon);
 		}
 	}
 }
@@ -461,8 +493,7 @@ void AShooterCharacter::OnHolsterEquippedWeaponAction(const FInputActionValue& V
 	const bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue && CombatComponent && CombatComponent->GetEquippedWeapon())
 	{
-		NextWeaponToEquip = nullptr;
-		CombatComponent->SetCombatAction(ECombatAction::CA_IdleToOut);
+		Server_HolsterWeaponProgressive();
 	}
 }
 

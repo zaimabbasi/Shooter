@@ -21,13 +21,26 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	void SetEquippedWeapon(AWeapon* WeaponToEquip);
-	void WeaponAttach(USkeletalMeshComponent* ParentSkeletalMesh, FName ParentSocketName = NAME_None);
-	void SetWeaponDelegateBindings(AWeapon* Weapon);
-	void ClearWeaponDelegateBindings(AWeapon* Weapon);
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponIdle();
+
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponIdleToOut();
+
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponOut();
+
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponOutToIdle();
+
+	UFUNCTION(Server, Reliable)
+	void Server_EquipWeapon(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName = NAME_None);
+
+	UFUNCTION(Server, Reliable)
+	void Server_UnequipWeapon(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName);
+
 	void SetIsAiming(bool bAiming);
 	void ReloadWeapon();
-	void SetCombatAction(ECombatAction Action);
 
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponIdle;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponIdleToOut;
@@ -39,16 +52,9 @@ protected:
 
 private:
 	UFUNCTION(Server, Reliable)
-	void Server_SetEquippedWeapon(AWeapon* WeaponToEquip);
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponAttach(USkeletalMeshComponent* ParentSkeletalMesh, FName ParentSocketName = NAME_None);
-
-	UFUNCTION(Server, Reliable)
 	void Server_SetIsAiming(bool bAiming);
 
-	UFUNCTION(Server, Reliable)
-	void Server_SetCombatAction(ECombatAction Action);
+	void SetCombatAction(ECombatAction Action);
 
 	UFUNCTION()
 	void Handle_OnWeaponIdle(AWeapon* Weapon);
@@ -65,13 +71,16 @@ private:
 	UFUNCTION()
 	void OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon);
 
+	UFUNCTION()
+	void OnRep_CombatAction();
+
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	TObjectPtr<AWeapon> EquippedWeapon;
 
 	UPROPERTY(Replicated)
 	bool bIsAiming;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_CombatAction)
 	ECombatAction CombatAction;
 
 public:

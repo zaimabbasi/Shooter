@@ -35,7 +35,9 @@ public:
 	uint8 GetMagAmmoSpace() const;
 	void LoadAmmoInChamber();
 	void SetCombatAction(ECombatAction Action);
-	void SetIsHolster(const bool bHolster);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetIsHolster(const bool bHolster);
 
 	FOnWeaponAnimNotifySignature OnWeaponIdle;
 	FOnWeaponAnimNotifySignature OnWeaponIdleToOut;
@@ -44,12 +46,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-	UFUNCTION(Server, Reliable)
-	void Server_SetCombatAction(ECombatAction Action);
-
-	UFUNCTION(Server, Reliable)
-	void Server_SetIsHolster(const bool bHolster);
 
 	UFUNCTION()
 	void Handle_OnMagAmmoRemoved(AAmmo* RemovedAmmo);
@@ -83,7 +79,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<AAmmo> AmmoInChamber;
 
-	UPROPERTY(Replicated)
 	ECombatAction CombatAction;
 
 	UPROPERTY(Replicated)

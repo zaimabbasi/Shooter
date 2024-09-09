@@ -37,82 +37,74 @@ void UCombatComponent::BeginPlay()
 	
 }
 
-void UCombatComponent::SetEquippedWeapon(AWeapon* WeaponToEquip)
+void UCombatComponent::Server_WeaponIdle_Implementation()
 {
-	if (!HasAuthority())
+	if (CombatAction != ECombatAction::CA_OutToIdle)
 	{
-		if (EquippedWeapon)
-		{
-			ClearWeaponDelegateBindings(EquippedWeapon);
-		}
-		if (WeaponToEquip)
-		{
-			SetWeaponDelegateBindings(WeaponToEquip);
-		}
-		EquippedWeapon = WeaponToEquip;
+		return;
 	}
-	Server_SetEquippedWeapon(WeaponToEquip);
+	SetCombatAction(ECombatAction::CA_Idle);
 }
 
-void UCombatComponent::Server_SetEquippedWeapon_Implementation(AWeapon* WeaponToEquip)
+void UCombatComponent::Server_WeaponIdleToOut_Implementation()
 {
-	if (EquippedWeapon)
+	if (CombatAction != ECombatAction::CA_Idle)
 	{
-		ClearWeaponDelegateBindings(EquippedWeapon);
+		return;
 	}
-	if (WeaponToEquip)
+	SetCombatAction(ECombatAction::CA_IdleToOut);
+}
+
+void UCombatComponent::Server_WeaponOut_Implementation()
+{
+	if (CombatAction != ECombatAction::CA_IdleToOut)
 	{
-		SetWeaponDelegateBindings(WeaponToEquip);
+		return;
 	}
+	SetCombatAction(ECombatAction::CA_Out);
+}
+
+void UCombatComponent::Server_WeaponOutToIdle_Implementation()
+{
+	if (CombatAction != ECombatAction::CA_Out)
+	{
+		return;
+	}
+	SetCombatAction(ECombatAction::CA_OutToIdle);
+}
+
+void UCombatComponent::Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName)
+{
+	if (WeaponToEquip == nullptr || EquippedWeapon)
+	{
+		return;
+	}
+	WeaponToEquip->AttachToComponent(ParentSkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform, InParentSocketName);
+	WeaponToEquip->Server_SetIsHolster(false);
+
+	WeaponToEquip->OnWeaponIdle.AddDynamic(this, &UCombatComponent::Handle_OnWeaponIdle);
+	WeaponToEquip->OnWeaponIdleToOut.AddDynamic(this, &UCombatComponent::Handle_OnWeaponIdleToOut);
+	WeaponToEquip->OnWeaponOut.AddDynamic(this, &UCombatComponent::Handle_OnWeaponOut);
+	WeaponToEquip->OnWeaponOutToIdle.AddDynamic(this, &UCombatComponent::Handle_OnWeaponOutToIdle);
+
 	EquippedWeapon = WeaponToEquip;
 }
 
-void UCombatComponent::WeaponAttach(USkeletalMeshComponent* ParentSkeletalMesh, FName ParentSocketName)
+void UCombatComponent::Server_UnequipWeapon_Implementation(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName)
 {
 	if (EquippedWeapon == nullptr)
 	{
 		return;
 	}
-	if (!HasAuthority())
-	{
-		EquippedWeapon->AttachToComponent(ParentSkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform, ParentSocketName);
-	}
-	Server_WeaponAttach(ParentSkeletalMesh, ParentSocketName);
-}
+	EquippedWeapon->AttachToComponent(ParentSkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform, InParentSocketName);
+	EquippedWeapon->Server_SetIsHolster(true);
 
-void UCombatComponent::Server_WeaponAttach_Implementation(USkeletalMeshComponent* ParentSkeletalMesh, FName ParentSocketName)
-{
-	if (EquippedWeapon == nullptr)
-	{
-		return;
-	}
-	EquippedWeapon->AttachToComponent(ParentSkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform, ParentSocketName);
-}
+	EquippedWeapon->OnWeaponIdle.RemoveAll(this);
+	EquippedWeapon->OnWeaponIdleToOut.RemoveAll(this);
+	EquippedWeapon->OnWeaponOut.RemoveAll(this);
+	EquippedWeapon->OnWeaponOutToIdle.RemoveAll(this);
 
-void UCombatComponent::SetWeaponDelegateBindings(AWeapon* Weapon)
-{
-	if (Weapon == nullptr)
-	{
-		return;
-	}
-	Weapon->OnWeaponIdle.AddDynamic(this, &UCombatComponent::Handle_OnWeaponIdle);
-	Weapon->OnWeaponIdleToOut.AddDynamic(this, &UCombatComponent::Handle_OnWeaponIdleToOut);
-	Weapon->OnWeaponOut.AddDynamic(this, &UCombatComponent::Handle_OnWeaponOut);
-	Weapon->OnWeaponOutToIdle.AddDynamic(this, &UCombatComponent::Handle_OnWeaponOutToIdle);
-	
-}
-
-void UCombatComponent::ClearWeaponDelegateBindings(AWeapon* Weapon)
-{
-	if (Weapon == nullptr)
-	{
-		return;
-	}
-	Weapon->OnWeaponIdle.RemoveAll(this);
-	Weapon->OnWeaponIdleToOut.RemoveAll(this);
-	Weapon->OnWeaponOut.RemoveAll(this);
-	Weapon->OnWeaponOutToIdle.RemoveAll(this);
-	
+	EquippedWeapon = nullptr;
 }
 
 void UCombatComponent::SetIsAiming(bool bAiming)
@@ -121,8 +113,20 @@ void UCombatComponent::SetIsAiming(bool bAiming)
 	{
 		return;
 	}
-	bIsAiming = bAiming;
+	if (!HasAuthority())
+	{
+		bIsAiming = bAiming;
+	}
 	Server_SetIsAiming(bAiming);
+}
+
+void UCombatComponent::Server_SetIsAiming_Implementation(bool bAiming)
+{
+	if (EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	bIsAiming = bAiming;
 }
 
 void UCombatComponent::ReloadWeapon()
@@ -131,19 +135,6 @@ void UCombatComponent::ReloadWeapon()
 }
 
 void UCombatComponent::SetCombatAction(ECombatAction Action)
-{
-	if (!HasAuthority())
-	{
-		CombatAction = Action;
-		if (EquippedWeapon)
-		{
-			EquippedWeapon->SetCombatAction(Action);
-		}
-	}
-	Server_SetCombatAction(Action);
-}
-
-void UCombatComponent::Server_SetCombatAction_Implementation(ECombatAction Action)
 {
 	CombatAction = Action;
 	if (EquippedWeapon)
@@ -154,39 +145,38 @@ void UCombatComponent::Server_SetCombatAction_Implementation(ECombatAction Actio
 
 void UCombatComponent::Handle_OnWeaponIdle(AWeapon* Weapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+	OnCombatComponentWeaponIdle.Broadcast(Weapon);
 }
 
 void UCombatComponent::Handle_OnWeaponIdleToOut(AWeapon* Weapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-	//SetCombatAction(ECombatAction::CA_Out);
 	OnCombatComponentWeaponIdleToOut.Broadcast(Weapon);
 }
 
 void UCombatComponent::Handle_OnWeaponOut(AWeapon* Weapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-
 	OnCombatComponentWeaponOut.Broadcast(Weapon);
 }
 
 void UCombatComponent::Handle_OnWeaponOutToIdle(AWeapon* Weapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
-	SetCombatAction(ECombatAction::CA_Idle);
+	OnCombatComponentWeaponOutToIdle.Broadcast(Weapon);
 }
 
 void UCombatComponent::OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon)
 {
-
+	if (EquippedWeapon)
+	{
+		// In case when Authoritative Character's EquippedWeapon is null for Authonomous Characters
+		EquippedWeapon->SetCombatAction(CombatAction);
+	}
 }
 
-void UCombatComponent::Server_SetIsAiming_Implementation(bool bAiming)
+void UCombatComponent::OnRep_CombatAction()
 {
-	if (EquippedWeapon == nullptr)
+	if (EquippedWeapon)
 	{
-		return;
+		EquippedWeapon->SetCombatAction(CombatAction);
 	}
-	bIsAiming = bAiming;
+	
 }

@@ -74,14 +74,26 @@ private:
 
 	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
 
+	UFUNCTION(Server, Reliable)
+	void Server_EquipWeaponProgressive(AWeapon* WeaponToEquip);
+
+	UFUNCTION(Server, Reliable)
+	void Server_HolsterWeaponProgressive();
+
 	UFUNCTION()
 	void Handle_OnInventoryComponentWeaponArrayReplicated();
+
+	UFUNCTION()
+	void Handle_OnCombatComponentWeaponIdle(AWeapon* Weapon);
 
 	UFUNCTION()
 	void Handle_OnCombatComponentWeaponIdleToOut(AWeapon* Weapon);
 
 	UFUNCTION()
 	void Handle_OnCombatComponentWeaponOut(AWeapon* Weapon);
+
+	UFUNCTION()
+	void Handle_OnCombatComponentWeaponOutToIdle(AWeapon* Weapon);
 
 	UFUNCTION()
 	void Handle_OnHandsAnimInstanceIdle();

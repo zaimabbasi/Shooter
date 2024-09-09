@@ -41,8 +41,8 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AWeapon, CombatAction);
 	DOREPLIFETIME(AWeapon, bIsHolster);
+
 }
 
 void AWeapon::PostInitializeComponents()
@@ -114,25 +114,7 @@ void AWeapon::LoadAmmoInChamber()
 
 void AWeapon::SetCombatAction(ECombatAction Action)
 {
-	if (!HasAuthority())
-	{
-		CombatAction = Action;
-	}
-	Server_SetCombatAction(Action);
-}
-
-void AWeapon::Server_SetCombatAction_Implementation(ECombatAction Action)
-{
 	CombatAction = Action;
-}
-
-void AWeapon::SetIsHolster(const bool bHolster)
-{
-	if (!HasAuthority())
-	{
-		bIsHolster = bHolster;
-	}
-	Server_SetIsHolster(bHolster);
 }
 
 void AWeapon::Server_SetIsHolster_Implementation(const bool bHolster)
@@ -161,25 +143,21 @@ void AWeapon::Handle_OnMagAmmoRemoved(AAmmo* RemovedAmmo)
 
 void AWeapon::Handle_OnWeaponAnimInstanceIdle()
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnWeaponIdle.Broadcast(this);
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceIdleToOut()
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnWeaponIdleToOut.Broadcast(this);
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceOut()
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnWeaponOut.Broadcast(this);
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceOutToIdle()
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnWeaponOutToIdle.Broadcast(this);
 }
 

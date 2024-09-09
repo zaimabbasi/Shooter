@@ -86,24 +86,20 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 void UHandsAnimInstance::AnimNotify_Idle() const
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnHandsAnimInstanceIdle.Broadcast();
 }
 
 void UHandsAnimInstance::AnimNotify_IdleToOut() const
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnHandsAnimInstanceIdleToOut.Broadcast();
 }
 
 void UHandsAnimInstance::AnimNotify_Out() const
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnHandsAnimInstanceOut.Broadcast();
 }
 
 void UHandsAnimInstance::AnimNotify_OutToIdle() const
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnHandsAnimInstanceOutToIdle.Broadcast();
 }

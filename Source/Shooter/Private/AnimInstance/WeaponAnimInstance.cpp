@@ -37,24 +37,20 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 void UWeaponAnimInstance::AnimNotify_Idle() const
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnWeaponAnimInstanceIdle.Broadcast();
 }
 
 void UWeaponAnimInstance::AnimNotify_IdleToOut() const
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnWeaponAnimInstanceIdleToOut.Broadcast();
 }
 
 void UWeaponAnimInstance::AnimNotify_Out() const
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnWeaponAnimInstanceOut.Broadcast();
 }
 
 void UWeaponAnimInstance::AnimNotify_OutToIdle() const
 {
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 	OnWeaponAnimInstanceOutToIdle.Broadcast();
 }
