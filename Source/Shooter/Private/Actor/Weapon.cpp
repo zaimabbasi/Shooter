@@ -13,6 +13,7 @@
 #include "DataAsset/MagDataAsset.h"
 #include "DataAsset/ModDataAsset.h"
 #include "DataAsset/WeaponDataAsset.h"
+#include "Type/ShooterNameType.h"
 
 AWeapon::AWeapon() :
 	CombatAction(ECombatAction::CA_Out)
@@ -41,6 +42,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(AWeapon, PatronInWeapon);
 	DOREPLIFETIME(AWeapon, bIsHolster);
 
 }
@@ -57,6 +59,7 @@ void AWeapon::PostInitializeComponents()
 			WeaponAnimInstance->OnWeaponAnimInstanceIdleToOut.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceIdleToOut);
 			WeaponAnimInstance->OnWeaponAnimInstanceOut.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOut);
 			WeaponAnimInstance->OnWeaponAnimInstanceOutToIdle.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOutToIdle);
+			WeaponAnimInstance->OnWeaponAnimInstancePatronInWeapon.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon);
 		}
 	}
 
@@ -72,7 +75,7 @@ void AWeapon::Init()
 		}
 		if (AMag* Mag = ModComponent->GetMag())
 		{
-			Mag->OnMagAmmoRemoved.AddDynamic(this, &AWeapon::Handle_OnMagAmmoRemoved);
+			Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
 		}
 	}
 }
@@ -81,6 +84,15 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
+}
+
+uint8 AWeapon::GetMagAmmoCount() const
+{
+	if (ModComponent == nullptr || ModComponent->GetMag() == nullptr)
+	{
+		return 0;
+	}
+	return ModComponent->GetMag()->GetAmmoCount();
 }
 
 uint8 AWeapon::GetMagAmmoSpace() const
@@ -97,24 +109,37 @@ uint8 AWeapon::GetMagAmmoSpace() const
 	return Mag->GetAmmoSpace();
 }
 
-void AWeapon::LoadAmmoInChamber()
-{
-	if (ModComponent == nullptr)
-	{
-		return;
-	}
-	if (!AmmoInChamber)
-	{
-		if (AMag* Mag = ModComponent->GetMag())
-		{
-			Mag->RemoveAmmo();
-		}
-	}
-}
-
 void AWeapon::SetCombatAction(ECombatAction Action)
 {
 	CombatAction = Action;
+}
+
+bool AWeapon::DoesNeedCharge()
+{
+	return (GetMagAmmoCount() > 0 && PatronInWeapon == nullptr);
+}
+
+bool AWeapon::CanFire()
+{
+	return (CombatAction == ECombatAction::CA_Idle && PatronInWeapon);
+}
+
+void AWeapon::Server_MagAddAmmo_Implementation(const uint8 Count)
+{
+	if (ModComponent == nullptr || ModComponent->GetMag() == nullptr)
+	{
+		return;
+	}
+	ModComponent->GetMag()->Server_AddAmmo(Count);
+}
+
+void AWeapon::Server_MagPopAmmo_Implementation()
+{
+	if (ModComponent == nullptr || ModComponent->GetMag() == nullptr)
+	{
+		return;
+	}
+	ModComponent->GetMag()->Server_PopAmmo();
 }
 
 void AWeapon::Server_SetIsHolster_Implementation(const bool bHolster)
@@ -122,23 +147,24 @@ void AWeapon::Server_SetIsHolster_Implementation(const bool bHolster)
 	bIsHolster = bHolster;
 }
 
-void AWeapon::Handle_OnMagAmmoRemoved(AAmmo* RemovedAmmo)
+void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
 {
-	if (RemovedAmmo == nullptr)
+	if (PoppedAmmo == nullptr && ModComponent && ModComponent->GetMag())
 	{
-		if (AMag* Mag = GetMag())
+		if (const UMagDataAsset* MagDataAsset = ModComponent->GetMag()->GetMagDataAsset().LoadSynchronous())
 		{
-			if (const UMagDataAsset* MagDataAsset = Mag->GetMagDataAsset().LoadSynchronous())
+			if (UWorld* World = GetWorld())
 			{
-				if (UWorld* World = GetWorld())
-				{
-					RemovedAmmo = World->SpawnActor<AAmmo>(MagDataAsset->AmmoClass);
-				}
+				PoppedAmmo = World->SpawnActor<AAmmo>(MagDataAsset->AmmoClass);
 			}
 		}
 	}
-	RemovedAmmo->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform, GetPatronInWeaponSocketName());
-	AmmoInChamber = RemovedAmmo;
+	if (PoppedAmmo)
+	{
+		PoppedAmmo->SetOwner(this);
+		PoppedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, WEAPON_PATRON_IN_WEAPON_SOCKET_NAME);
+	}
+	PatronInWeapon = PoppedAmmo;
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceIdle()
@@ -161,11 +187,10 @@ void AWeapon::Handle_OnWeaponAnimInstanceOutToIdle()
 	OnWeaponOutToIdle.Broadcast(this);
 }
 
-AMag* AWeapon::GetMag()
+void AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon()
 {
-	if (ModComponent == nullptr)
+	if (HasAuthority())
 	{
-		return nullptr;
+		Server_MagPopAmmo();
 	}
-	return ModComponent->GetMag();
 }

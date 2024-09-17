@@ -54,3 +54,8 @@ void UWeaponAnimInstance::AnimNotify_OutToIdle() const
 {
 	OnWeaponAnimInstanceOutToIdle.Broadcast();
 }
+
+void UWeaponAnimInstance::AnimNotify_PatronInWeapon() const
+{
+	OnWeaponAnimInstancePatronInWeapon.Broadcast();
+}

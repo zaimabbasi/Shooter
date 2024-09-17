@@ -56,6 +56,13 @@ private:
 
 	void SetCombatAction(ECombatAction Action);
 
+	bool CanIdle() const;
+	bool CanIdleToOut() const;
+	bool CanOut() const;
+	bool CanOutToIdle() const;
+	bool CanWeaponFire() const;
+	bool DoesWeaponNeedCharge() const;
+
 	UFUNCTION()
 	void Handle_OnWeaponIdle(AWeapon* Weapon);
 

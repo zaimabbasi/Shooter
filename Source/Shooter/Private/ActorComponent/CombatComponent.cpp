@@ -39,38 +39,34 @@ void UCombatComponent::BeginPlay()
 
 void UCombatComponent::Server_WeaponIdle_Implementation()
 {
-	if (CombatAction != ECombatAction::CA_OutToIdle)
+	if (CanIdle())
 	{
-		return;
+		SetCombatAction(ECombatAction::CA_Idle);
 	}
-	SetCombatAction(ECombatAction::CA_Idle);
 }
 
 void UCombatComponent::Server_WeaponIdleToOut_Implementation()
 {
-	if (CombatAction != ECombatAction::CA_Idle)
+	if (CanIdleToOut())
 	{
-		return;
+		SetCombatAction(ECombatAction::CA_IdleToOut);
 	}
-	SetCombatAction(ECombatAction::CA_IdleToOut);
 }
 
 void UCombatComponent::Server_WeaponOut_Implementation()
 {
-	if (CombatAction != ECombatAction::CA_IdleToOut)
+	if (CanOut())
 	{
-		return;
+		SetCombatAction(ECombatAction::CA_Out);
 	}
-	SetCombatAction(ECombatAction::CA_Out);
 }
 
 void UCombatComponent::Server_WeaponOutToIdle_Implementation()
 {
-	if (CombatAction != ECombatAction::CA_Out)
+	if (CanOutToIdle())
 	{
-		return;
+		SetCombatAction(DoesWeaponNeedCharge() ? ECombatAction::CA_OutToIdleArm : ECombatAction::CA_OutToIdle);
 	}
-	SetCombatAction(ECombatAction::CA_OutToIdle);
 }
 
 void UCombatComponent::Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName)
@@ -141,6 +137,36 @@ void UCombatComponent::SetCombatAction(ECombatAction Action)
 	{
 		EquippedWeapon->SetCombatAction(Action);
 	}
+}
+
+bool UCombatComponent::CanIdle() const
+{
+	return (CombatAction == ECombatAction::CA_OutToIdle || CombatAction == ECombatAction::CA_OutToIdleArm);
+}
+
+bool UCombatComponent::CanIdleToOut() const
+{
+	return (CombatAction == ECombatAction::CA_Idle);
+}
+
+bool UCombatComponent::CanOut() const
+{
+	return (CombatAction == ECombatAction::CA_IdleToOut);
+}
+
+bool UCombatComponent::CanOutToIdle() const
+{
+	return (CombatAction == ECombatAction::CA_Out);
+}
+
+bool UCombatComponent::CanWeaponFire() const
+{
+	return (CombatAction == ECombatAction::CA_Idle && EquippedWeapon && EquippedWeapon->CanFire());
+}
+
+bool UCombatComponent::DoesWeaponNeedCharge() const
+{
+	return (EquippedWeapon && EquippedWeapon->DoesNeedCharge());
 }
 
 void UCombatComponent::Handle_OnWeaponIdle(AWeapon* Weapon)

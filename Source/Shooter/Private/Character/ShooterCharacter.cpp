@@ -154,8 +154,7 @@ void AShooterCharacter::Init()
 
 		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
 		{
-			InventoryComponent->LoadAmmoInWeaponMag(Weapon, Weapon->GetMagAmmoSpace());
-			Weapon->LoadAmmoInChamber();
+			InventoryComponent->Server_LoadAmmoInWeaponMag(Weapon, Weapon->GetMagAmmoSpace());
 		}
 
 		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
@@ -208,7 +207,7 @@ void AShooterCharacter::BeginPlay()
 		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
 		if (PrimaryWeapon && PrimaryWeapon != CombatComponent->GetEquippedWeapon())
 		{
-			Server_EquipWeaponProgressive(PrimaryWeapon);
+			//Server_EquipWeaponProgressive(PrimaryWeapon);
 		}
 	}
 
@@ -221,7 +220,7 @@ void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
 		if (PrimaryWeapon && PrimaryWeapon != CombatComponent->GetEquippedWeapon())
 		{
-			Server_EquipWeaponProgressive(PrimaryWeapon);
+			//Server_EquipWeaponProgressive(PrimaryWeapon);
 		}
 	}
 }

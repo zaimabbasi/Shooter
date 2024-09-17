@@ -25,6 +25,7 @@ public:
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdleToOut;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOut;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOutToIdle;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstancePatronInWeapon;
 
 protected:
 	UFUNCTION()
@@ -38,6 +39,9 @@ protected:
 
 	UFUNCTION()
 	void AnimNotify_OutToIdle() const;
+
+	UFUNCTION()
+	void AnimNotify_PatronInWeapon() const;
 
 private:
 	TObjectPtr<AWeapon> Weapon;

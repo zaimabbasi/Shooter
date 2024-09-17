@@ -32,12 +32,20 @@ public:
 
 	virtual void Init();
 	virtual bool IsPistol() const { return false; }
+	uint8 GetMagAmmoCount() const;
 	uint8 GetMagAmmoSpace() const;
-	void LoadAmmoInChamber();
 	void SetCombatAction(ECombatAction Action);
+	bool DoesNeedCharge();
+	bool CanFire();
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetIsHolster(const bool bHolster);
+
+	UFUNCTION(Server, Reliable)
+	void Server_MagAddAmmo(const uint8 Count);
+
+	UFUNCTION(Server, Reliable)
+	void Server_MagPopAmmo();
 
 	FOnWeaponAnimNotifySignature OnWeaponIdle;
 	FOnWeaponAnimNotifySignature OnWeaponIdleToOut;
@@ -48,7 +56,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-	void Handle_OnMagAmmoRemoved(AAmmo* RemovedAmmo);
+	void Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo);
 
 	UFUNCTION()
 	void Handle_OnWeaponAnimInstanceIdle();
@@ -62,7 +70,8 @@ protected:
 	UFUNCTION()
 	void Handle_OnWeaponAnimInstanceOutToIdle();
 
-	FORCEINLINE FName GetPatronInWeaponSocketName() const { return TEXT("patron_in_weapon"); }
+	UFUNCTION()
+	void Handle_OnWeaponAnimInstancePatronInWeapon();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> Mesh;
@@ -76,8 +85,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UWeaponDataAsset> WeaponDataAsset;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<AAmmo> AmmoInChamber;
+	UPROPERTY(Replicated)
+	TObjectPtr<AAmmo> PatronInWeapon;
 
 	ECombatAction CombatAction;
 
@@ -89,6 +98,5 @@ public:
 	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }
 	FORCEINLINE bool GetIsHolster() const { return bIsHolster; }
 	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
-	AMag* GetMag();
 
 };

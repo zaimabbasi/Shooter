@@ -5,6 +5,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Actor/Ammo.h"
 #include "DataAsset/MagDataAsset.h"
+#include "Type/ShooterNameType.h"
 
 AMag::AMag()
 {
@@ -16,69 +17,47 @@ void AMag::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProp
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AMag, AmmoCount);
+	DOREPLIFETIME(AMag, AmmoArray);
 
-}
-
-void AMag::Server_RemoveAmmo_Implementation()
-{
-	if (AmmoCount == 0)
-	{
-		return;
-	}
-	FName AmmoSocketName = FName(*FString::Printf(TEXT("patron_%03d"), AmmoCount));
-	AAmmo* FoundAmmo = AmmoMap.FindRef(AmmoSocketName);
-	if (FoundAmmo)
-	{
-		AmmoMap.Remove(AmmoSocketName);
-	}
-	--AmmoCount;
-	OnMagAmmoRemoved.Broadcast(FoundAmmo);
 }
 
 void AMag::Server_AddAmmo_Implementation(const uint8 Count)
 {
-	if (GetAmmoSpace() < Count)
-	{
-		return;
-	}
-	if (const UMagDataAsset* LoadedMagDataAsset = MagDataAsset.LoadSynchronous())
+	if (GetAmmoSpace() >= Count)
 	{
 		if (UWorld* World = GetWorld())
 		{
-			for (uint8 Index = AmmoCount; Index < AmmoCount + Count; ++Index)
+			for (uint8 Index = AmmoCount + 1; Index < AmmoCount + Count; ++Index)
 			{
-				FName AmmoSocketName = FName(*FString::Printf(TEXT("patron_%03d"), Index + 1));
-				if (Mesh && Mesh->DoesSocketExist(AmmoSocketName))
+				const FName PatronSocketName = PATRON_SOCKET_NAME(Index);
+				if (Mesh && Mesh->DoesSocketExist(PatronSocketName))
 				{
-					if (AAmmo* SpawnedAmmo = World->SpawnActor<AAmmo>(LoadedMagDataAsset->AmmoClass))
+					if (AAmmo* SpawnedAmmo = World->SpawnActor<AAmmo>(MagDataAsset.LoadSynchronous()->AmmoClass))
 					{
 						SpawnedAmmo->SetOwner(this);
-						SpawnedAmmo->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform, AmmoSocketName);
-						AmmoMap.Add(AmmoSocketName, SpawnedAmmo);
+						SpawnedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, PatronSocketName);
+						AmmoArray.Add(SpawnedAmmo);
 					}
 				}
 			}
 		}
+		AmmoCount += Count;
 	}
-	AmmoCount += Count;
 }
 
-void AMag::AddAmmo(const uint8 Count)
+void AMag::Server_PopAmmo_Implementation()
 {
-	if (GetAmmoSpace() < Count)
+	if (AmmoCount > 0)
 	{
-		return;
+		AAmmo* PoppedAmmo = nullptr;
+		const FName PatronSocketName = PATRON_SOCKET_NAME(AmmoCount);
+		if (Mesh && Mesh->DoesSocketExist(PatronSocketName))
+		{
+			PoppedAmmo = AmmoArray.Pop(true);
+		}
+		--AmmoCount;
+		OnMagAmmoPopped.Broadcast(PoppedAmmo);
 	}
-	Server_AddAmmo(Count);
-}
-
-void AMag::RemoveAmmo()
-{
-	if (AmmoCount == 0)
-	{
-		return;
-	}
-	Server_RemoveAmmo();
 }
 
 uint8 AMag::GetAmmoCapacity()

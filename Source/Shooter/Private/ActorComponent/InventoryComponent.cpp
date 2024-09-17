@@ -52,18 +52,15 @@ void UInventoryComponent::Init(const FInventoryParams& InventoryParams)
 
 }
 
+void UInventoryComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+}
+
 int8 UInventoryComponent::FindWeapon(AWeapon* &Weapon) const
 {
 	return WeaponArray.Find(Weapon);
-}
-
-void UInventoryComponent::LoadAmmoInWeaponMag(AWeapon* Weapon, const uint8 AmmoCount)
-{
-	if (Weapon == nullptr || AmmoCount == 0)
-	{
-		return;
-	}
-	Server_LoadAmmoInWeaponMag(Weapon, AmmoCount);
 }
 
 void UInventoryComponent::Server_LoadAmmoInWeaponMag_Implementation(AWeapon* Weapon, const uint8 AmmoCount)
@@ -78,19 +75,11 @@ void UInventoryComponent::Server_LoadAmmoInWeaponMag_Implementation(AWeapon* Wea
 		const uint8 WeaponAmmo = WeaponAmmoArray[WeaponIndex];
 		if (WeaponAmmo >= AmmoCount)
 		{
-			if (AMag* WeaponMag = Weapon->GetMag())
-			{
-				WeaponMag->AddAmmo(AmmoCount);
-				WeaponAmmoArray[WeaponIndex] -= AmmoCount;
-			}
+			Weapon->Server_MagAddAmmo(AmmoCount);
+			// What if weapon does not have a mag?
+			WeaponAmmoArray[WeaponIndex] -= AmmoCount;
 		}
 	}
-}
-
-void UInventoryComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
 }
 
 AWeapon* UInventoryComponent::GetWeaponAtIndex(uint8 Index)

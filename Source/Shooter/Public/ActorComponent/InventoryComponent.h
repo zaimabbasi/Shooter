@@ -26,7 +26,10 @@ public:
 
 	void Init(const FInventoryParams& InventoryParams);
 	int8 FindWeapon(AWeapon*& Weapon) const;
-	void LoadAmmoInWeaponMag(AWeapon* Weapon, const uint8 AmmoCount);
+
+	UFUNCTION(Server, Reliable)
+	void Server_LoadAmmoInWeaponMag(AWeapon* Weapon, const uint8 AmmoCount);
+
 	AWeapon* GetWeaponAtIndex(uint8 Index);
 	uint8 GetAmmoAtIndex(uint8 Index);
 
@@ -36,9 +39,6 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	UFUNCTION(Server, Reliable)
-	void Server_LoadAmmoInWeaponMag(AWeapon* Weapon, const uint8 AmmoCount);
-
 	UFUNCTION()
 	void OnRep_WeaponArray() const;
 
