@@ -16,7 +16,9 @@
 #include "Type/ShooterNameType.h"
 
 AWeapon::AWeapon() :
-	CombatAction(ECombatAction::CA_Out)
+	CombatAction(ECombatAction::CA_Out),
+	bIsHolster(false),
+	FiremodeIndex(0)
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
@@ -44,6 +46,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 
 	DOREPLIFETIME(AWeapon, PatronInWeapon);
 	DOREPLIFETIME(AWeapon, bIsHolster);
+	DOREPLIFETIME(AWeapon, FiremodeIndex);
 
 }
 
@@ -60,6 +63,8 @@ void AWeapon::PostInitializeComponents()
 			WeaponAnimInstance->OnWeaponAnimInstanceOut.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOut);
 			WeaponAnimInstance->OnWeaponAnimInstanceOutToIdle.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOutToIdle);
 			WeaponAnimInstance->OnWeaponAnimInstancePatronInWeapon.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon);
+			WeaponAnimInstance->OnWeaponAnimInstanceFiremode.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceFiremode);
+			WeaponAnimInstance->OnWeaponAnimInstanceWeaponSelector.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector);
 		}
 	}
 
@@ -109,6 +114,16 @@ uint8 AWeapon::GetMagAmmoSpace() const
 	return Mag->GetAmmoSpace();
 }
 
+EWeaponFiremode AWeapon::GetFiremode() const
+{
+	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
+	if (LoadedWeaponDataAsset == nullptr || !LoadedWeaponDataAsset->Firemodes.IsValidIndex(FiremodeIndex))
+	{
+		return EWeaponFiremode::WF_None;
+	}
+	return LoadedWeaponDataAsset->Firemodes[FiremodeIndex];
+}
+
 void AWeapon::SetCombatAction(ECombatAction Action)
 {
 	CombatAction = Action;
@@ -122,6 +137,26 @@ bool AWeapon::DoesNeedCharge()
 bool AWeapon::CanFire()
 {
 	return (CombatAction == ECombatAction::CA_Idle && PatronInWeapon);
+}
+
+bool AWeapon::CanFiremode()
+{
+	return (CombatAction == ECombatAction::CA_Idle && HasFiremodes());
+}
+
+bool AWeapon::HasFiremodes()
+{
+	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
+	if (LoadedWeaponDataAsset && LoadedWeaponDataAsset->Firemodes.Num() > 1)
+	{
+		return true;
+	}
+	return false;
+}
+
+void AWeapon::Server_SetIsHolster_Implementation(const bool bHolster)
+{
+	bIsHolster = bHolster;
 }
 
 void AWeapon::Server_MagAddAmmo_Implementation(const uint8 Count)
@@ -142,9 +177,16 @@ void AWeapon::Server_MagPopAmmo_Implementation()
 	ModComponent->GetMag()->Server_PopAmmo();
 }
 
-void AWeapon::Server_SetIsHolster_Implementation(const bool bHolster)
+void AWeapon::Server_SwitchFiremode_Implementation()
 {
-	bIsHolster = bHolster;
+	if (!HasFiremodes())
+	{
+		return;
+	}
+	if (const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous())
+	{
+		FiremodeIndex = FMath::Modulo<uint8>(FiremodeIndex + 1, LoadedWeaponDataAsset->Firemodes.Num());
+	}
 }
 
 void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
@@ -192,5 +234,18 @@ void AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon()
 	if (HasAuthority())
 	{
 		Server_MagPopAmmo();
+	}
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceFiremode()
+{
+	OnWeaponFiremode.Broadcast(this);
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector()
+{
+	if (HasAuthority())
+	{
+		Server_SwitchFiremode();
 	}
 }

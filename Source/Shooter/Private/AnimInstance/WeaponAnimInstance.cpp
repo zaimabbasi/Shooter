@@ -32,6 +32,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	CombatAction = Weapon->GetCombatAction();
 	bIsHolster = Weapon->GetIsHolster();
+	Firemode = Weapon->GetFiremode();
 
 }
 
@@ -58,4 +59,14 @@ void UWeaponAnimInstance::AnimNotify_OutToIdle() const
 void UWeaponAnimInstance::AnimNotify_PatronInWeapon() const
 {
 	OnWeaponAnimInstancePatronInWeapon.Broadcast();
+}
+
+void UWeaponAnimInstance::AnimNotify_Firemode() const
+{
+	OnWeaponAnimInstanceFiremode.Broadcast();
+}
+
+void UWeaponAnimInstance::AnimNotify_WeaponSelector() const
+{
+	OnWeaponAnimInstanceWeaponSelector.Broadcast();
 }

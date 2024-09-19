@@ -85,6 +85,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(ToggleLeanRightAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleLeanRightAction);
 		EnhancedInputComponent->BindAction(ToggleAimAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleAimAction);
 		EnhancedInputComponent->BindAction(ReloadWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnReloadWeaponAction);
+		EnhancedInputComponent->BindAction(WeaponFiremodeAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnWeaponFiremodeAction);
 	}
 
 }
@@ -135,6 +136,7 @@ void AShooterCharacter::PostInitializeComponents()
 		CombatComponent->OnCombatComponentWeaponIdleToOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponIdleToOut);
 		CombatComponent->OnCombatComponentWeaponOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponOut);
 		CombatComponent->OnCombatComponentWeaponOutToIdle.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponOutToIdle);
+		CombatComponent->OnCombatComponentWeaponFiremode.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponFiremode);
 	}
 	if (InventoryComponent)
 	{
@@ -258,6 +260,14 @@ void AShooterCharacter::Handle_OnCombatComponentWeaponOut(AWeapon* Weapon)
 }
 
 void AShooterCharacter::Handle_OnCombatComponentWeaponOutToIdle(AWeapon* Weapon)
+{
+	if (HasAuthority() && CombatComponent)
+	{
+		CombatComponent->Server_WeaponIdle();
+	}
+}
+
+void AShooterCharacter::Handle_OnCombatComponentWeaponFiremode(AWeapon* Weapon)
 {
 	if (HasAuthority() && CombatComponent)
 	{
@@ -631,6 +641,15 @@ void AShooterCharacter::OnReloadWeaponAction(const FInputActionValue& Value)
 	if (CurrentValue && CombatComponent)
 	{
 		CombatComponent->ReloadWeapon();
+	}
+}
+
+void AShooterCharacter::OnWeaponFiremodeAction(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue && CombatComponent)
+	{
+		CombatComponent->Server_WeaponFiremode();
 	}
 }
 

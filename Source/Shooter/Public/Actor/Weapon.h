@@ -16,6 +16,7 @@ class UModComponent;
 class UModDataAsset;
 class UWeaponAnimationDataAsset;
 class UWeaponDataAsset;
+enum class EWeaponFiremode : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAnimNotifySignature, AWeapon*, Weapon);
 
@@ -34,9 +35,12 @@ public:
 	virtual bool IsPistol() const { return false; }
 	uint8 GetMagAmmoCount() const;
 	uint8 GetMagAmmoSpace() const;
+	EWeaponFiremode GetFiremode() const;
 	void SetCombatAction(ECombatAction Action);
 	bool DoesNeedCharge();
 	bool CanFire();
+	bool CanFiremode();
+	bool HasFiremodes();
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetIsHolster(const bool bHolster);
@@ -47,10 +51,14 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_MagPopAmmo();
 
+	UFUNCTION(Server, Reliable)
+	void Server_SwitchFiremode();
+
 	FOnWeaponAnimNotifySignature OnWeaponIdle;
 	FOnWeaponAnimNotifySignature OnWeaponIdleToOut;
 	FOnWeaponAnimNotifySignature OnWeaponOut;
 	FOnWeaponAnimNotifySignature OnWeaponOutToIdle;
+	FOnWeaponAnimNotifySignature OnWeaponFiremode;
 
 protected:
 	virtual void BeginPlay() override;
@@ -73,6 +81,12 @@ protected:
 	UFUNCTION()
 	void Handle_OnWeaponAnimInstancePatronInWeapon();
 
+	UFUNCTION()
+	void Handle_OnWeaponAnimInstanceFiremode();
+
+	UFUNCTION()
+	void Handle_OnWeaponAnimInstanceWeaponSelector();
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> Mesh;
 
@@ -92,6 +106,9 @@ protected:
 
 	UPROPERTY(Replicated)
 	bool bIsHolster;
+
+	UPROPERTY(Replicated)
+	uint8 FiremodeIndex;
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }

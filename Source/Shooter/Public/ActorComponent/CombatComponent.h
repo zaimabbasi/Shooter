@@ -34,6 +34,9 @@ public:
 	void Server_WeaponOutToIdle();
 
 	UFUNCTION(Server, Reliable)
+	void Server_WeaponFiremode();
+
+	UFUNCTION(Server, Reliable)
 	void Server_EquipWeapon(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName = NAME_None);
 
 	UFUNCTION(Server, Reliable)
@@ -46,6 +49,7 @@ public:
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponIdleToOut;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOut;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOutToIdle;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponFiremode;
 
 protected:
 	virtual void BeginPlay() override;
@@ -60,6 +64,7 @@ private:
 	bool CanIdleToOut() const;
 	bool CanOut() const;
 	bool CanOutToIdle() const;
+	bool CanFiremode() const;
 	bool CanWeaponFire() const;
 	bool DoesWeaponNeedCharge() const;
 
@@ -74,6 +79,9 @@ private:
 
 	UFUNCTION()
 	void Handle_OnWeaponOutToIdle(AWeapon* Weapon);
+
+	UFUNCTION()
+	void Handle_OnWeaponFiremode(AWeapon* Weapon);
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon);

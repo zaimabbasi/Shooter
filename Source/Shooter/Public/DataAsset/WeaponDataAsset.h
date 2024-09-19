@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Enum/WeaponFiremode.h"
 #include "WeaponDataAsset.generated.h"
 
 class UModDataAsset;
@@ -14,6 +15,9 @@ class SHOOTER_API UWeaponDataAsset : public UDataAsset
 	GENERATED_BODY()
 	
 public:
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	TArray<EWeaponFiremode> Firemodes;
+
 	UPROPERTY(EditAnywhere, Category = "DataAsset")
 	TSoftObjectPtr<UModDataAsset> ModDataAsset;
 

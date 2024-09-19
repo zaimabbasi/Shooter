@@ -9,6 +9,7 @@
 
 UCombatComponent::UCombatComponent() :
 	EquippedWeapon(nullptr),
+	bIsAiming(false),
 	CombatAction(ECombatAction::CA_Idle)
 {
 	PrimaryComponentTick.bCanEverTick = false;
@@ -69,6 +70,14 @@ void UCombatComponent::Server_WeaponOutToIdle_Implementation()
 	}
 }
 
+void UCombatComponent::Server_WeaponFiremode_Implementation()
+{
+	if (CanFiremode())
+	{
+		SetCombatAction(ECombatAction::CA_Firemode);
+	}
+}
+
 void UCombatComponent::Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName)
 {
 	if (WeaponToEquip == nullptr || EquippedWeapon)
@@ -82,6 +91,7 @@ void UCombatComponent::Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip,
 	WeaponToEquip->OnWeaponIdleToOut.AddDynamic(this, &UCombatComponent::Handle_OnWeaponIdleToOut);
 	WeaponToEquip->OnWeaponOut.AddDynamic(this, &UCombatComponent::Handle_OnWeaponOut);
 	WeaponToEquip->OnWeaponOutToIdle.AddDynamic(this, &UCombatComponent::Handle_OnWeaponOutToIdle);
+	WeaponToEquip->OnWeaponFiremode.AddDynamic(this, &UCombatComponent::Handle_OnWeaponFiremode);
 
 	EquippedWeapon = WeaponToEquip;
 }
@@ -99,6 +109,7 @@ void UCombatComponent::Server_UnequipWeapon_Implementation(USkeletalMeshComponen
 	EquippedWeapon->OnWeaponIdleToOut.RemoveAll(this);
 	EquippedWeapon->OnWeaponOut.RemoveAll(this);
 	EquippedWeapon->OnWeaponOutToIdle.RemoveAll(this);
+	EquippedWeapon->OnWeaponFiremode.RemoveAll(this);
 
 	EquippedWeapon = nullptr;
 }
@@ -141,7 +152,7 @@ void UCombatComponent::SetCombatAction(ECombatAction Action)
 
 bool UCombatComponent::CanIdle() const
 {
-	return (CombatAction == ECombatAction::CA_OutToIdle || CombatAction == ECombatAction::CA_OutToIdleArm);
+	return (CombatAction == ECombatAction::CA_OutToIdle || CombatAction == ECombatAction::CA_OutToIdleArm || CombatAction == ECombatAction::CA_Firemode);
 }
 
 bool UCombatComponent::CanIdleToOut() const
@@ -157,6 +168,11 @@ bool UCombatComponent::CanOut() const
 bool UCombatComponent::CanOutToIdle() const
 {
 	return (CombatAction == ECombatAction::CA_Out);
+}
+
+bool UCombatComponent::CanFiremode() const
+{
+	return (CombatAction == ECombatAction::CA_Idle && EquippedWeapon && EquippedWeapon->CanFiremode());
 }
 
 bool UCombatComponent::CanWeaponFire() const
@@ -187,6 +203,11 @@ void UCombatComponent::Handle_OnWeaponOut(AWeapon* Weapon)
 void UCombatComponent::Handle_OnWeaponOutToIdle(AWeapon* Weapon)
 {
 	OnCombatComponentWeaponOutToIdle.Broadcast(Weapon);
+}
+
+void UCombatComponent::Handle_OnWeaponFiremode(AWeapon* Weapon)
+{
+	OnCombatComponentWeaponFiremode.Broadcast(Weapon);
 }
 
 void UCombatComponent::OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon)

@@ -12,5 +12,6 @@ enum class ECombatAction : uint8
 	CA_Out UMETA(DisplayName = "Out"),
 	CA_OutToIdle UMETA(DisplayName = "OutToIdle"),
 	CA_OutToIdleArm UMETA(DisplayName = "OutToIdleArm"),
+	CA_Firemode UMETA(DisplayName = "Firemode"),
 	Default_MAX UMETA(Hidden)
 };

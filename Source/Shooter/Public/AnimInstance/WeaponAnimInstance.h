@@ -9,6 +9,7 @@
 class AShooterCharacter;
 class AWeapon;
 enum class ECombatAction : uint8;
+enum class EWeaponFiremode : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponAnimInstanceAnimNotifySignature);
 
@@ -26,6 +27,8 @@ public:
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOut;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOutToIdle;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstancePatronInWeapon;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFiremode;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponSelector;
 
 protected:
 	UFUNCTION()
@@ -43,6 +46,12 @@ protected:
 	UFUNCTION()
 	void AnimNotify_PatronInWeapon() const;
 
+	UFUNCTION()
+	void AnimNotify_Firemode() const;
+
+	UFUNCTION()
+	void AnimNotify_WeaponSelector() const;
+
 private:
 	TObjectPtr<AWeapon> Weapon;
 
@@ -51,5 +60,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	bool bIsHolster;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	EWeaponFiremode Firemode;
 
 };

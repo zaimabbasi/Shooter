@@ -57,6 +57,7 @@ private:
 	void OnToggleLeanRightAction(const FInputActionValue& Value);
 	void OnToggleAimAction(const FInputActionValue& Value);
 	void OnReloadWeaponAction(const FInputActionValue& Value);
+	void OnWeaponFiremodeAction(const FInputActionValue& Value);
 
 	void UpdateMovement(float DeltaTime);
 	void UpdateAO_Pitch(float DeltaTime);
@@ -94,6 +95,9 @@ private:
 
 	UFUNCTION()
 	void Handle_OnCombatComponentWeaponOutToIdle(AWeapon* Weapon);
+
+	UFUNCTION()
+	void Handle_OnCombatComponentWeaponFiremode(AWeapon* Weapon);
 
 	UFUNCTION()
 	void Handle_OnHandsAnimInstanceIdle();
@@ -208,6 +212,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> ReloadWeaponAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UInputAction> WeaponFiremodeAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCharacterDataAsset> CharacterDataAsset;
