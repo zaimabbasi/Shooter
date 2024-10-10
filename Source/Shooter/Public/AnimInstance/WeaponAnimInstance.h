@@ -22,20 +22,63 @@ public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceActionEnd;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceActionStart;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceChamberCheck;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFire;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFireDry;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFiremode;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFiremodeCheck;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdle;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdleToOut;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceMagCheck;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceMagIn;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceMagOut;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOut;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOutToIdle;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOutToIdleArm;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceReloadCharge;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstancePatronInWeapon;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFiremode;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponSelector;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponHammer;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceShellPort;
 
 protected:
+	UFUNCTION()
+	void AnimNotify_ActionEnd() const;
+
+	UFUNCTION()
+	void AnimNotify_ActionStart() const;
+
+	UFUNCTION()
+	void AnimNotify_ChamberCheck() const;
+
+	UFUNCTION()
+	void AnimNotify_Fire() const;
+
+	UFUNCTION()
+	void AnimNotify_FireDry() const;
+
+	UFUNCTION()
+	void AnimNotify_Firemode() const;
+
+	UFUNCTION()
+	void AnimNotify_FiremodeCheck() const;
+
 	UFUNCTION()
 	void AnimNotify_Idle() const;
 
 	UFUNCTION()
 	void AnimNotify_IdleToOut() const;
+
+	UFUNCTION()
+	void AnimNotify_MagCheck() const;
+
+	UFUNCTION()
+	void AnimNotify_MagIn() const;
+
+	UFUNCTION()
+	void AnimNotify_MagOut() const;
 
 	UFUNCTION()
 	void AnimNotify_Out() const;
@@ -44,13 +87,22 @@ protected:
 	void AnimNotify_OutToIdle() const;
 
 	UFUNCTION()
+	void AnimNotify_OutToIdleArm() const;
+
+	UFUNCTION()
+	void AnimNotify_ReloadCharge() const;
+
+	UFUNCTION()
 	void AnimNotify_PatronInWeapon() const;
 
 	UFUNCTION()
-	void AnimNotify_Firemode() const;
+	void AnimNotify_WeaponSelector() const;
 
 	UFUNCTION()
-	void AnimNotify_WeaponSelector() const;
+	void AnimNotify_WeaponHammer() const;
+
+	UFUNCTION()
+	void AnimNotify_ShellPort() const;
 
 private:
 	TObjectPtr<AWeapon> Weapon;
@@ -62,6 +114,15 @@ private:
 	bool bIsHolster;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	bool bHasPatronInWeaponAmmo;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	EWeaponFiremode Firemode;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	float FireAnimPlayRate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	bool bLoopFireAnim;
 
 };

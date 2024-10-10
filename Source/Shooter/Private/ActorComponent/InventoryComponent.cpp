@@ -14,10 +14,14 @@ UInventoryComponent::UInventoryComponent()
 
 }
 
-void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+int8 UInventoryComponent::FindWeapon(AWeapon*& Weapon) const
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	return WeaponArray.Find(Weapon);
+}
 
+uint8 UInventoryComponent::GetAmmoAtIndex(uint8 Index)
+{
+	return WeaponAmmoArray.IsValidIndex(Index) ? WeaponAmmoArray[Index] : 0;
 }
 
 void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -29,12 +33,17 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 }
 
+AWeapon* UInventoryComponent::GetWeaponAtIndex(uint8 Index)
+{
+	return WeaponArray.IsValidIndex(Index) ? WeaponArray[Index] : nullptr;
+}
+
 void UInventoryComponent::Init(const FInventoryParams& InventoryParams)
 {
 	if (UWorld* World = GetWorld())
 	{
 		AActor* OwningActor = GetOwner();
-		if (AWeapon* const PrimaryWeapon  = World->SpawnActor<AWeapon>(InventoryParams.PrimaryWeaponClass))
+		if (AWeapon* const PrimaryWeapon = World->SpawnActor<AWeapon>(InventoryParams.PrimaryWeaponClass))
 		{
 			PrimaryWeapon->SetOwner(OwningActor);
 			PrimaryWeapon->Init();
@@ -50,17 +59,6 @@ void UInventoryComponent::Init(const FInventoryParams& InventoryParams)
 	WeaponAmmoArray.Add(InventoryParams.PrimaryWeaponMaxAmmo);
 	WeaponAmmoArray.Add(InventoryParams.SecondaryWeaponMaxAmmo);
 
-}
-
-void UInventoryComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-}
-
-int8 UInventoryComponent::FindWeapon(AWeapon* &Weapon) const
-{
-	return WeaponArray.Find(Weapon);
 }
 
 void UInventoryComponent::Server_LoadAmmoInWeaponMag_Implementation(AWeapon* Weapon, const uint8 AmmoCount)
@@ -82,14 +80,16 @@ void UInventoryComponent::Server_LoadAmmoInWeaponMag_Implementation(AWeapon* Wea
 	}
 }
 
-AWeapon* UInventoryComponent::GetWeaponAtIndex(uint8 Index)
+void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	return WeaponArray.IsValidIndex(Index) ? WeaponArray[Index] : nullptr;
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
 }
 
-uint8 UInventoryComponent::GetAmmoAtIndex(uint8 Index)
+void UInventoryComponent::BeginPlay()
 {
-	return WeaponAmmoArray.IsValidIndex(Index) ? WeaponAmmoArray[Index] : 0;
+	Super::BeginPlay();
+
 }
 
 void UInventoryComponent::OnRep_WeaponArray() const

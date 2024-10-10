@@ -18,10 +18,12 @@ AMod::AMod()
 
 }
 
-void AMod::Tick(float DeltaTime)
+void AMod::Init()
 {
-	Super::Tick(DeltaTime);
-
+	if (ModComponent)
+	{
+		ModComponent->Init(ModDataAsset.LoadSynchronous());
+	}
 }
 
 void AMod::PostInitializeComponents()
@@ -30,12 +32,10 @@ void AMod::PostInitializeComponents()
 
 }
 
-void AMod::Init()
+void AMod::Tick(float DeltaTime)
 {
-	if (ModComponent)
-	{
-		ModComponent->Init(ModDataAsset.LoadSynchronous());
-	}
+	Super::Tick(DeltaTime);
+
 }
 
 void AMod::BeginPlay()

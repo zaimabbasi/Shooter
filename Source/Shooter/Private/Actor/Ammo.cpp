@@ -10,17 +10,8 @@ AAmmo::AAmmo()
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
-	USceneComponent* Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	SetRootComponent(Root);
-
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
-	Mesh->SetupAttachment(GetRootComponent());
-
-}
-
-void AAmmo::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+	SetRootComponent(Mesh);
 
 }
 
@@ -32,14 +23,20 @@ void AAmmo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePro
 
 }
 
-void AAmmo::SetIsEmpty(bool bEmpty)
+void AAmmo::Server_SetIsEmpty_Implementation(bool bEmpty)
 {
 	bIsEmpty = bEmpty;
-	if (Mesh && AmmoDataAsset)
+	UAmmoDataAsset* LoadedAmmoDataAsset = AmmoDataAsset.LoadSynchronous();
+	if (Mesh && LoadedAmmoDataAsset)
 	{
-		Mesh->SetSkeletalMesh(bEmpty ? AmmoDataAsset->ShellMesh : AmmoDataAsset->FullMesh);
+		Mesh->SetSkeletalMesh(bEmpty ? LoadedAmmoDataAsset->ShellMesh : LoadedAmmoDataAsset->FullMesh);
 	}
-	Server_SetIsEmpty(bEmpty);
+}
+
+void AAmmo::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
 }
 
 void AAmmo::BeginPlay()
@@ -48,11 +45,11 @@ void AAmmo::BeginPlay()
 	
 }
 
-void AAmmo::Server_SetIsEmpty_Implementation(bool bEmpty)
+void AAmmo::OnRep_IsEmpty()
 {
-	bIsEmpty = bEmpty;
-	/*if (Mesh && AmmoDataAsset)
+	UAmmoDataAsset* LoadedAmmoDataAsset = AmmoDataAsset.LoadSynchronous();
+	if (Mesh && LoadedAmmoDataAsset)
 	{
-		Mesh->SetSkeletalMesh(bEmpty ? AmmoDataAsset->ShellMesh : AmmoDataAsset->FullMesh);
-	}*/
+		Mesh->SetSkeletalMesh(bIsEmpty ? LoadedAmmoDataAsset->ShellMesh : LoadedAmmoDataAsset->FullMesh);
+	}
 }

@@ -22,16 +22,11 @@
 #include "Actor/Weapon.h"
 #include "DataAsset/ModDataAsset.h"
 #include "Struct/ShooterUtility.h"
+#include "Type/ShooterNameType.h"
 
 UModComponent::UModComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
-
-}
-
-void UModComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 }
 
@@ -69,7 +64,7 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 				{
 					SpawnedBarrel->SetOwner(OwningActor);
 					SpawnedBarrel->Init();
-					SpawnedBarrel->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_barrelSocket"));
+					SpawnedBarrel->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_BARREL_SOCKET_NAME);
 
 					Barrel = SpawnedBarrel;
 				}
@@ -80,7 +75,7 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 				{
 					SpawnedCharge->SetOwner(OwningActor);
 					SpawnedCharge->Init();
-					SpawnedCharge->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_chargeSocket"));
+					SpawnedCharge->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_CHARGE_SOCKET_NAME);
 
 					Charge = SpawnedCharge;
 				}
@@ -91,8 +86,8 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 				{
 					SpawnedGasBlock->SetOwner(OwningActor);
 					SpawnedGasBlock->Init();
-					SpawnedGasBlock->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_gas_blockSocket"));
-					
+					SpawnedGasBlock->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_GAS_BLOCK_SOCKET_NAME);
+
 					GasBlock = SpawnedGasBlock;
 				}
 			}
@@ -102,8 +97,8 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 				{
 					SpawnedHandguard->SetOwner(OwningActor);
 					SpawnedHandguard->Init();
-					SpawnedHandguard->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_handguardSocket"));
-					
+					SpawnedHandguard->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_HANDGUARD_SOCKET_NAME);
+
 					Handguard = SpawnedHandguard;
 				}
 			}
@@ -113,8 +108,8 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 				{
 					SpawnedMag->SetOwner(OwningActor);
 					SpawnedMag->Init();
-					SpawnedMag->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_magazineSocket"));
-					
+					SpawnedMag->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_MAGAZINE_SOCKET_NAME);
+
 					Mag = SpawnedMag;
 				}
 			}
@@ -124,8 +119,8 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 				{
 					SpawnedMuzzle->SetOwner(OwningActor);
 					SpawnedMuzzle->Init();
-					SpawnedMuzzle->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_muzzleSocket"));
-					
+					SpawnedMuzzle->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_MUZZLE_SOCKET_NAME);
+
 					Muzzle = SpawnedMuzzle;
 				}
 			}
@@ -135,8 +130,8 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 				{
 					SpawnedPistolgrip->SetOwner(OwningActor);
 					SpawnedPistolgrip->Init();
-					SpawnedPistolgrip->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_pistol_gripSocket"));
-					
+					SpawnedPistolgrip->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_PISTOL_GRIP_SOCKET_NAME);
+
 					Pistolgrip = SpawnedPistolgrip;
 				}
 			}
@@ -146,8 +141,8 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 				{
 					SpawnedReciever->SetOwner(OwningActor);
 					SpawnedReciever->Init();
-					SpawnedReciever->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_recieverSocket"));
-					
+					SpawnedReciever->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_RECIEVER_SOCKET_NAME);
+
 					Reciever = SpawnedReciever;
 				}
 			}
@@ -157,8 +152,8 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 				{
 					SpawnedSightFront->SetOwner(OwningActor);
 					SpawnedSightFront->Init();
-					SpawnedSightFront->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_sight_frontSocket"));
-					
+					SpawnedSightFront->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_SIGHT_FRONT_SOCKET_NAME);
+
 					SightFront = SpawnedSightFront;
 				}
 			}
@@ -168,8 +163,8 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 				{
 					SpawnedSightRear->SetOwner(OwningActor);
 					SpawnedSightRear->Init();
-					SpawnedSightRear->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_sight_rearSocket"));
-					
+					SpawnedSightRear->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_SIGHT_REAR_SOCKET_NAME);
+
 					SpawnedSightRear = SightRear;
 				}
 			}
@@ -179,8 +174,8 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 				{
 					SpawnedStock->SetOwner(OwningActor);
 					SpawnedStock->Init();
-					SpawnedStock->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, TEXT("mod_stockSocket"));
-					
+					SpawnedStock->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_STOCK_SOCKET_NAME);
+
 					Stock = SpawnedStock;
 				}
 			}
@@ -188,8 +183,14 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 	}
 }
 
+void UModComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+}
+
 void UModComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }

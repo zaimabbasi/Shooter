@@ -18,55 +18,102 @@ class SHOOTER_API UCombatComponent : public UActorComponent
 
 public:
 	UCombatComponent();
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION(Server, Reliable)
-	void Server_WeaponIdle();
+	void Server_ActionEnd();
 
 	UFUNCTION(Server, Reliable)
-	void Server_WeaponIdleToOut();
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponOut();
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponOutToIdle();
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponFiremode();
+	void Server_ActionStart();
 
 	UFUNCTION(Server, Reliable)
 	void Server_EquipWeapon(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName = NAME_None);
 
 	UFUNCTION(Server, Reliable)
+	void Server_Idle();
+
+	UFUNCTION(Server, Reliable)
+	void Server_IdleToOut();
+
+	UFUNCTION(Server, Reliable)
+	void Server_Out();
+
+	UFUNCTION(Server, Reliable)
+	void Server_OutToIdle();
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetIsAiming(bool bAiming);
+
+	UFUNCTION(Server, Reliable)
 	void Server_UnequipWeapon(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName);
 
-	void SetIsAiming(bool bAiming);
-	void ReloadWeapon();
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponChamberCheck();
 
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponFire(const bool bFiring);
+
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponFiremode();
+
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponFiremodeCheck();
+
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponMagCheck();
+
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponMagIn();
+
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponMagOut();
+
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponReloadCharge();
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionEnd;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionStart;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponChamberCheck;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponFire;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponFireDry;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponFiremode;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponFiremodeCheck;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponIdle;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponIdleToOut;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponMagCheck;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponMagIn;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponMagOut;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOut;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOutToIdle;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponFiremode;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOutToIdleArm;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponReloadCharge;
 
 protected:
 	virtual void BeginPlay() override;
 
 private:
-	UFUNCTION(Server, Reliable)
-	void Server_SetIsAiming(bool bAiming);
+	UFUNCTION()
+	void Handle_OnWeaponActionEnd(AWeapon* Weapon);
 
-	void SetCombatAction(ECombatAction Action);
+	UFUNCTION()
+	void Handle_OnWeaponActionStart(AWeapon* Weapon);
 
-	bool CanIdle() const;
-	bool CanIdleToOut() const;
-	bool CanOut() const;
-	bool CanOutToIdle() const;
-	bool CanFiremode() const;
-	bool CanWeaponFire() const;
-	bool DoesWeaponNeedCharge() const;
+	UFUNCTION()
+	void Handle_OnWeaponChamberCheck(AWeapon* Weapon);
+
+	UFUNCTION()
+	void Handle_OnWeaponFire(AWeapon* Weapon);
+
+	UFUNCTION()
+	void Handle_OnWeaponFireDry(AWeapon* Weapon);
+
+	UFUNCTION()
+	void Handle_OnWeaponFiremode(AWeapon* Weapon);
+
+	UFUNCTION()
+	void Handle_OnWeaponFiremodeCheck(AWeapon* Weapon);
 
 	UFUNCTION()
 	void Handle_OnWeaponIdle(AWeapon* Weapon);
@@ -75,32 +122,53 @@ private:
 	void Handle_OnWeaponIdleToOut(AWeapon* Weapon);
 
 	UFUNCTION()
+	void Handle_OnWeaponMagCheck(AWeapon* Weapon);
+
+	UFUNCTION()
+	void Handle_OnWeaponMagIn(AWeapon* Weapon);
+
+	UFUNCTION()
+	void Handle_OnWeaponMagOut(AWeapon* Weapon);
+
+	UFUNCTION()
 	void Handle_OnWeaponOut(AWeapon* Weapon);
 
 	UFUNCTION()
 	void Handle_OnWeaponOutToIdle(AWeapon* Weapon);
 
 	UFUNCTION()
-	void Handle_OnWeaponFiremode(AWeapon* Weapon);
+	void Handle_OnWeaponOutToIdleArm(AWeapon* Weapon);
 
 	UFUNCTION()
-	void OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon);
+	void Handle_OnWeaponReloadCharge(AWeapon* Weapon);
 
 	UFUNCTION()
 	void OnRep_CombatAction();
 
-	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
-	TObjectPtr<AWeapon> EquippedWeapon;
+	UFUNCTION()
+	void OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetCombatAction(ECombatAction Action);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetIsFiring(const bool bFiring);
 
 	UPROPERTY(Replicated)
 	bool bIsAiming;
 
+	UPROPERTY(Replicated)
+	bool bIsFiring;
+
 	UPROPERTY(ReplicatedUsing = OnRep_CombatAction)
 	ECombatAction CombatAction;
 
+	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
+	TObjectPtr<AWeapon> EquippedWeapon;
+
 public:
-	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
 	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }
+	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
 

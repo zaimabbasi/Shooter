@@ -16,11 +16,10 @@ class SHOOTER_API AMod : public AActor
 	
 public:
 	AMod();
-	virtual void Tick(float DeltaTime) override;
-	virtual void PostInitializeComponents() override;
-	
 	virtual void Init();
-
+	virtual void PostInitializeComponents() override;
+	virtual void Tick(float DeltaTime) override;
+	
 protected:
 	virtual void BeginPlay() override;
 	

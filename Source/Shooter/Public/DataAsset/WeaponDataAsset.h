@@ -18,6 +18,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	TArray<EWeaponFiremode> Firemodes;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	uint16 RateOfFire;
+
 	UPROPERTY(EditAnywhere, Category = "DataAsset")
 	TSoftObjectPtr<UModDataAsset> ModDataAsset;
 

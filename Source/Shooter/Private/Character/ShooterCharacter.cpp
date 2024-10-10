@@ -51,58 +51,97 @@ AShooterCharacter::AShooterCharacter()
 
 }
 
-void AShooterCharacter::Tick(float DeltaTime)
+FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const
 {
-	Super::Tick(DeltaTime);
+	FName WeaponHolsterSocketName = NAME_None;
+	if (Weapon && InventoryComponent)
+	{
+		if (Weapon->IsPistol())
+		{
+			WeaponHolsterSocketName = CHARACTER_PISTOL_HOLSTER_SOCKET_NAME;
+		}
+		else
+		{
+			const int8 WeaponIndex = InventoryComponent->FindWeapon(Weapon);
+			if (WeaponIndex == PRIMARY_WEAPON_INDEX)
+			{
+				WeaponHolsterSocketName = CHARACTER_PRIMARY_WEAPON_HOLSTER_SOCKET_NAME;
+			}
+			else if (WeaponIndex != INDEX_NONE)
+			{
 
-	UpdateAO_Pitch(DeltaTime);
-
-	UpdateMovement(DeltaTime);
-
-	UpdateCameraFOV(DeltaTime);
-
+				WeaponHolsterSocketName = CHARACTER_SECONDARY_WEAPON_HOLSTER_SOCKET_NAME(WeaponIndex);
+			}
+		}
+	}
+	return WeaponHolsterSocketName;
 }
 
-void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+ECombatAction AShooterCharacter::GetCombatAction() const
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
+	if (CombatComponent == nullptr)
 	{
-		EnhancedInputComponent->BindAction(LookAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnLookAction);
-		EnhancedInputComponent->BindAction(MoveForwardAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveForwardAction);
-		EnhancedInputComponent->BindAction(MoveBackwardAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveBackwardAction);
-		EnhancedInputComponent->BindAction(MoveLeftAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveLeftAction);
-		EnhancedInputComponent->BindAction(MoveRightAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnMoveRightAction);
-		EnhancedInputComponent->BindAction(EquipPrimaryWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnEquipPrimaryWeaponAction);
-		EnhancedInputComponent->BindAction(EquipSecondaryWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnEquipSecondaryWeaponAction);
-		EnhancedInputComponent->BindAction(HolsterEquippedWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnHolsterEquippedWeaponAction);
-		EnhancedInputComponent->BindAction(ToggleCrouchAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleCrouchAction);
-		EnhancedInputComponent->BindAction(ToggleProneAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleProneAction);
-		EnhancedInputComponent->BindAction(ToggleSlowAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleSlowAction);
-		EnhancedInputComponent->BindAction(ToggleSprintAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleSprintAction);
-		EnhancedInputComponent->BindAction(ToggleLeanLeftAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleLeanLeftAction);
-		EnhancedInputComponent->BindAction(ToggleLeanRightAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleLeanRightAction);
-		EnhancedInputComponent->BindAction(ToggleAimAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnToggleAimAction);
-		EnhancedInputComponent->BindAction(ReloadWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnReloadWeaponAction);
-		EnhancedInputComponent->BindAction(WeaponFiremodeAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnWeaponFiremodeAction);
+		return ECombatAction::CA_None;
 	}
+	return CombatComponent->GetCombatAction();
+}
 
+AWeapon* AShooterCharacter::GetEquippedWeapon() const
+{
+	if (CombatComponent == nullptr)
+	{
+		return nullptr;
+	}
+	return CombatComponent->GetEquippedWeapon();
+}
+
+bool AShooterCharacter::GetIsAiming() const
+{
+	if (CombatComponent == nullptr)
+	{
+		return false;
+	}
+	return CombatComponent->GetIsAiming();
 }
 
 void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AShooterCharacter, RemoteViewYaw);
-	DOREPLIFETIME(AShooterCharacter, MovementInputVector);
-	DOREPLIFETIME(AShooterCharacter, TurnDirection);
+	DOREPLIFETIME(AShooterCharacter, bIsAlterAction);
 	DOREPLIFETIME(AShooterCharacter, bIsToggleSlow);
 	DOREPLIFETIME(AShooterCharacter, bIsToggleSprint);
-	DOREPLIFETIME(AShooterCharacter, LeanDirection);
-	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
-	DOREPLIFETIME(AShooterCharacter, LeaningRate);
 	DOREPLIFETIME(AShooterCharacter, CurrentStance);
+	DOREPLIFETIME(AShooterCharacter, LeanDirection);
+	DOREPLIFETIME(AShooterCharacter, LeaningRate);
+	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
+	DOREPLIFETIME(AShooterCharacter, MovementInputVector);
+	DOREPLIFETIME(AShooterCharacter, RemoteViewYaw);
+	DOREPLIFETIME(AShooterCharacter, TurnDirection);
+
+}
+
+void AShooterCharacter::Init()
+{
+	if (InventoryComponent)
+	{
+		if (const UCharacterDataAsset* LoadedCharacterDataAsset = CharacterDataAsset.LoadSynchronous())
+		{
+			InventoryComponent->Init(LoadedCharacterDataAsset->InventoryParams);
+		}
+
+		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
+		{
+			InventoryComponent->Server_LoadAmmoInWeaponMag(Weapon, Weapon->GetMagAmmoSpace());
+		}
+
+		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
+		{
+			FName WeaponHolsterSocketName = GetCharacterWeaponHolsterSocketName(Weapon);
+			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponHolsterSocketName);
+			Weapon->Server_SetIsHolster(true);
+		}
+	}
 
 }
 
@@ -132,11 +171,22 @@ void AShooterCharacter::PostInitializeComponents()
 
 	if (CombatComponent)
 	{
-		CombatComponent->OnCombatComponentWeaponIdle.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponIdle);
-		CombatComponent->OnCombatComponentWeaponIdleToOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponIdleToOut);
-		CombatComponent->OnCombatComponentWeaponOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponOut);
-		CombatComponent->OnCombatComponentWeaponOutToIdle.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponOutToIdle);
+		CombatComponent->OnCombatComponentWeaponActionEnd.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentActionEnd);
+		CombatComponent->OnCombatComponentWeaponActionStart.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentActionStart);
+		CombatComponent->OnCombatComponentWeaponChamberCheck.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponChamberCheck);
+		CombatComponent->OnCombatComponentWeaponFire.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponFire);
+		CombatComponent->OnCombatComponentWeaponFireDry.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponFireDry);
 		CombatComponent->OnCombatComponentWeaponFiremode.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponFiremode);
+		CombatComponent->OnCombatComponentWeaponFiremodeCheck.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponFiremodeCheck);
+		CombatComponent->OnCombatComponentWeaponIdle.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentIdle);
+		CombatComponent->OnCombatComponentWeaponIdleToOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentIdleToOut);
+		CombatComponent->OnCombatComponentWeaponMagCheck.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponMagCheck);
+		CombatComponent->OnCombatComponentWeaponMagIn.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponMagIn);
+		CombatComponent->OnCombatComponentWeaponMagOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponMagOut);
+		CombatComponent->OnCombatComponentWeaponOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentOut);
+		CombatComponent->OnCombatComponentWeaponOutToIdle.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentOutToIdle);
+		CombatComponent->OnCombatComponentWeaponOutToIdleArm.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentOutToIdleArm);
+		CombatComponent->OnCombatComponentWeaponReloadCharge.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponReloadCharge);
 	}
 	if (InventoryComponent)
 	{
@@ -145,27 +195,45 @@ void AShooterCharacter::PostInitializeComponents()
 
 }
 
-void AShooterCharacter::Init()
+void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	if (InventoryComponent)
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		if (const UCharacterDataAsset* LoadedCharacterDataAsset = CharacterDataAsset.LoadSynchronous())
-		{
-			InventoryComponent->Init(LoadedCharacterDataAsset->InventoryParams);
-		}
-
-		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
-		{
-			InventoryComponent->Server_LoadAmmoInWeaponMag(Weapon, Weapon->GetMagAmmoSpace());
-		}
-
-		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
-		{
-			FName WeaponHolsterSocketName = GetCharacterWeaponHolsterSocketName(Weapon);
-			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponHolsterSocketName);
-			Weapon->Server_SetIsHolster(true);
-		}
+		EnhancedInputComponent->BindAction(CharacterLookAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterLookAction);
+		EnhancedInputComponent->BindAction(CharacterMoveForwardAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterMoveForwardAction);
+		EnhancedInputComponent->BindAction(CharacterMoveBackwardAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterMoveBackwardAction);
+		EnhancedInputComponent->BindAction(CharacterMoveLeftAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterMoveLeftAction);
+		EnhancedInputComponent->BindAction(CharacterMoveRightAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterMoveRightAction);
+		EnhancedInputComponent->BindAction(CharacterEquipPrimaryWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterEquipPrimaryWeaponAction);
+		EnhancedInputComponent->BindAction(CharacterEquipSecondaryWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterEquipSecondaryWeaponAction);
+		EnhancedInputComponent->BindAction(CharacterHolsterWeaponAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterHolsterWeaponAction);
+		EnhancedInputComponent->BindAction(CharacterCrouchAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterCrouchAction);
+		EnhancedInputComponent->BindAction(CharacterProneAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterProneAction);
+		EnhancedInputComponent->BindAction(CharacterSlowAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterSlowAction);
+		EnhancedInputComponent->BindAction(CharacterSprintAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterSprintAction);
+		EnhancedInputComponent->BindAction(CharacterLeanLeftAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterLeanLeftAction);
+		EnhancedInputComponent->BindAction(CharacterLeanRightAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterLeanRightAction);
+		EnhancedInputComponent->BindAction(CharacterAimAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterAimAction);
+		EnhancedInputComponent->BindAction(CharacterAlterAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnCharacterAlterAction);
+		EnhancedInputComponent->BindAction(WeaponChamberCheckAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnWeaponChamberCheckAction);
+		EnhancedInputComponent->BindAction(WeaponReloadAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnWeaponReloadAction);
+		EnhancedInputComponent->BindAction(WeaponFiremodeAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnWeaponFiremodeAction);
+		EnhancedInputComponent->BindAction(WeaponFireAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &AShooterCharacter::OnWeaponFireAction);
 	}
+
+}
+
+void AShooterCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	UpdateAO_Pitch(DeltaTime);
+
+	UpdateMovement(DeltaTime);
+
+	UpdateCameraFOV(DeltaTime);
 
 }
 
@@ -180,6 +248,7 @@ void AShooterCharacter::BeginPlay()
 			EnhancedInputLocalPlayerSubsystem->AddMappingContext(MovementMappingContext.LoadSynchronous(), 0);
 			EnhancedInputLocalPlayerSubsystem->AddMappingContext(InventoryMappingContext.LoadSynchronous(), 0);
 			EnhancedInputLocalPlayerSubsystem->AddMappingContext(CombatMappingContext.LoadSynchronous(), 0);
+			EnhancedInputLocalPlayerSubsystem->AddMappingContext(OtherMappingContext.LoadSynchronous(), 0);
 		}
 	}
 
@@ -215,32 +284,28 @@ void AShooterCharacter::BeginPlay()
 
 }
 
-void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
-{
-	if (InventoryComponent && CombatComponent)
-	{
-		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-		if (PrimaryWeapon && PrimaryWeapon != CombatComponent->GetEquippedWeapon())
-		{
-			//Server_EquipWeaponProgressive(PrimaryWeapon);
-		}
-	}
-}
-
-void AShooterCharacter::Handle_OnCombatComponentWeaponIdle(AWeapon* Weapon)
+void AShooterCharacter::Handle_OnCombatComponentActionEnd(AWeapon* Weapon)
 {
 
 }
 
-void AShooterCharacter::Handle_OnCombatComponentWeaponIdleToOut(AWeapon* Weapon)
+void AShooterCharacter::Handle_OnCombatComponentActionStart(AWeapon* Weapon)
+{
+}
+
+void AShooterCharacter::Handle_OnCombatComponentIdle(AWeapon* Weapon)
+{
+}
+
+void AShooterCharacter::Handle_OnCombatComponentIdleToOut(AWeapon* Weapon)
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->Server_WeaponOut();
+		CombatComponent->Server_Out();
 	}
 }
 
-void AShooterCharacter::Handle_OnCombatComponentWeaponOut(AWeapon* Weapon)
+void AShooterCharacter::Handle_OnCombatComponentOut(AWeapon* Weapon)
 {
 	if (HasAuthority() && CombatComponent)
 	{
@@ -259,32 +324,96 @@ void AShooterCharacter::Handle_OnCombatComponentWeaponOut(AWeapon* Weapon)
 	}
 }
 
-void AShooterCharacter::Handle_OnCombatComponentWeaponOutToIdle(AWeapon* Weapon)
+void AShooterCharacter::Handle_OnCombatComponentOutToIdle(AWeapon* Weapon)
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->Server_WeaponIdle();
+		CombatComponent->Server_Idle();
 	}
+}
+
+void AShooterCharacter::Handle_OnCombatComponentOutToIdleArm(AWeapon* Weapon)
+{
+	if (HasAuthority() && CombatComponent)
+	{
+		CombatComponent->Server_Idle();
+	}
+}
+
+void AShooterCharacter::Handle_OnCombatComponentWeaponChamberCheck(AWeapon* Weapon)
+{
+}
+
+void AShooterCharacter::Handle_OnCombatComponentWeaponFire(AWeapon* Weapon)
+{
+	
+}
+
+void AShooterCharacter::Handle_OnCombatComponentWeaponFireDry(AWeapon* Weapon)
+{
 }
 
 void AShooterCharacter::Handle_OnCombatComponentWeaponFiremode(AWeapon* Weapon)
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->Server_WeaponIdle();
+		CombatComponent->Server_Idle();
 	}
+}
+
+void AShooterCharacter::Handle_OnCombatComponentWeaponFiremodeCheck(AWeapon* Weapon)
+{
+	if (HasAuthority() && CombatComponent)
+	{
+		CombatComponent->Server_Idle();
+	}
+}
+
+void AShooterCharacter::Handle_OnCombatComponentWeaponMagCheck(AWeapon* Weapon)
+{
+}
+
+void AShooterCharacter::Handle_OnCombatComponentWeaponMagIn(AWeapon* Weapon)
+{
+	if (HasAuthority() && Weapon && CombatComponent)
+	{
+		if (Weapon->DoesNeedCharge())
+		{
+			CombatComponent->Server_WeaponReloadCharge();
+		}
+		else
+		{
+			CombatComponent->Server_ActionEnd();
+		}
+	}
+
+}
+
+void AShooterCharacter::Handle_OnCombatComponentWeaponMagOut(AWeapon* Weapon)
+{
+	if (HasAuthority() && Weapon && CombatComponent && InventoryComponent)
+	{
+		const uint8 WeaponMagSpace = Weapon->GetMagAmmoSpace();
+		const uint8 WeaponAmmoInInventory = InventoryComponent->GetAmmoAtIndex(InventoryComponent->FindWeapon(Weapon));
+		const uint8 WeaponMagAmmoCountToLoad = FMath::Min(WeaponMagSpace, WeaponAmmoInInventory);
+		InventoryComponent->Server_LoadAmmoInWeaponMag(Weapon, WeaponMagAmmoCountToLoad);
+		CombatComponent->Server_WeaponMagIn();
+	}
+}
+
+void AShooterCharacter::Handle_OnCombatComponentWeaponReloadCharge(AWeapon* Weapon)
+{
 }
 
 void AShooterCharacter::Handle_OnHandsAnimInstanceIdle()
 {
-
 }
 
 void AShooterCharacter::Handle_OnHandsAnimInstanceIdleToOut()
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->Server_WeaponOut();
+		CombatComponent->Server_Out();
 	}
 }
 
@@ -300,110 +429,153 @@ void AShooterCharacter::Handle_OnHandsAnimInstanceOutToIdle()
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->Server_WeaponIdle();
+		CombatComponent->Server_Idle();
 	}
 }
 
-FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const
+void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 {
-	FName WeaponHolsterSocketName = NAME_None;
-	if (Weapon && InventoryComponent)
+	if (InventoryComponent && CombatComponent)
 	{
-		if (Weapon->IsPistol())
+		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
+		if (PrimaryWeapon && PrimaryWeapon != CombatComponent->GetEquippedWeapon())
 		{
-			WeaponHolsterSocketName = CHARACTER_PISTOL_HOLSTER_SOCKET_NAME;
+			//Server_EquipWeaponProgressive(PrimaryWeapon);
+		}
+	}
+}
+
+void AShooterCharacter::OnCharacterAimAction(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CombatComponent && !(bIsToggleSprint && MovementInputVector.Y == 1.0))
+	{
+		CombatComponent->Server_SetIsAiming(CurrentValue);
+	}
+}
+
+void AShooterCharacter::OnCharacterAlterAction(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	Server_SetIsAlterAction(CurrentValue);
+}
+
+void AShooterCharacter::OnCharacterCrouchAction(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue)
+	{
+		ECharacterStance NewStance;
+		if (CurrentStance != ECharacterStance::CS_Crouch)
+		{
+			NewStance = ECharacterStance::CS_Crouch;
+			Crouch();
 		}
 		else
 		{
-			const int8 WeaponIndex = InventoryComponent->FindWeapon(Weapon);
-			if (WeaponIndex == PRIMARY_WEAPON_INDEX)
-			{
-				WeaponHolsterSocketName = CHARACTER_PRIMARY_WEAPON_HOLSTER_SOCKET_NAME;
-			}
-			else if (WeaponIndex != INDEX_NONE)
-			{
-				
-				WeaponHolsterSocketName = CHARACTER_SECONDARY_WEAPON_HOLSTER_SOCKET_NAME(WeaponIndex);
-			}
+			NewStance = ECharacterStance::CS_Stand;
+			UnCrouch();
+		}
+		SetCurrentStance(NewStance);
+
+		if (bIsToggleSprint)
+		{
+			SetIsToggleSprint(false);
 		}
 	}
-	return WeaponHolsterSocketName;
 }
 
-void AShooterCharacter::Server_EquipWeaponProgressive_Implementation(AWeapon* WeaponToEquip)
+void AShooterCharacter::OnCharacterEquipPrimaryWeaponAction(const FInputActionValue& Value)
 {
-	if (WeaponToEquip == nullptr || CombatComponent == nullptr)
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue && InventoryComponent && CombatComponent)
 	{
-		return;
-	}
-	const ECombatAction CombatAction = GetCombatAction();
-	if (NextWeaponToEquip == nullptr && CombatAction == ECombatAction::CA_Idle)
-	{
-		NextWeaponToEquip = WeaponToEquip;
-		CombatComponent->Server_WeaponIdleToOut();
-	}
-	else if (NextWeaponToEquip && CombatAction == ECombatAction::CA_Out)
-	{
-		CombatComponent->Server_EquipWeapon(NextWeaponToEquip, HandsMesh, CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME);
-		CombatComponent->Server_WeaponOutToIdle();
-		NextWeaponToEquip = nullptr;
+		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
+		if (PrimaryWeapon && PrimaryWeapon != CombatComponent->GetEquippedWeapon())
+		{
+			Server_EquipWeaponProgressive(PrimaryWeapon);
+		}
 	}
 }
 
-void AShooterCharacter::Server_HolsterWeaponProgressive_Implementation()
+void AShooterCharacter::OnCharacterEquipSecondaryWeaponAction(const FInputActionValue& Value)
 {
-	if (CombatComponent == nullptr)
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue && InventoryComponent && CombatComponent)
 	{
-		return;
-	}
-	const ECombatAction CombatAction = GetCombatAction();
-	if (CombatAction == ECombatAction::CA_Idle)
-	{
-		NextWeaponToEquip = nullptr;
-		CombatComponent->Server_WeaponIdleToOut();
-	}
-	else if (NextWeaponToEquip == nullptr && CombatAction == ECombatAction::CA_Out)
-	{
-		CombatComponent->Server_WeaponOutToIdle();
+		AWeapon* SecondaryWeapon = InventoryComponent->GetWeaponAtIndex(SECONDARY_WEAPON_INDEX);
+		if (SecondaryWeapon && SecondaryWeapon != CombatComponent->GetEquippedWeapon())
+		{
+			Server_EquipWeaponProgressive(SecondaryWeapon);
+		}
 	}
 }
 
-void AShooterCharacter::OnLookAction(const FInputActionValue& Value)
+void AShooterCharacter::OnCharacterHolsterWeaponAction(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue && CombatComponent && CombatComponent->GetEquippedWeapon())
+	{
+		Server_HolsterWeaponProgressive();
+	}
+}
+
+void AShooterCharacter::OnCharacterLeanLeftAction(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue && !(bIsToggleSprint && MovementInputVector.Y == 1.0))
+	{
+		ELeanDirection NewLeanDirection = ELeanDirection::LD_Left;
+		float TransitionDuration = DefaultAnimationTransitionDuration;
+		float MaxLeanRotation = MaxLean;
+		if (LeanDirection == ELeanDirection::LD_Left)
+		{
+			NewLeanDirection = ELeanDirection::LD_None;
+		}
+		else if (LeanDirection == ELeanDirection::LD_Right)
+		{
+			TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
+			MaxLeanRotation = MaxLean * 2.0f;
+		}
+		SetLeanDirection(NewLeanDirection);
+		SetLeanTransitionDuration(TransitionDuration);
+		SetLeaningRate(MaxLeanRotation / TransitionDuration);
+	}
+}
+
+void AShooterCharacter::OnCharacterLeanRightAction(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue && !(bIsToggleSprint && MovementInputVector.Y == 1.0))
+	{
+		ELeanDirection NewLeanDirection = ELeanDirection::LD_Right;
+		float TransitionDuration = DefaultAnimationTransitionDuration;
+		float MaxLeanRotation = MaxLean;
+		if (LeanDirection == ELeanDirection::LD_Right)
+		{
+			NewLeanDirection = ELeanDirection::LD_None;
+		}
+		else if (LeanDirection == ELeanDirection::LD_Left)
+		{
+			TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
+			MaxLeanRotation = MaxLean * 2.0f;
+		}
+		SetLeanDirection(NewLeanDirection);
+		SetLeanTransitionDuration(TransitionDuration);
+		SetLeaningRate(MaxLeanRotation / TransitionDuration);
+	}
+}
+
+void AShooterCharacter::OnCharacterLookAction(const FInputActionValue& Value)
 {
 	const FVector2D CurrentValue = Value.Get<FVector2D>();
-	
+
 	AddControllerYawInput(CurrentValue.X);
 	AddControllerPitchInput(CurrentValue.Y);
 
 }
 
-void AShooterCharacter::OnMoveForwardAction(const FInputActionValue& Value)
-{
-	const float CurrentValue = Value.Get<float>();
-	float MovementInputY = CurrentValue;
-	if (CurrentValue)
-	{
-		if (MovementInputVector.Y == -1.0)
-		{
-			MovementInputY = 0.0f;
-		}
-	}
-	else
-	{
-		if (MovementInputVector.Y == 0.0)
-		{
-			MovementInputY = -1.0f;
-		}
-	}
-	SetMovementInputVector(MovementInputVector.X, MovementInputY);
-
-	if (MovementInputY == 1.0 && bIsToggleSprint)
-	{
-		TransitionToSprint();
-	}
-}
-
-void AShooterCharacter::OnMoveBackwardAction(const FInputActionValue& Value)
+void AShooterCharacter::OnCharacterMoveBackwardAction(const FInputActionValue& Value)
 {
 	const float CurrentValue = Value.Get<float>();
 	float MovementInputY = CurrentValue;
@@ -429,7 +601,33 @@ void AShooterCharacter::OnMoveBackwardAction(const FInputActionValue& Value)
 	}
 }
 
-void AShooterCharacter::OnMoveLeftAction(const FInputActionValue& Value)
+void AShooterCharacter::OnCharacterMoveForwardAction(const FInputActionValue& Value)
+{
+	const float CurrentValue = Value.Get<float>();
+	float MovementInputY = CurrentValue;
+	if (CurrentValue)
+	{
+		if (MovementInputVector.Y == -1.0)
+		{
+			MovementInputY = 0.0f;
+		}
+	}
+	else
+	{
+		if (MovementInputVector.Y == 0.0)
+		{
+			MovementInputY = -1.0f;
+		}
+	}
+	SetMovementInputVector(MovementInputVector.X, MovementInputY);
+
+	if (MovementInputY == 1.0 && bIsToggleSprint)
+	{
+		TransitionToSprint();
+	}
+}
+
+void AShooterCharacter::OnCharacterMoveLeftAction(const FInputActionValue& Value)
 {
 	const float CurrentValue = Value.Get<float>();
 	float MovementInputX = CurrentValue;
@@ -450,7 +648,7 @@ void AShooterCharacter::OnMoveLeftAction(const FInputActionValue& Value)
 	SetMovementInputVector(MovementInputX, MovementInputVector.Y);
 }
 
-void AShooterCharacter::OnMoveRightAction(const FInputActionValue& Value)
+void AShooterCharacter::OnCharacterMoveRightAction(const FInputActionValue& Value)
 {
 	const float CurrentValue = Value.Get<float>();
 	float MovementInputX = CurrentValue;
@@ -471,67 +669,7 @@ void AShooterCharacter::OnMoveRightAction(const FInputActionValue& Value)
 	SetMovementInputVector(MovementInputX, MovementInputVector.Y);
 }
 
-void AShooterCharacter::OnEquipPrimaryWeaponAction(const FInputActionValue& Value)
-{
-	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && InventoryComponent && CombatComponent)
-	{
-		AWeapon* PrimaryWeapon = InventoryComponent->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-		if (PrimaryWeapon && PrimaryWeapon != CombatComponent->GetEquippedWeapon())
-		{
-			Server_EquipWeaponProgressive(PrimaryWeapon);
-		}
-	}
-}
-
-void AShooterCharacter::OnEquipSecondaryWeaponAction(const FInputActionValue& Value)
-{
-	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && InventoryComponent && CombatComponent)
-	{
-		AWeapon* SecondaryWeapon = InventoryComponent->GetWeaponAtIndex(SECONDARY_WEAPON_INDEX);
-		if (SecondaryWeapon && SecondaryWeapon != CombatComponent->GetEquippedWeapon())
-		{
-			Server_EquipWeaponProgressive(SecondaryWeapon);
-		}
-	}
-}
-
-void AShooterCharacter::OnHolsterEquippedWeaponAction(const FInputActionValue& Value)
-{
-	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && CombatComponent && CombatComponent->GetEquippedWeapon())
-	{
-		Server_HolsterWeaponProgressive();
-	}
-}
-
-void AShooterCharacter::OnToggleCrouchAction(const FInputActionValue& Value)
-{
-	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue)
-	{
-		ECharacterStance NewStance;
-		if (CurrentStance != ECharacterStance::CS_Crouch)
-		{
-			NewStance = ECharacterStance::CS_Crouch;
-			Crouch();
-		}
-		else
-		{
-			NewStance = ECharacterStance::CS_Stand;
-			UnCrouch();
-		}
-		SetCurrentStance(NewStance);
-
-		if (bIsToggleSprint)
-		{
-			SetIsToggleSprint(false);
-		}
-	}
-}
-
-void AShooterCharacter::OnToggleProneAction(const FInputActionValue& Value)
+void AShooterCharacter::OnCharacterProneAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue)
@@ -558,89 +696,43 @@ void AShooterCharacter::OnToggleProneAction(const FInputActionValue& Value)
 	}
 }
 
-void AShooterCharacter::OnToggleSlowAction(const FInputActionValue& Value)
+void AShooterCharacter::OnCharacterSlowAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
 	SetIsToggleSlow(CurrentValue);
-	
+
 	if (CurrentValue && bIsToggleSprint)
 	{
 		SetIsToggleSprint(false);
 	}
 }
 
-void AShooterCharacter::OnToggleSprintAction(const FInputActionValue& Value)
+void AShooterCharacter::OnCharacterSprintAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
 	SetIsToggleSprint(CurrentValue);
-	
+
 	if (CurrentValue && MovementInputVector.Y == 1.0)
 	{
 		TransitionToSprint();
 	}
 }
 
-void AShooterCharacter::OnToggleLeanLeftAction(const FInputActionValue& Value)
+void AShooterCharacter::OnWeaponChamberCheckAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && !(bIsToggleSprint && MovementInputVector.Y == 1.0))
+	if (CurrentValue && CombatComponent && bIsAlterAction)
 	{
-		ELeanDirection NewLeanDirection = ELeanDirection::LD_Left;
-		float TransitionDuration = DefaultAnimationTransitionDuration;
-		float MaxLeanRotation = MaxLean;
-		if (LeanDirection == ELeanDirection::LD_Left)
-		{
-			NewLeanDirection = ELeanDirection::LD_None;
-		}
-		else if (LeanDirection == ELeanDirection::LD_Right)
-		{
-			TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
-			MaxLeanRotation = MaxLean * 2.0f;
-		}
-		SetLeanDirection(NewLeanDirection);
-		SetLeanTransitionDuration(TransitionDuration);
-		SetLeaningRate(MaxLeanRotation / TransitionDuration);
+		CombatComponent->Server_WeaponChamberCheck();
 	}
 }
 
-void AShooterCharacter::OnToggleLeanRightAction(const FInputActionValue& Value)
+void AShooterCharacter::OnWeaponFireAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && !(bIsToggleSprint && MovementInputVector.Y == 1.0))
+	if (CombatComponent)
 	{
-		ELeanDirection NewLeanDirection = ELeanDirection::LD_Right;
-		float TransitionDuration = DefaultAnimationTransitionDuration;
-		float MaxLeanRotation = MaxLean;
-		if (LeanDirection == ELeanDirection::LD_Right)
-		{
-			NewLeanDirection = ELeanDirection::LD_None;
-		}
-		else if (LeanDirection == ELeanDirection::LD_Left)
-		{
-			TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
-			MaxLeanRotation = MaxLean * 2.0f;
-		}
-		SetLeanDirection(NewLeanDirection);
-		SetLeanTransitionDuration(TransitionDuration);
-		SetLeaningRate(MaxLeanRotation / TransitionDuration);
-	}
-}
-
-void AShooterCharacter::OnToggleAimAction(const FInputActionValue& Value)
-{
-	const bool CurrentValue = Value.Get<bool>();
-	if (CombatComponent && !(bIsToggleSprint && MovementInputVector.Y == 1.0))
-	{
-		CombatComponent->SetIsAiming(CurrentValue);
-	}
-}
-
-void AShooterCharacter::OnReloadWeaponAction(const FInputActionValue& Value)
-{
-	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && CombatComponent)
-	{
-		CombatComponent->ReloadWeapon();
+		CombatComponent->Server_WeaponFire(CurrentValue);
 	}
 }
 
@@ -649,7 +741,249 @@ void AShooterCharacter::OnWeaponFiremodeAction(const FInputActionValue& Value)
 	const bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue && CombatComponent)
 	{
-		CombatComponent->Server_WeaponFiremode();
+		if (!bIsAlterAction)
+		{
+			CombatComponent->Server_WeaponFiremode();
+		}
+		else
+		{
+			CombatComponent->Server_WeaponFiremodeCheck();
+		}
+	}
+}
+
+void AShooterCharacter::OnWeaponReloadAction(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue && CombatComponent)
+	{
+		if (!bIsAlterAction)
+		{
+			AWeapon* EquippedWeapon = CombatComponent->GetEquippedWeapon();
+			if (EquippedWeapon && InventoryComponent)
+			{
+				const uint8 WeaponMagSpace = EquippedWeapon->GetMagAmmoSpace();
+				const uint8 WeaponAmmoInInventory = InventoryComponent->GetAmmoAtIndex(InventoryComponent->FindWeapon(EquippedWeapon));
+				if (WeaponMagSpace > 0 && WeaponAmmoInInventory > 0)
+				{
+					CombatComponent->Server_WeaponMagOut();
+				}
+			}
+		}
+		else
+		{
+			CombatComponent->Server_WeaponMagCheck();
+		}
+	}
+}
+
+void AShooterCharacter::Server_EquipWeaponProgressive_Implementation(AWeapon* WeaponToEquip)
+{
+	if (WeaponToEquip == nullptr || CombatComponent == nullptr)
+	{
+		return;
+	}
+	const ECombatAction CombatAction = GetCombatAction();
+	if (NextWeaponToEquip == nullptr && CombatAction == ECombatAction::CA_Idle)
+	{
+		NextWeaponToEquip = WeaponToEquip;
+		CombatComponent->Server_IdleToOut();
+	}
+	else if (NextWeaponToEquip && CombatAction == ECombatAction::CA_Out)
+	{
+		CombatComponent->Server_EquipWeapon(NextWeaponToEquip, HandsMesh, CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME);
+		CombatComponent->Server_OutToIdle();
+		NextWeaponToEquip = nullptr;
+	}
+}
+
+void AShooterCharacter::Server_HolsterWeaponProgressive_Implementation()
+{
+	if (CombatComponent == nullptr)
+	{
+		return;
+	}
+	const ECombatAction CombatAction = GetCombatAction();
+	if (CombatAction == ECombatAction::CA_Idle)
+	{
+		NextWeaponToEquip = nullptr;
+		CombatComponent->Server_IdleToOut();
+	}
+	else if (NextWeaponToEquip == nullptr && CombatAction == ECombatAction::CA_Out)
+	{
+		CombatComponent->Server_OutToIdle();
+	}
+}
+
+void AShooterCharacter::Server_SetCurrentStance_Implementation(ECharacterStance NewStance)
+{
+	CurrentStance = NewStance;
+}
+
+void AShooterCharacter::Server_SetIsAlterAction_Implementation(bool bAlterAction)
+{
+	bIsAlterAction = bAlterAction;
+}
+
+void AShooterCharacter::Server_SetIsToggleSlow_Implementation(bool bToggleSlow)
+{
+	bIsToggleSlow = bToggleSlow;
+}
+
+void AShooterCharacter::Server_SetIsToggleSprint_Implementation(bool bToggleSprint)
+{
+	bIsToggleSprint = bToggleSprint;
+}
+
+void AShooterCharacter::Server_SetLeanDirection_Implementation(ELeanDirection NewLeanDirection)
+{
+	LeanDirection = NewLeanDirection;
+}
+
+void AShooterCharacter::Server_SetLeanTransitionDuration_Implementation(float NewTransitionDuration)
+{
+	LeanTransitionDuration = NewTransitionDuration;
+}
+
+void AShooterCharacter::Server_SetLeaningRate_Implementation(float NewLeaningRate)
+{
+	LeaningRate = NewLeaningRate;
+}
+
+void AShooterCharacter::Server_SetMovementInputVector_Implementation(float MovementInputX, float MovementInputY)
+{
+	MovementInputVector.Set(MovementInputX, MovementInputY);
+}
+
+void AShooterCharacter::Server_SetRemoteViewYaw_Implementation(float RemoteYaw)
+{
+	RemoteViewYaw = RemoteYaw;
+}
+
+void AShooterCharacter::Server_SetTurnDirection_Implementation(ETurnDirection NewTurnDirection)
+{
+	TurnDirection = NewTurnDirection;
+}
+
+void AShooterCharacter::SetCurrentStance(ECharacterStance NewStance)
+{
+	CurrentStance = NewStance;
+	Server_SetCurrentStance(NewStance);
+}
+
+void AShooterCharacter::SetIsToggleSlow(bool bToggleSlow)
+{
+	bIsToggleSlow = bToggleSlow;
+	Server_SetIsToggleSlow(bToggleSlow);
+}
+
+void AShooterCharacter::SetIsToggleSprint(bool bToggleSprint)
+{
+	bIsToggleSprint = bToggleSprint;
+	Server_SetIsToggleSprint(bToggleSprint);
+}
+
+void AShooterCharacter::SetLeanDirection(ELeanDirection NewLeanDirection)
+{
+	LeanDirection = NewLeanDirection;
+	Server_SetLeanDirection(NewLeanDirection);
+}
+
+void AShooterCharacter::SetLeanTransitionDuration(float NewLeanTransitionDuration)
+{
+	LeanTransitionDuration = NewLeanTransitionDuration;
+	Server_SetLeanTransitionDuration(NewLeanTransitionDuration);
+}
+
+void AShooterCharacter::SetLeaningRate(float NewLeaningRate)
+{
+	LeaningRate = NewLeaningRate;
+	Server_SetLeaningRate(NewLeaningRate);
+}
+
+void AShooterCharacter::SetMovementInputVector(float MovementInputX, float MovementInputY)
+{
+	MovementInputVector.Set(MovementInputX, MovementInputY);
+	Server_SetMovementInputVector(MovementInputX, MovementInputY);
+}
+
+//void AShooterCharacter::SetTurnDirection(ETurnDirection NewTurnDirection)
+//{
+//	TurnDirection = NewTurnDirection;
+//	Server_SetTurnDirection(NewTurnDirection);
+//}
+
+void AShooterCharacter::TransitionToSprint()
+{
+	if (CurrentStance == ECharacterStance::CS_Crouch)
+	{
+		UnCrouch();
+	}
+	SetCurrentStance(ECharacterStance::CS_Stand);
+
+	if (GetIsAiming())
+	{
+		CombatComponent->Server_SetIsAiming(false);
+	}
+
+	if (LeanDirection != ELeanDirection::LD_None)
+	{
+		SetLeanDirection(ELeanDirection::LD_None);
+		SetLeanTransitionDuration(DefaultAnimationTransitionDuration);
+		SetLeaningRate(MaxLean / DefaultAnimationTransitionDuration);
+	}
+}
+
+void AShooterCharacter::UpdateAO_Pitch(float DeltaTime)
+{
+	if (IsLocallyControlled())
+	{
+		AO_Pitch = GetControlRotation().Pitch;
+	}
+	else
+	{
+		AO_Pitch = FMath::RInterpTo(FRotator(AO_Pitch, 0.0, 0.0), FRotator(GetBaseAimRotation().Pitch, 0.0, 0.0), DeltaTime, 15.0f).Pitch;
+	}
+	if (AO_Pitch > 90.0f)
+	{
+		FVector2D InRange = FVector2D(270.0, 360.0);
+		FVector2D OutRange = FVector2D(-90.0, 0.0);
+		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
+	}
+}
+
+void AShooterCharacter::UpdateCameraFOV(float DeltaTime)
+{
+	if (FirstPersonCamera == nullptr)
+	{
+		return;
+	}
+	bool bIsAiming = GetIsAiming();
+	if (!bIsAiming && FirstPersonCamera->FieldOfView == DefaultCameraFOV)
+	{
+		return;
+	}
+	if (bIsAiming && FirstPersonCamera->FieldOfView == AimCameraFOV)
+	{
+		return;
+	}
+	float AimSpeed = 50.0f;
+	float FOVStep = AimSpeed * DeltaTime;
+	if (bIsAiming)
+	{
+		FirstPersonCamera->FieldOfView -= FOVStep;
+		if (FirstPersonCamera->FieldOfView < AimCameraFOV)
+		{
+			FirstPersonCamera->FieldOfView = AimCameraFOV;
+		}
+	}
+	else
+	{
+		FirstPersonCamera->FieldOfView += FOVStep;
+		if (FirstPersonCamera->FieldOfView > DefaultCameraFOV)
+		{
+			FirstPersonCamera->FieldOfView = DefaultCameraFOV;
+		}
 	}
 }
 
@@ -726,198 +1060,4 @@ void AShooterCharacter::UpdateMovement(float DeltaTime)
 		Server_SetTurnDirection(TurnDirection);
 	}
 	
-}
-
-void AShooterCharacter::UpdateAO_Pitch(float DeltaTime)
-{
-	if (IsLocallyControlled())
-	{
-		AO_Pitch = GetControlRotation().Pitch;
-	}
-	else
-	{
-		AO_Pitch = FMath::RInterpTo(FRotator(AO_Pitch, 0.0, 0.0), FRotator(GetBaseAimRotation().Pitch, 0.0, 0.0), DeltaTime, 15.0f).Pitch;
-	}
-	if (AO_Pitch > 90.0f)
-	{
-		FVector2D InRange = FVector2D(270.0, 360.0);
-		FVector2D OutRange = FVector2D(-90.0, 0.0);
-		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
-	}
-}
-
-void AShooterCharacter::UpdateCameraFOV(float DeltaTime)
-{
-	if (FirstPersonCamera == nullptr)
-	{
-		return;
-	}
-	bool bIsAiming = GetIsAiming();
-	if (!bIsAiming && FirstPersonCamera->FieldOfView == DefaultCameraFOV)
-	{
-		return;
-	}
-	if (bIsAiming && FirstPersonCamera->FieldOfView == AimCameraFOV)
-	{
-		return;
-	}
-	float AimSpeed = 50.0f;
-	float FOVStep = AimSpeed * DeltaTime;
-	if (bIsAiming)
-	{
-		FirstPersonCamera->FieldOfView -= FOVStep;
-		if (FirstPersonCamera->FieldOfView < AimCameraFOV)
-		{
-			FirstPersonCamera->FieldOfView = AimCameraFOV;
-		}
-	}
-	else
-	{
-		FirstPersonCamera->FieldOfView += FOVStep;
-		if (FirstPersonCamera->FieldOfView > DefaultCameraFOV)
-		{
-			FirstPersonCamera->FieldOfView = DefaultCameraFOV;
-		}
-	}
-}
-
-void AShooterCharacter::TransitionToSprint()
-{
-	if (CurrentStance == ECharacterStance::CS_Crouch)
-	{
-		UnCrouch();
-	}
-	SetCurrentStance(ECharacterStance::CS_Stand);
-
-	if (GetIsAiming())
-	{
-		CombatComponent->SetIsAiming(false);
-	}
-
-	if (LeanDirection != ELeanDirection::LD_None)
-	{
-		SetLeanDirection(ELeanDirection::LD_None);
-		SetLeanTransitionDuration(DefaultAnimationTransitionDuration);
-		SetLeaningRate(MaxLean / DefaultAnimationTransitionDuration);
-	}
-}
-
-void AShooterCharacter::SetMovementInputVector(float MovementInputX, float MovementInputY)
-{
-	MovementInputVector.Set(MovementInputX, MovementInputY);
-	Server_SetMovementInputVector(MovementInputX, MovementInputY);
-}
-
-//void AShooterCharacter::SetTurnDirection(ETurnDirection NewTurnDirection)
-//{
-//	TurnDirection = NewTurnDirection;
-//	Server_SetTurnDirection(NewTurnDirection);
-//}
-
-void AShooterCharacter::SetIsToggleSlow(bool bToggleSlow)
-{
-	bIsToggleSlow = bToggleSlow;
-	Server_SetIsToggleSlow(bToggleSlow);
-}
-
-void AShooterCharacter::SetIsToggleSprint(bool bToggleSprint)
-{
-	bIsToggleSprint = bToggleSprint;
-	Server_SetIsToggleSprint(bToggleSprint);
-}
-
-void AShooterCharacter::SetLeanDirection(ELeanDirection NewLeanDirection)
-{
-	LeanDirection = NewLeanDirection;
-	Server_SetLeanDirection(NewLeanDirection);
-}
-
-void AShooterCharacter::SetLeanTransitionDuration(float NewLeanTransitionDuration)
-{
-	LeanTransitionDuration = NewLeanTransitionDuration;
-	Server_SetLeanTransitionDuration(NewLeanTransitionDuration);
-}
-
-void AShooterCharacter::SetLeaningRate(float NewLeaningRate)
-{
-	LeaningRate = NewLeaningRate;
-	Server_SetLeaningRate(NewLeaningRate);
-}
-
-void AShooterCharacter::SetCurrentStance(ECharacterStance NewStance)
-{
-	CurrentStance = NewStance;
-	Server_SetCurrentStance(NewStance);
-}
-
-void AShooterCharacter::Server_SetRemoteViewYaw_Implementation(float RemoteYaw)
-{
-	RemoteViewYaw = RemoteYaw;
-}
-
-void AShooterCharacter::Server_SetMovementInputVector_Implementation(float MovementInputX, float MovementInputY)
-{
-	MovementInputVector.Set(MovementInputX, MovementInputY);
-}
-
-void AShooterCharacter::Server_SetTurnDirection_Implementation(ETurnDirection NewTurnDirection)
-{
-	TurnDirection = NewTurnDirection;
-}
-
-void AShooterCharacter::Server_SetIsToggleSlow_Implementation(bool bToggleSlow)
-{
-	bIsToggleSlow = bToggleSlow;
-}
-
-void AShooterCharacter::Server_SetIsToggleSprint_Implementation(bool bToggleSprint)
-{
-	bIsToggleSprint = bToggleSprint;
-}
-
-void AShooterCharacter::Server_SetLeanDirection_Implementation(ELeanDirection NewLeanDirection)
-{
-	LeanDirection = NewLeanDirection;
-}
-
-void AShooterCharacter::Server_SetLeanTransitionDuration_Implementation(float NewTransitionDuration)
-{
-	LeanTransitionDuration = NewTransitionDuration;
-}
-
-void AShooterCharacter::Server_SetLeaningRate_Implementation(float NewLeaningRate)
-{
-	LeaningRate = NewLeaningRate;
-}
-
-void AShooterCharacter::Server_SetCurrentStance_Implementation(ECharacterStance NewStance)
-{
-	CurrentStance = NewStance;
-}
-
-AWeapon* AShooterCharacter::GetEquippedWeapon() const
-{
-	if (CombatComponent == nullptr)
-	{
-		return nullptr;
-	}
-	return CombatComponent->GetEquippedWeapon();
-}
-
-bool AShooterCharacter::GetIsAiming() const
-{
-	if (CombatComponent == nullptr)
-	{
-		return false;
-	}
-	return CombatComponent->GetIsAiming();
-}
-
-ECombatAction AShooterCharacter::GetCombatAction() const
-{
-	if (CombatComponent == nullptr)
-	{
-		return ECombatAction::CA_None;
-	}
-	return CombatComponent->GetCombatAction();
 }

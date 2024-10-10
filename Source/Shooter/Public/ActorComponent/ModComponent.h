@@ -32,14 +32,13 @@ class SHOOTER_API UModComponent : public UActorComponent
 
 public:
 	UModComponent();
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
 	void Init(const UModDataAsset* ModDataAsset);
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
-	virtual void BeginPlay() override;
-
+	virtual void BeginPlay() override;	
+	
 private:
 	UPROPERTY(Replicated)
 	TObjectPtr<ABarrel> Barrel;

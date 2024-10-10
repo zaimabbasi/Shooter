@@ -18,6 +18,8 @@ class SHOOTER_API AMag: public AMod
 	
 public:	
 	AMag();
+	uint8 GetAmmoCapacity();
+	uint8 GetAmmoSpace();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION(Server, Reliable)
@@ -39,9 +41,7 @@ private:
 	TArray<TObjectPtr<AAmmo>> AmmoArray;
 
 public:
-	FORCEINLINE TSoftObjectPtr<UMagDataAsset> GetMagDataAsset() const { return MagDataAsset; }
 	FORCEINLINE uint8 GetAmmoCount() const { return AmmoCount; }
-	uint8 GetAmmoCapacity();
-	uint8 GetAmmoSpace();
+	FORCEINLINE TSoftObjectPtr<UMagDataAsset> GetMagDataAsset() const { return MagDataAsset; }
 
 };

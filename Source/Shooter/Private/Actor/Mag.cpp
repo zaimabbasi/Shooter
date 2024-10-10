@@ -12,6 +12,16 @@ AMag::AMag()
 	
 }
 
+uint8 AMag::GetAmmoCapacity()
+{
+	return MagDataAsset == nullptr ? 0 : MagDataAsset->AmmoCapacity;
+}
+
+uint8 AMag::GetAmmoSpace()
+{
+	return GetAmmoCapacity() - AmmoCount;
+}
+
 void AMag::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -27,7 +37,7 @@ void AMag::Server_AddAmmo_Implementation(const uint8 Count)
 	{
 		if (UWorld* World = GetWorld())
 		{
-			for (uint8 Index = AmmoCount + 1; Index < AmmoCount + Count; ++Index)
+			for (uint8 Index = AmmoCount + 1; Index <= AmmoCount + Count; ++Index)
 			{
 				const FName PatronSocketName = PATRON_SOCKET_NAME(Index);
 				if (Mesh && Mesh->DoesSocketExist(PatronSocketName))
@@ -58,14 +68,4 @@ void AMag::Server_PopAmmo_Implementation()
 		--AmmoCount;
 		OnMagAmmoPopped.Broadcast(PoppedAmmo);
 	}
-}
-
-uint8 AMag::GetAmmoCapacity()
-{
-	return MagDataAsset == nullptr ? 0 : MagDataAsset->AmmoCapacity;
-}
-
-uint8 AMag::GetAmmoSpace()
-{
-	return GetAmmoCapacity() - AmmoCount;
 }
