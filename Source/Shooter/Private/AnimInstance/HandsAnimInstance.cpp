@@ -40,7 +40,7 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		FTransform DeltaWeaponRootTransform = HandsWeaponRootTransform.GetRelativeTransformReverse(CharacterWeaponRootTransform);
 		HandsMesh->SetRelativeLocation(DeltaWeaponRootTransform.GetLocation());*/
 
-		FTransform CharacterBaseHumanRibcageTransform = CharacterMesh->GetSocketTransform(CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
+		FTransform CharacterBaseHumanRibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
 		HandsMesh->SetRelativeLocation(CharacterBaseHumanRibcageTransform.GetLocation());
 	}
 

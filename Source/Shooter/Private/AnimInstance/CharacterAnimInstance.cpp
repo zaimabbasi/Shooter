@@ -32,12 +32,12 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	HandsMesh = ShooterCharacter->GetHandsMesh();
 	if (CharacterMesh && HandsMesh)
 	{
-		BaseHumanRibcageTransform = HandsMesh->GetSocketTransform(CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		BaseHumanRibcageTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		
-		LPalmTransform = HandsMesh->GetSocketTransform(CHARACTER_BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		LPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, CHARACTER_IK_S_L_PALM_SOCKET_NAME, LPalmTransform);
-		RPalmTransform = HandsMesh->GetSocketTransform(CHARACTER_BASE_HUMAN_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, CHARACTER_IK_S_R_PALM_SOCKET_NAME, RPalmTransform);
+		LPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		LPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, IK_S_L_PALM_SOCKET_NAME, LPalmTransform);
+		RPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		RPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, IK_S_R_PALM_SOCKET_NAME, RPalmTransform);
 	}
 
 	AO_Yaw = ShooterCharacter->GetAO_Yaw();

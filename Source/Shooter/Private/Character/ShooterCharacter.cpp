@@ -58,19 +58,19 @@ FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) co
 	{
 		if (Weapon->IsPistol())
 		{
-			WeaponHolsterSocketName = CHARACTER_PISTOL_HOLSTER_SOCKET_NAME;
+			WeaponHolsterSocketName = PISTOL_HOLSTER_SOCKET_NAME;
 		}
 		else
 		{
 			const int8 WeaponIndex = InventoryComponent->FindWeapon(Weapon);
 			if (WeaponIndex == PRIMARY_WEAPON_INDEX)
 			{
-				WeaponHolsterSocketName = CHARACTER_PRIMARY_WEAPON_HOLSTER_SOCKET_NAME;
+				WeaponHolsterSocketName = WEAPON_HOLSTER_SOCKET_NAME;
 			}
 			else if (WeaponIndex != INDEX_NONE)
 			{
 
-				WeaponHolsterSocketName = CHARACTER_SECONDARY_WEAPON_HOLSTER_SOCKET_NAME(WeaponIndex);
+				WeaponHolsterSocketName = WEAPON_HOLSTER_N_SOCKET_NAME(WeaponIndex);
 			}
 		}
 	}
@@ -791,7 +791,7 @@ void AShooterCharacter::Server_EquipWeaponProgressive_Implementation(AWeapon* We
 	}
 	else if (NextWeaponToEquip && CombatAction == ECombatAction::CA_Out)
 	{
-		CombatComponent->Server_EquipWeapon(NextWeaponToEquip, HandsMesh, CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME);
+		CombatComponent->Server_EquipWeapon(NextWeaponToEquip, HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME);
 		CombatComponent->Server_OutToIdle();
 		NextWeaponToEquip = nullptr;
 	}

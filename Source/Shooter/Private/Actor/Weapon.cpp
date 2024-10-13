@@ -244,7 +244,7 @@ void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
 	if (PoppedAmmo)
 	{
 		PoppedAmmo->SetOwner(this);
-		PoppedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, WEAPON_PATRON_IN_WEAPON_SOCKET_NAME);
+		PoppedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, PATRON_IN_WEAPON_SOCKET_NAME);
 	}
 	PatronInWeaponAmmo = PoppedAmmo;
 }
@@ -348,7 +348,7 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 	{
 		if (PatronInWeaponAmmo)
 		{
-			PatronInWeaponAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, WEAPON_SHELL_PORT_SOCKET_NAME);
+			PatronInWeaponAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, SHELL_PORT_SOCKET_NAME);
 			PatronInWeaponAmmo->Server_SetIsEmpty(true);
 			ShellPortAmmo = PatronInWeaponAmmo;
 			PatronInWeaponAmmo = nullptr;
