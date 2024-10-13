@@ -27,6 +27,9 @@ private:
 	TObjectPtr<USkeletalMeshComponent> HandsMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	FTransform BaseHumanRibcageTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	FTransform LPalmTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))

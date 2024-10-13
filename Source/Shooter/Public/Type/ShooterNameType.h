@@ -3,10 +3,19 @@
 #include "CoreMinimal.h"
 
 // Character Types
+#define CHARACTER_BASE_HUMAN_L_COLLARBONE_SOCKET_NAME				(TEXT("Base-HumanLCollarbone"))
+#define CHARACTER_BASE_HUMAN_L_PALM_SOCKET_NAME						(TEXT("Base-HumanLPalm"))
+#define CHARACTER_BASE_HUMAN_R_COLLARBONE_SOCKET_NAME				(TEXT("Base-HumanRCollarbone"))
+#define CHARACTER_BASE_HUMAN_R_PALM_SOCKET_NAME						(TEXT("Base-HumanRPalm"))
 #define CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME					(TEXT("Base-HumanRibcage"))
+#define CHARACTER_CAMERA_ANIMATED_SOCKET_NAME						(TEXT("Camera_animated"))
+#define CHARACTER_CAMERA_ANIMATED_3RD_SOCKET_NAME					(TEXT("Camera_animated_3rd"))
+#define CHARACTER_IK_S_L_PALM_SOCKET_NAME							(TEXT("IK_S_LPalm"))
+#define CHARACTER_IK_S_R_PALM_SOCKET_NAME							(TEXT("IK_S_RPalm"))
 #define CHARACTER_PISTOL_HOLSTER_SOCKET_NAME						(TEXT("pistol_holsterSocket"))
 #define CHARACTER_PRIMARY_WEAPON_HOLSTER_SOCKET_NAME				(TEXT("weapon_holsterSocket"))
 #define CHARACTER_SECONDARY_WEAPON_HOLSTER_SOCKET_NAME(Index)		(*FString::Printf(TEXT("weapon_holster%uSocket"), Index))
+
 
 // Mod Types
 #define MOD_BARREL_SOCKET_NAME										(TEXT("mod_barrel"))

@@ -6,6 +6,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Character/ShooterCharacter.h"
 #include "Struct/ShooterUtility.h"
+#include "Type/ShooterNameType.h"
 
 void UCharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -31,10 +32,12 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	HandsMesh = ShooterCharacter->GetHandsMesh();
 	if (CharacterMesh && HandsMesh)
 	{
-		LPalmTransform = HandsMesh->GetSocketTransform(TEXT("Base-HumanLPalm"), ERelativeTransformSpace::RTS_World);
-		LPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, TEXT("IK_S_LPalm"), LPalmTransform);
-		RPalmTransform = HandsMesh->GetSocketTransform(TEXT("Base-HumanRPalm"), ERelativeTransformSpace::RTS_World);
-		RPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, TEXT("IK_S_RPalm"), RPalmTransform);
+		BaseHumanRibcageTransform = HandsMesh->GetSocketTransform(CHARACTER_BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		
+		LPalmTransform = HandsMesh->GetSocketTransform(CHARACTER_BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		LPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, CHARACTER_IK_S_L_PALM_SOCKET_NAME, LPalmTransform);
+		RPalmTransform = HandsMesh->GetSocketTransform(CHARACTER_BASE_HUMAN_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		RPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, CHARACTER_IK_S_R_PALM_SOCKET_NAME, RPalmTransform);
 	}
 
 	AO_Yaw = ShooterCharacter->GetAO_Yaw();
