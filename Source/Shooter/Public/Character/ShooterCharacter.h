@@ -161,14 +161,6 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_SetTurnDirection(ETurnDirection NewTurnDirection);
 
-	void SetCurrentStance(ECharacterStance NewStance);
-	void SetIsToggleSlow(bool bToggleSlow);
-	void SetIsToggleSprint(bool bToggleSprint);
-	void SetLeanDirection(ELeanDirection NewLeanDirection);
-	void SetLeanTransitionDuration(float NewLeanTransitionDuration);
-	void SetLeaningRate(float NewLeaningRate);
-	void SetMovementInputVector(float MovementInputX, float MovementInputY);
-	/*void SetTurnDirection(ETurnDirection NewTurnDirection);*/
 	void TransitionToSprint();
 	void UpdateAO_Pitch(float DeltaTime);
 	void UpdateCameraFOV(float DeltaTime);

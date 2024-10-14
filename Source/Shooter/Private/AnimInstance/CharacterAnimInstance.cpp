@@ -27,18 +27,21 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		return;
 	}
-
-	USkeletalMeshComponent* CharacterMesh = ShooterCharacter->GetMesh();
+	
 	HandsMesh = ShooterCharacter->GetHandsMesh();
-	if (CharacterMesh && HandsMesh)
+	if (HandsMesh)
 	{
 		BaseHumanRibcageTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		
+	}
+	// No need for now
+	/*USkeletalMeshComponent* CharacterMesh = ShooterCharacter->GetMesh();
+	if (CharacterMesh && HandsMesh)
+	{
 		LPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		LPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, IK_S_L_PALM_SOCKET_NAME, LPalmTransform);
 		RPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		RPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, IK_S_R_PALM_SOCKET_NAME, RPalmTransform);
-	}
+	}*/
 
 	AO_Yaw = ShooterCharacter->GetAO_Yaw();
 	AO_Pitch = ShooterCharacter->GetAO_Pitch();
