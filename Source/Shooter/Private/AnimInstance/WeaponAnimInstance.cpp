@@ -4,6 +4,8 @@
 #include "AnimInstance/WeaponAnimInstance.h"
 #include "Actor/Weapon.h"
 #include "Character/ShooterCharacter.h"
+#include "Struct/ShooterUtility.h"
+#include "Type/ShooterNameType.h"
 
 void UWeaponAnimInstance::NativeInitializeAnimation()
 {
@@ -31,12 +33,29 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		return;
 	}
+	if (OwningCharacter == nullptr)
+	{
+		OwningCharacter = Cast<ACharacter>(Weapon->GetOwner());
+	}
 
 	CombatAction = Weapon->GetCombatAction();
 	bIsHolster = Weapon->GetIsHolster();
 	bHasPatronInWeaponAmmo = Weapon->HasPatronInWeaponAmmo();
 	Firemode = Weapon->GetFiremode();
 
+	if (OwningCharacter && !bIsHolster)
+	{
+		CharacterMesh = OwningCharacter->GetMesh();
+		USkeletalMeshComponent* WeaponMesh = Weapon->GetMesh();
+		if (CharacterMesh && WeaponMesh)
+		{
+			LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			
+			RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			
+			WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		}
+	}
 }
 
 void UWeaponAnimInstance::AnimNotify_ActionEnd() const
