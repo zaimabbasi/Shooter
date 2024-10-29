@@ -27,13 +27,19 @@ class SHOOTER_API AShooterCharacter : public ACharacter
 
 public:
 	AShooterCharacter();
+	float GetAO_Pitch(float CurrentPitch, float DeltaTime) const;
+	float GetAO_Yaw(float CurrentYaw, float DeltaTime);
 	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
 	ECombatAction GetCombatAction() const;
 	AWeapon* GetEquippedWeapon() const;
 	bool GetIsAiming() const;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	ETurnDirection GetTurnDirection(float CurrentYaw);
 	void Init();
+	bool IsMoveInput() const;
+	bool IsMoveInputForward() const;
 	virtual void PostInitializeComponents() override;
+	virtual void PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void Tick(float DeltaTime) override;
 
@@ -113,6 +119,7 @@ private:
 	void OnCharacterLeanLeftAction(const FInputActionValue& Value);
 	void OnCharacterLeanRightAction(const FInputActionValue& Value);
 	void OnCharacterLookAction(const FInputActionValue& Value);
+	void OnCharacterMove(const float InputValueX, const float InputValueY);
 	void OnCharacterMoveBackwardAction(const FInputActionValue& Value);
 	void OnCharacterMoveForwardAction(const FInputActionValue& Value);
 	void OnCharacterMoveLeftAction(const FInputActionValue& Value);
@@ -153,18 +160,16 @@ private:
 	void Server_SetLeaningRate(float Rate);
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetMovementInputVector(float MovementInputX, float MovementInputY);
-
-	UFUNCTION(Server, Reliable)
-	void Server_SetRemoteViewYaw(float RemoteYaw);
+	void Server_SetMovementInputVector(const float InputValueX, const float InputValueY);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetTurnDirection(ETurnDirection NewTurnDirection);
 
+	void SetRemoteViewYaw(float NewRemoteYaw);
 	void TransitionToSprint();
-	void UpdateAO_Pitch(float DeltaTime);
+	//void UpdateAO_Pitch(float DeltaTime);
 	void UpdateCameraFOV(float DeltaTime);
-	void UpdateMovement(float DeltaTime);
+	//void UpdateMovement(float DeltaTime);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
@@ -260,11 +265,16 @@ private:
 	TSoftObjectPtr<UInputAction> WeaponReloadAction;
 
 	float AimCameraFOV;
-	float AO_Pitch;
-	float AO_Yaw;
+	//float AO_Pitch;
+	//float AO_Yaw;
 
 	UPROPERTY(Replicated)
 	bool bIsAlterAction;
+
+	bool bIsMoveInputBackward;
+	bool bIsMoveInputForward;
+	bool bIsMoveInputLeft;
+	bool bIsMoveInputRight;
 
 	UPROPERTY(Replicated)
 	bool bIsToggleSlow;
@@ -296,14 +306,14 @@ private:
 	TObjectPtr<AWeapon> NextWeaponToEquip;
 
 	UPROPERTY(Replicated)
-	float RemoteViewYaw;
+	uint8 RemoteViewYaw;
 
 	UPROPERTY(Replicated)
 	ETurnDirection TurnDirection;
 
 public:
-	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
-	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
+	//FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
+	//FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE ECharacterStance GetCurrentStance() const { return CurrentStance; }
 	FORCEINLINE float GetDefaultAnimationTransitionDuration() const { return DefaultAnimationTransitionDuration; }
 	FORCEINLINE float GetDefaultToAimCameraFOVPercentage() const { return DefaultToAimCameraFOVPercentage; }
