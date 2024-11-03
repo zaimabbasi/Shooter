@@ -41,9 +41,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	AO_Yaw = ShooterCharacter->GetAO_Yaw(AO_Yaw, DeltaSeconds);
 	AO_Pitch = ShooterCharacter->GetAO_Pitch(AO_Pitch, DeltaSeconds);
-	MovementInputVector = ShooterCharacter->GetMovementInputVector();
-	bIsMoveInput = ShooterCharacter->IsMoveInput();
-	bIsMoveInputForward = ShooterCharacter->IsMoveInputForward();
+	bHasVelocity = ShooterCharacter->HasVelocity();
 	TurnDirection = ShooterCharacter->GetTurnDirection(AO_Yaw);
 	LeanDirection = ShooterCharacter->GetLeanDirection();
 	bIsToggleSlow = ShooterCharacter->GetIsToggleSlow();
@@ -51,99 +49,32 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	LeanTransitionDuration = ShooterCharacter->GetLeanTransitionDuration();
 	AnimationTransitionDuration = ShooterCharacter->GetDefaultAnimationTransitionDuration();
 	CurrentStance = ShooterCharacter->GetCurrentStance();
-
-	bIsAccelerating = ShooterCharacter->GetCharacterMovement() && ShooterCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.0;
 	
-	FVector CharacterVelocity = ShooterCharacter->GetVelocity();
-	CharacterVelocity.Z = 0.0;
-	Speed = CharacterVelocity.Size();
-
-	float VelocityYawInWorld = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetVelocity()).Yaw;
-	MovementDirection = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYawInWorld, 0.0), FRotator(0.0, ShooterCharacter->GetActorRotation().Yaw, 0.0)).Yaw;
-	/*UE_LOG(LogTemp, Warning, TEXT("MovementDirection: %f"), MovementDirection);*/
-
-	if (bIsAccelerating)
+	if (bHasVelocity)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("bIsAccelerating"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Not bIsAccelerating"));
-	}
-	UE_LOG(LogTemp, Warning, TEXT("Speed: %f"), Speed);
-
-	
-	//bool bIsYawExceedingMaxLimig = AO_Yaw < -90.0f || AO_Yaw > 90.0f;
-	if (TurnDirection != ETurnDirection::TD_None)
-	{
-		float YawExceedingMaxLimit = 0.0f;
-		if (AO_Yaw < -90.0f)		YawExceedingMaxLimit = AO_Yaw + 90.0f;
-		else if (AO_Yaw > 90.0f)	YawExceedingMaxLimit = AO_Yaw - 90.0f;
-
-		if (YawExceedingMaxLimit != 0.0f)
-		{
-			ShooterCharacter->AddActorLocalRotation(FRotator(0.0, YawExceedingMaxLimit, 0.0));
-			AO_Yaw -= YawExceedingMaxLimit;
-		}
-	}
-	//else if (bIsMoveInput && AO_Yaw != 0.0f)
-	else if (bIsMoveInput)
-	{
-		float YawRotationStep = ShooterCharacter->GetCharacterMovement()->RotationRate.Yaw * DeltaSeconds;
-		if (FMath::Abs(AO_Yaw) < YawRotationStep)
-		{
-			YawRotationStep = AO_Yaw;
-		}
-		else if (AO_Yaw < 0.0)
-		{
-			YawRotationStep *= -1.0f;
-		}
-		
-		ShooterCharacter->AddActorLocalRotation(FRotator(0.0, YawRotationStep, 0.0));
-		AO_Yaw -= YawRotationStep;
+		float VelocityYaw = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetVelocity()).Yaw;
+		VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, ShooterCharacter->GetActorRotation().Yaw, 0.0)).Yaw;
 	}
 
-	//ShooterCharacter->bUseControllerRotationYaw = TurnDirection == ETurnDirection::TD_None && bIsMoveInput && AO_Yaw == 0.0f;
-	ShooterCharacter->bUseControllerRotationYaw = true;
-
-	// To Test network latency
-	/*FVector ActorLocation = ShooterCharacter->GetActorLocation();
-	if (ShooterCharacter->HasAuthority())
+	float bUsingControllerDesiredRotation = ShooterCharacter->GetCharacterMovement()->bUseControllerDesiredRotation;
+	if ((bHasVelocity || TurnDirection != ETurnDirection::TD_None) && !bUsingControllerDesiredRotation)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("HasAuthority: ActorLocation: X=%f, Y=%f, Z=%f"), ActorLocation.X, ActorLocation.Y, ActorLocation.Z);
+		ShooterCharacter->GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	}
-	else
+	else if (!bHasVelocity && TurnDirection == ETurnDirection::TD_None && bUsingControllerDesiredRotation)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("!HasAuthority: ActorLocation: X=%f, Y=%f, Z=%f"), ActorLocation.X, ActorLocation.Y, ActorLocation.Z);
-	}*/
-	
-	//if (bIsMoveInput)	//TurnDirection != ETurnDirection::TD_None || 
-	//{
-	//	float ExceedingYaw = 0.0f;
-	//	if (AO_Yaw < -90.0f)
-	//	{
-	//		ExceedingYaw = AO_Yaw + 90.0f;
-	//	}
-	//	else if (AO_Yaw > 90.0f)
-	//	{
-	//		ExceedingYaw = AO_Yaw - 90.0f;
-	//	}
+		ShooterCharacter->GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	}
 
-	//	float YawRotationStep = ShooterCharacter->GetCharacterMovement()->RotationRate.Yaw * DeltaSeconds;
-	//	if (FMath::Abs(AO_Yaw) < YawRotationStep)
-	//	{
-	//		YawRotationStep = AO_Yaw;
-	//	}
-	//	else if (AO_Yaw < 0.0)
-	//	{
-	//		YawRotationStep *= -1.0f;
-	//	}
-	//	ExceedingYaw += YawRotationStep;
+	if (float YawExceedingMaxLimit = ShooterCharacter->GetYawExceedingMaxLimit(AO_Yaw))
+	{
+		ShooterCharacter->AddActorLocalRotation(FRotator(0.0, YawExceedingMaxLimit, 0.0));
+		AO_Yaw -= YawExceedingMaxLimit;
+	}
 
-	//	ShooterCharacter->AddActorLocalRotation(FRotator(0.0, ExceedingYaw, 0.0));
-	//	AO_Yaw -= ExceedingYaw;
-	//}
+}
 
-	//ShooterCharacter->bUseControllerRotationYaw = TurnDirection == ETurnDirection::TD_None && bIsMoveInput && FMath::IsNearlyZero(AO_Yaw, UE_KINDA_SMALL_NUMBER);
-
+void UCharacterAnimInstance::AnimNotify_TurnInPlace() const
+{
+	OnCharacterAnimInstanceTurnInPlace.Broadcast();
 }

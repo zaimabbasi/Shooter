@@ -14,6 +14,7 @@
 #include "Actor/Weapon.h"
 #include "ActorComponent/CombatComponent.h"
 #include "ActorComponent/InventoryComponent.h"
+#include "AnimInstance/CharacterAnimInstance.h"
 #include "AnimInstance/HandsAnimInstance.h"
 #include "DataAsset/CharacterDataAsset.h"
 #include "Enum/CharacterStance.h"
@@ -138,35 +139,51 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(AShooterCharacter, LeanDirection);
 	DOREPLIFETIME(AShooterCharacter, LeaningRate);
 	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
-	DOREPLIFETIME(AShooterCharacter, MovementInputVector);
-	DOREPLIFETIME(AShooterCharacter, TurnDirection);
+	//DOREPLIFETIME(AShooterCharacter, MovementInputVector);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, RemoteViewYaw, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(AShooterCharacter, TurnDirection, COND_SkipOwner);
 
 }
 
 ETurnDirection AShooterCharacter::GetTurnDirection(float CurrentYaw)
 {
-	ETurnDirection NewTurnDirection = TurnDirection;
-	if (IsLocallyControlled())
+	if (HasVelocity())
 	{
-		if (FMath::IsNearlyZero(CurrentYaw, UE_KINDA_SMALL_NUMBER))
+		if (TurnDirection != ETurnDirection::TD_None)
 		{
-			NewTurnDirection = ETurnDirection::TD_None;
+			TurnDirection = ETurnDirection::TD_None;
 		}
-		else if (CurrentYaw < -90.0f)
+	}
+	else
+	{
+		if (CurrentYaw < -90.0f && TurnDirection != ETurnDirection::TD_Left)
 		{
-			NewTurnDirection = ETurnDirection::TD_Left;
+			TurnDirection = ETurnDirection::TD_Left;
 		}
-		else if (CurrentYaw > 90.0f)
+		else if (CurrentYaw > 90.0f && TurnDirection != ETurnDirection::TD_Right)
 		{
-			NewTurnDirection = ETurnDirection::TD_Right;
-		}
-		if (NewTurnDirection != TurnDirection)
-		{
-			Server_SetTurnDirection(NewTurnDirection);
+			TurnDirection = ETurnDirection::TD_Right;
 		}
 	}
 	return TurnDirection;
+}
+
+float AShooterCharacter::GetYawExceedingMaxLimit(float CurrentYaw) const
+{
+	if (CurrentYaw < -90.0f)
+	{
+		return CurrentYaw + 90.0f;
+	}
+	else if (CurrentYaw > 90.0f)
+	{
+		return CurrentYaw - 90.0f;
+	}
+	return 0.0f;
+}
+
+bool AShooterCharacter::HasVelocity() const
+{
+	return GetVelocity().SizeSquared2D() > 0.0f;
 }
 
 void AShooterCharacter::Init()
@@ -193,15 +210,15 @@ void AShooterCharacter::Init()
 
 }
 
-bool AShooterCharacter::IsMoveInput() const
-{
-	return MovementInputVector.X != 0.0f || MovementInputVector.Y != 0.0f;
-}
+//bool AShooterCharacter::IsMoveInput() const
+//{
+//	return MovementInputVector.X != 0.0f || MovementInputVector.Y != 0.0f;
+//}
 
-bool AShooterCharacter::IsMoveInputForward() const
-{
-	return MovementInputVector.Y == 1.0f;
-}
+//bool AShooterCharacter::IsMoveInputForward() const
+//{
+//	return MovementInputVector.Y == 1.0f;
+//}
 
 void AShooterCharacter::PostInitializeComponents()
 {
@@ -210,6 +227,10 @@ void AShooterCharacter::PostInitializeComponents()
 	if (USkeletalMeshComponent* CharacterMesh = GetMesh())
 	{
 		CharacterMesh->SetSkeletalMeshAsset(USkeletalMergingLibrary::MergeMeshes(CharacterMeshMergeParams));
+		if (UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(CharacterMesh->GetAnimInstance()))
+		{
+			CharacterAnimInstance->OnCharacterAnimInstanceTurnInPlace.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTurnInPlace);
+		}
 	}
 	if (HandsMesh)
 	{
@@ -344,6 +365,80 @@ void AShooterCharacter::BeginPlay()
 		}
 	}
 
+}
+
+bool AShooterCharacter::CanPerformCrouchAction() const
+{
+	return TurnDirection == ETurnDirection::TD_None;
+}
+
+bool AShooterCharacter::CanPerformMoveAction() const
+{
+	return true;
+}
+
+bool AShooterCharacter::CanPerformProneAction() const
+{
+	return TurnDirection == ETurnDirection::TD_None;
+}
+
+float AShooterCharacter::GetMaxWalkSpeed() const
+{
+	if (const UCharacterDataAsset* LoadedCharacterDataAsset = CharacterDataAsset.LoadSynchronous())
+	{
+		return LoadedCharacterDataAsset->MovementParams.MaxWalkSpeed;
+	}
+	return 0.0f;
+}
+
+float AShooterCharacter::GetMaxWalkSpeedCrouched() const
+{
+	if (const UCharacterDataAsset* LoadedCharacterDataAsset = CharacterDataAsset.LoadSynchronous())
+	{
+		return LoadedCharacterDataAsset->MovementParams.MaxWalkSpeedCrouched;
+	}
+	return 0.0f;
+}
+
+float AShooterCharacter::GetMaxWalkSpeedCrouchedSlow() const
+{
+	if (const UCharacterDataAsset* LoadedCharacterDataAsset = CharacterDataAsset.LoadSynchronous())
+	{
+		return LoadedCharacterDataAsset->MovementParams.MaxWalkSpeedCrouchedSlow;
+	}
+	return 0.0f;
+}
+
+float AShooterCharacter::GetMaxWalkSpeedProned() const
+{
+	if (const UCharacterDataAsset* LoadedCharacterDataAsset = CharacterDataAsset.LoadSynchronous())
+	{
+		return LoadedCharacterDataAsset->MovementParams.MaxWalkSpeedProned;
+	}
+	return 0.0f;
+}
+
+float AShooterCharacter::GetMaxWalkSpeedSlow() const
+{
+	if (const UCharacterDataAsset* LoadedCharacterDataAsset = CharacterDataAsset.LoadSynchronous())
+	{
+		return LoadedCharacterDataAsset->MovementParams.MaxWalkSpeedSlow;
+	}
+	return 0.0f;
+}
+
+float AShooterCharacter::GetMaxWalkSpeedSprint() const
+{
+	if (const UCharacterDataAsset* LoadedCharacterDataAsset = CharacterDataAsset.LoadSynchronous())
+	{
+		return LoadedCharacterDataAsset->MovementParams.MaxWalkSpeedSprint;
+	}
+	return 0.0f;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTurnInPlace()
+{
+	TurnDirection = ETurnDirection::TD_None;
 }
 
 void AShooterCharacter::Handle_OnCombatComponentActionEnd(AWeapon* Weapon)
@@ -510,7 +605,7 @@ void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 void AShooterCharacter::OnCharacterAimAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CombatComponent && !(bIsToggleSprint && MovementInputVector.Y == 1.0))
+	if (CombatComponent && !(bIsToggleSprint && HasVelocity() && bIsMoveInputForward))
 	{
 		CombatComponent->Server_SetIsAiming(CurrentValue);
 	}
@@ -525,7 +620,7 @@ void AShooterCharacter::OnCharacterAlterAction(const FInputActionValue& Value)
 void AShooterCharacter::OnCharacterCrouchAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue)
+	if (CurrentValue && CanPerformCrouchAction())
 	{
 		ECharacterStance NewStance;
 		if (CurrentStance != ECharacterStance::CS_Crouch)
@@ -585,7 +680,7 @@ void AShooterCharacter::OnCharacterHolsterWeaponAction(const FInputActionValue& 
 void AShooterCharacter::OnCharacterLeanLeftAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && !(bIsToggleSprint && MovementInputVector.Y == 1.0))
+	if (CurrentValue && !(bIsToggleSprint && HasVelocity() && bIsMoveInputForward))
 	{
 		ELeanDirection NewLeanDirection = ELeanDirection::LD_Left;
 		float TransitionDuration = DefaultAnimationTransitionDuration;
@@ -608,7 +703,7 @@ void AShooterCharacter::OnCharacterLeanLeftAction(const FInputActionValue& Value
 void AShooterCharacter::OnCharacterLeanRightAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && !(bIsToggleSprint && MovementInputVector.Y == 1.0))
+	if (CurrentValue && !(bIsToggleSprint && HasVelocity() && bIsMoveInputForward))
 	{
 		ELeanDirection NewLeanDirection = ELeanDirection::LD_Right;
 		float TransitionDuration = DefaultAnimationTransitionDuration;
@@ -637,148 +732,88 @@ void AShooterCharacter::OnCharacterLookAction(const FInputActionValue& Value)
 
 }
 
-void AShooterCharacter::OnCharacterMove(const float InputValueX, const float InputValueY)
-{
-	Server_SetMovementInputVector(InputValueX, InputValueY);
-
-	if (InputValueY == 1.0 && bIsToggleSprint)
-	{
-		TransitionToSprint();
-	}
-}
+//void AShooterCharacter::OnCharacterMove(const float InputValueX, const float InputValueY)
+//{
+//	Server_SetMovementInputVector(InputValueX, InputValueY);
+//
+//	if (InputValueY == 1.0 && bIsToggleSprint)
+//	{
+//		TransitionToSprint();
+//	}
+//}
 
 void AShooterCharacter::OnCharacterMoveBackwardAction(const FInputActionValue& Value)
 {
 	float CurrentValue = Value.Get<float>();
-	bIsMoveInputBackward = Value.Get<bool>();
-
-	if (bIsMoveInputForward)
+	if (CanPerformMoveAction())
 	{
-		CurrentValue = 0.0f;
-	}
-	if (CurrentValue)
-	{
-		AddMovementInput(GetActorForwardVector(), CurrentValue);
-	}
-
-	/*float CurrentValue = Value.Get<float>();
-	if (CurrentValue)
-	{
-		if (MovementInputVector.Y == 1.0)
+		bIsMoveInputBackward = CurrentValue != 0.0f;
+		if (bIsMoveInputForward)
 		{
 			CurrentValue = 0.0f;
 		}
-	}
-	else
-	{
-		if (MovementInputVector.Y == 0.0)
+		if (CurrentValue)
 		{
-			CurrentValue = 1.0f;
+			AddMovementInput(GetActorForwardVector(), CurrentValue);
 		}
 	}
-	OnCharacterMove(MovementInputVector.X, CurrentValue);*/
 }
 
 void AShooterCharacter::OnCharacterMoveForwardAction(const FInputActionValue& Value)
 {
 	float CurrentValue = Value.Get<float>();
-	bIsMoveInputForward = Value.Get<bool>();
-
-	if (bIsMoveInputBackward)
+	if (CanPerformMoveAction())
 	{
-		CurrentValue = 0.0f;
-	}
-	if (CurrentValue)
-	{
-		AddMovementInput(GetActorForwardVector(), CurrentValue);
-	}
-	
-	/*float CurrentValue = Value.Get<float>();
-	if (CurrentValue)
-	{
-		if (MovementInputVector.Y == -1.0)
+		bIsMoveInputForward = CurrentValue != 0.0f;
+		if (bIsMoveInputBackward)
 		{
 			CurrentValue = 0.0f;
 		}
-	}
-	else
-	{
-		if (MovementInputVector.Y == 0.0)
+		if (CurrentValue)
 		{
-			CurrentValue = -1.0f;
+			AddMovementInput(GetActorForwardVector(), CurrentValue);
 		}
 	}
-	OnCharacterMove(MovementInputVector.X, CurrentValue);*/
 }
 
 void AShooterCharacter::OnCharacterMoveLeftAction(const FInputActionValue& Value)
 {
 	float CurrentValue = Value.Get<float>();
-	bIsMoveInputLeft = Value.Get<bool>();
-
-	if (bIsMoveInputRight)
+	if (CanPerformMoveAction())
 	{
-		CurrentValue = 0.0f;
-	}
-	if (CurrentValue)
-	{
-		AddMovementInput(GetActorRightVector(), CurrentValue);
-	}
-	
-	/*float CurrentValue = Value.Get<float>();
-	if (CurrentValue)
-	{
-		if (MovementInputVector.X == 1.0)
+		bIsMoveInputLeft = CurrentValue != 0.0f;
+		if (bIsMoveInputRight)
 		{
 			CurrentValue = 0.0f;
 		}
-	}
-	else
-	{
-		if (MovementInputVector.X == 0.0)
+		if (CurrentValue)
 		{
-			CurrentValue = 1.0f;
+			AddMovementInput(GetActorRightVector(), CurrentValue);
 		}
 	}
-	OnCharacterMove(CurrentValue, MovementInputVector.Y);*/
 }
 
 void AShooterCharacter::OnCharacterMoveRightAction(const FInputActionValue& Value)
 {
 	float CurrentValue = Value.Get<float>();
-	bIsMoveInputRight = Value.Get<bool>();
-
-	if (bIsMoveInputLeft)
+	if (CanPerformMoveAction())
 	{
-		CurrentValue = 0.0f;
-	}
-	if (CurrentValue)
-	{
-		AddMovementInput(GetActorRightVector(), CurrentValue);
-	}
-	
-	/*float CurrentValue = Value.Get<float>();
-	if (CurrentValue)
-	{
-		if (MovementInputVector.X == -1.0)
+		bIsMoveInputRight = CurrentValue != 0.0f;
+		if (bIsMoveInputLeft)
 		{
 			CurrentValue = 0.0f;
 		}
-	}
-	else
-	{
-		if (MovementInputVector.X == 0.0)
+		if (CurrentValue)
 		{
-			CurrentValue = -1.0f;
+			AddMovementInput(GetActorRightVector(), CurrentValue);
 		}
 	}
-	OnCharacterMove(CurrentValue, MovementInputVector.Y);*/
 }
 
 void AShooterCharacter::OnCharacterProneAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue)
+	if (CurrentValue && CanPerformProneAction())
 	{
 		ECharacterStance NewStance;
 		if (CurrentStance != ECharacterStance::CS_Prone)
@@ -818,7 +853,7 @@ void AShooterCharacter::OnCharacterSprintAction(const FInputActionValue& Value)
 	const bool CurrentValue = Value.Get<bool>();
 	Server_SetIsToggleSprint(CurrentValue);
 
-	if (CurrentValue && MovementInputVector.Y == 1.0)
+	if (CurrentValue && HasVelocity() && bIsMoveInputForward)
 	{
 		TransitionToSprint();
 	}
@@ -883,6 +918,21 @@ void AShooterCharacter::OnWeaponReloadAction(const FInputActionValue& Value)
 	}
 }
 
+void AShooterCharacter::OnRep_CurrentStance()
+{
+	UpdateMaxWalkSpeed(CurrentStance, bIsToggleSlow, bIsToggleSprint);
+}
+
+void AShooterCharacter::OnRep_IsToggleSlow()
+{
+	UpdateMaxWalkSpeed(CurrentStance, bIsToggleSlow, bIsToggleSprint);
+}
+
+void AShooterCharacter::OnRep_IsToggleSprint()
+{
+	UpdateMaxWalkSpeed(CurrentStance, bIsToggleSlow, bIsToggleSprint);
+}
+
 void AShooterCharacter::Server_EquipWeaponProgressive_Implementation(AWeapon* WeaponToEquip)
 {
 	if (WeaponToEquip == nullptr || CombatComponent == nullptr)
@@ -924,6 +974,8 @@ void AShooterCharacter::Server_HolsterWeaponProgressive_Implementation()
 void AShooterCharacter::Server_SetCurrentStance_Implementation(ECharacterStance NewStance)
 {
 	CurrentStance = NewStance;
+	
+	UpdateMaxWalkSpeed(CurrentStance, bIsToggleSlow, bIsToggleSprint);
 }
 
 void AShooterCharacter::Server_SetIsAlterAction_Implementation(bool bAlterAction)
@@ -934,11 +986,15 @@ void AShooterCharacter::Server_SetIsAlterAction_Implementation(bool bAlterAction
 void AShooterCharacter::Server_SetIsToggleSlow_Implementation(bool bToggleSlow)
 {
 	bIsToggleSlow = bToggleSlow;
+
+	UpdateMaxWalkSpeed(CurrentStance, bIsToggleSlow, bIsToggleSprint);
 }
 
 void AShooterCharacter::Server_SetIsToggleSprint_Implementation(bool bToggleSprint)
 {
 	bIsToggleSprint = bToggleSprint;
+
+	UpdateMaxWalkSpeed(CurrentStance, bIsToggleSlow, bIsToggleSprint);
 }
 
 void AShooterCharacter::Server_SetLeanDirection_Implementation(ELeanDirection NewLeanDirection)
@@ -956,15 +1012,15 @@ void AShooterCharacter::Server_SetLeaningRate_Implementation(float NewLeaningRat
 	LeaningRate = NewLeaningRate;
 }
 
-void AShooterCharacter::Server_SetMovementInputVector_Implementation(float InputValueX, float InputValueY)
-{
-	MovementInputVector.Set(InputValueX, InputValueY);
-}
+//void AShooterCharacter::Server_SetMovementInputVector_Implementation(float InputValueX, float InputValueY)
+//{
+//	MovementInputVector.Set(InputValueX, InputValueY);
+//}
 
-void AShooterCharacter::Server_SetTurnDirection_Implementation(ETurnDirection NewTurnDirection)
-{
-	TurnDirection = NewTurnDirection;
-}
+//void AShooterCharacter::Server_SetTurnDirection_Implementation(ETurnDirection NewTurnDirection)
+//{
+//	TurnDirection = NewTurnDirection;
+//}
 
 void AShooterCharacter::SetRemoteViewYaw(float NewRemoteYaw)
 {
@@ -1043,6 +1099,31 @@ void AShooterCharacter::UpdateCameraFOV(float DeltaTime)
 			FirstPersonCamera->FieldOfView = DefaultCameraFOV;
 		}
 	}
+}
+
+void AShooterCharacter::UpdateMaxWalkSpeed(ECharacterStance Stance, bool bToggleSlow, bool bToggleSprint)
+{
+	if (GetCharacterMovement() == nullptr)
+	{
+		return;
+	}
+	if (Stance == ECharacterStance::CS_Stand)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = bToggleSlow ? GetMaxWalkSpeedSlow() : GetMaxWalkSpeed();
+		if (bToggleSprint)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = GetMaxWalkSpeedSprint();
+		}
+	}
+	else if (Stance == ECharacterStance::CS_Crouch)
+	{
+		GetCharacterMovement()->MaxWalkSpeedCrouched = bToggleSlow ? GetMaxWalkSpeedCrouchedSlow() : GetMaxWalkSpeedCrouched();
+	}
+	else if (Stance == ECharacterStance::CS_Prone)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = GetMaxWalkSpeedProned();
+	}
+	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
 }
 
 //void AShooterCharacter::UpdateMovement(float DeltaTime)

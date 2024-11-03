@@ -35,9 +35,11 @@ public:
 	bool GetIsAiming() const;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	ETurnDirection GetTurnDirection(float CurrentYaw);
+	float GetYawExceedingMaxLimit(float CurrentYaw) const;
+	bool HasVelocity() const;
 	void Init();
-	bool IsMoveInput() const;
-	bool IsMoveInputForward() const;
+	//bool IsMoveInput() const;
+	//bool IsMoveInputForward() const;
 	virtual void PostInitializeComponents() override;
 	virtual void PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -47,6 +49,19 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	bool CanPerformCrouchAction() const;
+	bool CanPerformMoveAction() const;
+	bool CanPerformProneAction() const;
+	float GetMaxWalkSpeed() const;
+	float GetMaxWalkSpeedCrouched() const;
+	float GetMaxWalkSpeedCrouchedSlow() const;
+	float GetMaxWalkSpeedProned() const;
+	float GetMaxWalkSpeedSlow() const;
+	float GetMaxWalkSpeedSprint() const;
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceTurnInPlace();
+
 	UFUNCTION()
 	void Handle_OnCombatComponentActionEnd(AWeapon* Weapon);
 
@@ -119,7 +134,7 @@ private:
 	void OnCharacterLeanLeftAction(const FInputActionValue& Value);
 	void OnCharacterLeanRightAction(const FInputActionValue& Value);
 	void OnCharacterLookAction(const FInputActionValue& Value);
-	void OnCharacterMove(const float InputValueX, const float InputValueY);
+	//void OnCharacterMove(const float InputValueX, const float InputValueY);
 	void OnCharacterMoveBackwardAction(const FInputActionValue& Value);
 	void OnCharacterMoveForwardAction(const FInputActionValue& Value);
 	void OnCharacterMoveLeftAction(const FInputActionValue& Value);
@@ -131,6 +146,15 @@ private:
 	void OnWeaponFireAction(const FInputActionValue& Value);
 	void OnWeaponFiremodeAction(const FInputActionValue& Value);
 	void OnWeaponReloadAction(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void OnRep_CurrentStance();
+
+	UFUNCTION()
+	void OnRep_IsToggleSlow();
+
+	UFUNCTION()
+	void OnRep_IsToggleSprint();
 
 	UFUNCTION(Server, Reliable)
 	void Server_EquipWeaponProgressive(AWeapon* WeaponToEquip);
@@ -159,16 +183,17 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_SetLeaningRate(float Rate);
 
-	UFUNCTION(Server, Reliable)
-	void Server_SetMovementInputVector(const float InputValueX, const float InputValueY);
+	/*UFUNCTION(Server, Reliable)
+	void Server_SetMovementInputVector(const float InputValueX, const float InputValueY);*/
 
-	UFUNCTION(Server, Reliable)
-	void Server_SetTurnDirection(ETurnDirection NewTurnDirection);
+	/*UFUNCTION(Server, Reliable)
+	void Server_SetTurnDirection(ETurnDirection NewTurnDirection);*/
 
 	void SetRemoteViewYaw(float NewRemoteYaw);
 	void TransitionToSprint();
 	//void UpdateAO_Pitch(float DeltaTime);
 	void UpdateCameraFOV(float DeltaTime);
+	void UpdateMaxWalkSpeed(ECharacterStance Stance, bool bToggleSlow, bool bToggleSprint);
 	//void UpdateMovement(float DeltaTime);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
@@ -276,13 +301,13 @@ private:
 	bool bIsMoveInputLeft;
 	bool bIsMoveInputRight;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_IsToggleSlow)
 	bool bIsToggleSlow;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_IsToggleSprint)
 	bool bIsToggleSprint;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentStance)
 	ECharacterStance CurrentStance;
 
 	const float DefaultAnimationTransitionDuration = 0.25f;
@@ -300,8 +325,8 @@ private:
 
 	const float MaxLean = 15.0f;
 
-	UPROPERTY(Replicated)
-	FVector2D MovementInputVector;
+	/*UPROPERTY(Replicated)
+	FVector2D MovementInputVector;*/
 
 	TObjectPtr<AWeapon> NextWeaponToEquip;
 
@@ -324,7 +349,7 @@ public:
 	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
 	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }
 	FORCEINLINE float GetMaxLean() const { return MaxLean; }
-	FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
-	FORCEINLINE ETurnDirection GetTurnDirection() const { return TurnDirection; }
+	//FORCEINLINE FVector2D GetMovementInputVector() const { return MovementInputVector; }
+	//FORCEINLINE ETurnDirection GetTurnDirection() const { return TurnDirection; }
 
 };

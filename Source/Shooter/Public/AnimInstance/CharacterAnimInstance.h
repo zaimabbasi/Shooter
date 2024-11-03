@@ -11,6 +11,8 @@ enum class ECharacterStance : uint8;
 enum class ELeanDirection: uint8;
 enum class ETurnDirection: uint8;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterAnimInstanceAnimNotifySignature);
+
 UCLASS()
 class SHOOTER_API UCharacterAnimInstance : public UAnimInstance
 {
@@ -20,9 +22,13 @@ public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
-private:
-	void CharacterFaceRotation();
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTurnInPlace;
 
+protected:
+	UFUNCTION()
+	void AnimNotify_TurnInPlace() const;
+
+private:
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
@@ -39,15 +45,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	float AO_Pitch;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	FVector2D MovementInputVector;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	bool bIsMoveInput;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	bool bIsMoveInputForward;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	ETurnDirection TurnDirection;
@@ -71,12 +68,9 @@ private:
 	ECharacterStance CurrentStance;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	bool bIsAccelerating;
+	bool bHasVelocity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	float Speed;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	float MovementDirection;
+	float VelocityYawOffset;
 
 };

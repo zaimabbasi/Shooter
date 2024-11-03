@@ -27,6 +27,34 @@ public:
 	uint8 SecondaryWeaponMaxAmmo;
 };
 
+USTRUCT()
+struct FMovementParams
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
+	float MaxWalkSpeed;
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
+	float MaxWalkSpeedCrouched;
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
+	float MaxWalkSpeedCrouchedSlow;
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
+	float MaxWalkSpeedProned;
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
+	float MaxWalkSpeedSlow;
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
+	float MaxWalkSpeedSprint;
+
+};
+
+
+
 UCLASS()
 class SHOOTER_API UCharacterDataAsset : public UDataAsset
 {
@@ -35,5 +63,8 @@ class SHOOTER_API UCharacterDataAsset : public UDataAsset
 public:
 	UPROPERTY(EditAnywhere, Category = "InventoryParams")
 	FInventoryParams InventoryParams;
+
+	UPROPERTY(EditAnywhere, Category = "MovementParams")
+	FMovementParams MovementParams;
 
 };
