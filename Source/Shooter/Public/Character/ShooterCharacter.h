@@ -35,9 +35,12 @@ public:
 	bool GetIsAiming() const;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	ETurnDirection GetTurnDirection(float CurrentYaw);
+	bool GetUseControllerDesiredRotation() const;
+	float GetVelocityYawOffset() const;
 	float GetYawExceedingMaxLimit(float CurrentYaw) const;
 	bool HasVelocity() const;
 	void Init();
+	bool IsAccelerating() const;
 	//bool IsMoveInput() const;
 	//bool IsMoveInputForward() const;
 	virtual void PostInitializeComponents() override;
@@ -61,6 +64,9 @@ private:
 
 	UFUNCTION()
 	void Handle_OnCharacterAnimInstanceTurnInPlace();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceControllerDesiredRotationNeeded(bool bControllerDesiredRotationNeeded);
 
 	UFUNCTION()
 	void Handle_OnCombatComponentActionEnd(AWeapon* Weapon);
@@ -189,6 +195,7 @@ private:
 	/*UFUNCTION(Server, Reliable)
 	void Server_SetTurnDirection(ETurnDirection NewTurnDirection);*/
 
+	void SetIsRemoteAccelerating(bool bRemoteAccelerating);
 	void SetRemoteViewYaw(float NewRemoteYaw);
 	void TransitionToSprint();
 	//void UpdateAO_Pitch(float DeltaTime);
@@ -300,6 +307,9 @@ private:
 	bool bIsMoveInputForward;
 	bool bIsMoveInputLeft;
 	bool bIsMoveInputRight;
+
+	UPROPERTY(Replicated)
+	bool bIsRemoteAccelerating;
 
 	UPROPERTY(ReplicatedUsing = OnRep_IsToggleSlow)
 	bool bIsToggleSlow;

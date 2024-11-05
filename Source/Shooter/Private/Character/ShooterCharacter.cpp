@@ -140,6 +140,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(AShooterCharacter, LeaningRate);
 	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
 	//DOREPLIFETIME(AShooterCharacter, MovementInputVector);
+	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsRemoteAccelerating, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, RemoteViewYaw, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, TurnDirection, COND_SkipOwner);
 
@@ -166,6 +167,21 @@ ETurnDirection AShooterCharacter::GetTurnDirection(float CurrentYaw)
 		}
 	}
 	return TurnDirection;
+}
+
+bool AShooterCharacter::GetUseControllerDesiredRotation() const
+{
+	return GetCharacterMovement() && GetCharacterMovement()->bUseControllerDesiredRotation;
+}
+
+float AShooterCharacter::GetVelocityYawOffset() const
+{
+	if (!HasVelocity())
+	{
+		return 0.0f;
+	}
+	float VelocityYaw = UKismetMathLibrary::MakeRotFromX(GetVelocity()).Yaw;
+	return UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, GetActorRotation().Yaw, 0.0)).Yaw;
 }
 
 float AShooterCharacter::GetYawExceedingMaxLimit(float CurrentYaw) const
@@ -210,6 +226,11 @@ void AShooterCharacter::Init()
 
 }
 
+bool AShooterCharacter::IsAccelerating() const
+{
+	return GetController() ? GetCharacterMovement() && GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f : bIsRemoteAccelerating;
+}
+
 //bool AShooterCharacter::IsMoveInput() const
 //{
 //	return MovementInputVector.X != 0.0f || MovementInputVector.Y != 0.0f;
@@ -230,6 +251,7 @@ void AShooterCharacter::PostInitializeComponents()
 		if (UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(CharacterMesh->GetAnimInstance()))
 		{
 			CharacterAnimInstance->OnCharacterAnimInstanceTurnInPlace.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTurnInPlace);
+			CharacterAnimInstance->OnCharacterAnimInstanceControllerDesiredRotationNeeded.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceControllerDesiredRotationNeeded);
 		}
 	}
 	if (HandsMesh)
@@ -280,7 +302,14 @@ void AShooterCharacter::PreReplication(IRepChangedPropertyTracker& ChangedProper
 
 	if (HasAuthority())
 	{
-		SetRemoteViewYaw(GetControlRotation().Yaw);
+		if (GetCharacterMovement())
+		{
+			SetIsRemoteAccelerating(GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f);
+		}
+		if (GetController())
+		{
+			SetRemoteViewYaw(GetController()->GetControlRotation().Yaw);
+		}
 	}
 }
 
@@ -439,6 +468,14 @@ float AShooterCharacter::GetMaxWalkSpeedSprint() const
 void AShooterCharacter::Handle_OnCharacterAnimInstanceTurnInPlace()
 {
 	TurnDirection = ETurnDirection::TD_None;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceControllerDesiredRotationNeeded(bool bControllerDesiredRotationNeeded)
+{
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->bUseControllerDesiredRotation = bControllerDesiredRotationNeeded;
+	}
 }
 
 void AShooterCharacter::Handle_OnCombatComponentActionEnd(AWeapon* Weapon)
@@ -772,6 +809,11 @@ void AShooterCharacter::OnCharacterMoveForwardAction(const FInputActionValue& Va
 		if (CurrentValue)
 		{
 			AddMovementInput(GetActorForwardVector(), CurrentValue);
+
+			if (CurrentStance == ECharacterStance::CS_Crouch && bIsToggleSprint)
+			{
+				TransitionToSprint();
+			}
 		}
 	}
 }
@@ -1022,6 +1064,11 @@ void AShooterCharacter::Server_SetLeaningRate_Implementation(float NewLeaningRat
 //	TurnDirection = NewTurnDirection;
 //}
 
+void AShooterCharacter::SetIsRemoteAccelerating(bool bRemoteAccelerating)
+{
+	bIsRemoteAccelerating = bRemoteAccelerating;
+}
+
 void AShooterCharacter::SetRemoteViewYaw(float NewRemoteYaw)
 {
 	RemoteViewYaw = FRotator::CompressAxisToByte(NewRemoteYaw);
@@ -1123,7 +1170,7 @@ void AShooterCharacter::UpdateMaxWalkSpeed(ECharacterStance Stance, bool bToggle
 	{
 		GetCharacterMovement()->MaxWalkSpeed = GetMaxWalkSpeedProned();
 	}
-	UE_LOG(LogTemp, Warning, TEXT(__FUNCTION__));
+
 }
 
 //void AShooterCharacter::UpdateMovement(float DeltaTime)

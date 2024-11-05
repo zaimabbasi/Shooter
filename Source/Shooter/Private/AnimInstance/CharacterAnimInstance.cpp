@@ -41,6 +41,8 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	AO_Yaw = ShooterCharacter->GetAO_Yaw(AO_Yaw, DeltaSeconds);
 	AO_Pitch = ShooterCharacter->GetAO_Pitch(AO_Pitch, DeltaSeconds);
+	bIsAccelerating = ShooterCharacter->IsAccelerating();
+	//bIsFalling = ShooterCharacter->GetCharacterMovement() && ShooterCharacter->GetCharacterMovement()->IsFalling();
 	bHasVelocity = ShooterCharacter->HasVelocity();
 	TurnDirection = ShooterCharacter->GetTurnDirection(AO_Yaw);
 	LeanDirection = ShooterCharacter->GetLeanDirection();
@@ -52,18 +54,17 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	
 	if (bHasVelocity)
 	{
-		float VelocityYaw = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetVelocity()).Yaw;
-		VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, ShooterCharacter->GetActorRotation().Yaw, 0.0)).Yaw;
+		VelocityYawOffset = ShooterCharacter->GetVelocityYawOffset();
 	}
 
-	float bUsingControllerDesiredRotation = ShooterCharacter->GetCharacterMovement()->bUseControllerDesiredRotation;
-	if ((bHasVelocity || TurnDirection != ETurnDirection::TD_None) && !bUsingControllerDesiredRotation)
+	float bUseControllerDesiredRotation = ShooterCharacter->GetUseControllerDesiredRotation();
+	if (!bUseControllerDesiredRotation && (bHasVelocity || TurnDirection != ETurnDirection::TD_None))
 	{
-		ShooterCharacter->GetCharacterMovement()->bUseControllerDesiredRotation = true;
+		OnCharacterAnimInstanceControllerDesiredRotationNeeded.Broadcast(true);
 	}
-	else if (!bHasVelocity && TurnDirection == ETurnDirection::TD_None && bUsingControllerDesiredRotation)
+	else if (bUseControllerDesiredRotation && !bHasVelocity && TurnDirection == ETurnDirection::TD_None)
 	{
-		ShooterCharacter->GetCharacterMovement()->bUseControllerDesiredRotation = false;
+		OnCharacterAnimInstanceControllerDesiredRotationNeeded.Broadcast(false);
 	}
 
 	if (float YawExceedingMaxLimit = ShooterCharacter->GetYawExceedingMaxLimit(AO_Yaw))

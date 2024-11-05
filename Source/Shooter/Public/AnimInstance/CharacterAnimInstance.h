@@ -12,6 +12,7 @@ enum class ELeanDirection: uint8;
 enum class ETurnDirection: uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterAnimInstanceAnimNotifySignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterAnimInstanceControllerDesiredRotationNeededSignature, bool, bControllerDesiredRotationNeeded);
 
 UCLASS()
 class SHOOTER_API UCharacterAnimInstance : public UAnimInstance
@@ -23,6 +24,7 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTurnInPlace;
+	FOnCharacterAnimInstanceControllerDesiredRotationNeededSignature OnCharacterAnimInstanceControllerDesiredRotationNeeded;
 
 protected:
 	UFUNCTION()
@@ -66,6 +68,12 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	ECharacterStance CurrentStance;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	bool bIsAccelerating;
+
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	bool bIsFalling;*/
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	bool bHasVelocity;
