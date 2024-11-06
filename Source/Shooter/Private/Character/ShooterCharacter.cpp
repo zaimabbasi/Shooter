@@ -139,7 +139,6 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(AShooterCharacter, LeanDirection);
 	DOREPLIFETIME(AShooterCharacter, LeaningRate);
 	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
-	//DOREPLIFETIME(AShooterCharacter, MovementInputVector);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsRemoteAccelerating, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, RemoteViewYaw, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, TurnDirection, COND_SkipOwner);
@@ -230,16 +229,6 @@ bool AShooterCharacter::IsAccelerating() const
 {
 	return GetController() ? GetCharacterMovement() && GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f : bIsRemoteAccelerating;
 }
-
-//bool AShooterCharacter::IsMoveInput() const
-//{
-//	return MovementInputVector.X != 0.0f || MovementInputVector.Y != 0.0f;
-//}
-
-//bool AShooterCharacter::IsMoveInputForward() const
-//{
-//	return MovementInputVector.Y == 1.0f;
-//}
 
 void AShooterCharacter::PostInitializeComponents()
 {
@@ -769,16 +758,6 @@ void AShooterCharacter::OnCharacterLookAction(const FInputActionValue& Value)
 
 }
 
-//void AShooterCharacter::OnCharacterMove(const float InputValueX, const float InputValueY)
-//{
-//	Server_SetMovementInputVector(InputValueX, InputValueY);
-//
-//	if (InputValueY == 1.0 && bIsToggleSprint)
-//	{
-//		TransitionToSprint();
-//	}
-//}
-
 void AShooterCharacter::OnCharacterMoveBackwardAction(const FInputActionValue& Value)
 {
 	float CurrentValue = Value.Get<float>();
@@ -1054,16 +1033,6 @@ void AShooterCharacter::Server_SetLeaningRate_Implementation(float NewLeaningRat
 	LeaningRate = NewLeaningRate;
 }
 
-//void AShooterCharacter::Server_SetMovementInputVector_Implementation(float InputValueX, float InputValueY)
-//{
-//	MovementInputVector.Set(InputValueX, InputValueY);
-//}
-
-//void AShooterCharacter::Server_SetTurnDirection_Implementation(ETurnDirection NewTurnDirection)
-//{
-//	TurnDirection = NewTurnDirection;
-//}
-
 void AShooterCharacter::SetIsRemoteAccelerating(bool bRemoteAccelerating)
 {
 	bIsRemoteAccelerating = bRemoteAccelerating;
@@ -1094,24 +1063,6 @@ void AShooterCharacter::TransitionToSprint()
 		Server_SetLeaningRate(MaxLean / DefaultAnimationTransitionDuration);
 	}
 }
-
-//void AShooterCharacter::UpdateAO_Pitch(float DeltaTime)
-//{
-//	if (IsLocallyControlled())
-//	{
-//		AO_Pitch = GetControlRotation().Pitch;
-//	}
-//	else
-//	{
-//		AO_Pitch = FMath::RInterpTo(FRotator(AO_Pitch, 0.0, 0.0), FRotator(GetBaseAimRotation().Pitch, 0.0, 0.0), DeltaTime, 15.0f).Pitch;
-//	}
-//	if (AO_Pitch > 90.0f)
-//	{
-//		FVector2D InRange = FVector2D(270.0, 360.0);
-//		FVector2D OutRange = FVector2D(-90.0, 0.0);
-//		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
-//	}
-//}
 
 void AShooterCharacter::UpdateCameraFOV(float DeltaTime)
 {

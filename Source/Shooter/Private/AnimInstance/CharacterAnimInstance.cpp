@@ -42,7 +42,6 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	AO_Yaw = ShooterCharacter->GetAO_Yaw(AO_Yaw, DeltaSeconds);
 	AO_Pitch = ShooterCharacter->GetAO_Pitch(AO_Pitch, DeltaSeconds);
 	bIsAccelerating = ShooterCharacter->IsAccelerating();
-	//bIsFalling = ShooterCharacter->GetCharacterMovement() && ShooterCharacter->GetCharacterMovement()->IsFalling();
 	bHasVelocity = ShooterCharacter->HasVelocity();
 	TurnDirection = ShooterCharacter->GetTurnDirection(AO_Yaw);
 	LeanDirection = ShooterCharacter->GetLeanDirection();
@@ -56,7 +55,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		VelocityYawOffset = ShooterCharacter->GetVelocityYawOffset();
 	}
-
+	
 	float bUseControllerDesiredRotation = ShooterCharacter->GetUseControllerDesiredRotation();
 	if (!bUseControllerDesiredRotation && (bHasVelocity || TurnDirection != ETurnDirection::TD_None))
 	{
