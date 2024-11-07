@@ -31,16 +31,16 @@ public:
 	float GetAO_Yaw(float CurrentYaw, float DeltaTime);
 	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
 	ECombatAction GetCombatAction() const;
+	FVector GetCurrentAcceleration() const;
 	AWeapon* GetEquippedWeapon() const;
 	bool GetIsAiming() const;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	ETurnDirection GetTurnDirection(float CurrentYaw);
 	bool GetUseControllerDesiredRotation() const;
-	float GetVelocityYawOffset() const;
 	float GetYawExceedingMaxLimit(float CurrentYaw) const;
-	bool HasVelocity() const;
+	//bool HasVelocity() const;
 	void Init();
-	bool IsAccelerating() const;
+	//bool IsAccelerating() const;
 	virtual void PostInitializeComponents() override;
 	virtual void PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -186,7 +186,8 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_SetLeaningRate(float Rate);
 
-	void SetIsRemoteAccelerating(bool bRemoteAccelerating);
+	//void SetIsRemoteAccelerating(bool bRemoteAccelerating);
+	//void SetRemoteAcceleration(FVector NewRemoteAcceleration);
 	void SetRemoteViewYaw(float NewRemoteYaw);
 	void TransitionToSprint();
 	void UpdateCameraFOV(float DeltaTime);
@@ -296,8 +297,8 @@ private:
 	bool bIsMoveInputLeft;
 	bool bIsMoveInputRight;
 
-	UPROPERTY(Replicated)
-	bool bIsRemoteAccelerating;
+	/*UPROPERTY(Replicated)
+	bool bIsRemoteAccelerating;*/
 
 	UPROPERTY(ReplicatedUsing = OnRep_IsToggleSlow)
 	bool bIsToggleSlow;
@@ -324,6 +325,9 @@ private:
 	const float MaxLean = 15.0f;
 
 	TObjectPtr<AWeapon> NextWeaponToEquip;
+
+	/*UPROPERTY(Replicated)
+	FVector RemoteAcceleration;*/
 
 	UPROPERTY(Replicated)
 	uint8 RemoteViewYaw;

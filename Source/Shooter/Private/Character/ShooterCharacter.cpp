@@ -110,6 +110,11 @@ ECombatAction AShooterCharacter::GetCombatAction() const
 	return CombatComponent->GetCombatAction();
 }
 
+FVector AShooterCharacter::GetCurrentAcceleration() const
+{
+	return GetCharacterMovement() ? GetCharacterMovement()->GetCurrentAcceleration() : FVector::ZeroVector;
+}
+
 AWeapon* AShooterCharacter::GetEquippedWeapon() const
 {
 	if (CombatComponent == nullptr)
@@ -139,7 +144,8 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(AShooterCharacter, LeanDirection);
 	DOREPLIFETIME(AShooterCharacter, LeaningRate);
 	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
-	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsRemoteAccelerating, COND_SkipOwner);
+	//DOREPLIFETIME_CONDITION(AShooterCharacter, bIsRemoteAccelerating, COND_SkipOwner);
+	//DOREPLIFETIME_CONDITION(AShooterCharacter, RemoteAcceleration, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, RemoteViewYaw, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, TurnDirection, COND_SkipOwner);
 
@@ -147,7 +153,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 ETurnDirection AShooterCharacter::GetTurnDirection(float CurrentYaw)
 {
-	if (HasVelocity())
+	if (GetVelocity().SizeSquared2D() > 0.0f)
 	{
 		if (TurnDirection != ETurnDirection::TD_None)
 		{
@@ -173,16 +179,6 @@ bool AShooterCharacter::GetUseControllerDesiredRotation() const
 	return GetCharacterMovement() && GetCharacterMovement()->bUseControllerDesiredRotation;
 }
 
-float AShooterCharacter::GetVelocityYawOffset() const
-{
-	if (!HasVelocity())
-	{
-		return 0.0f;
-	}
-	float VelocityYaw = UKismetMathLibrary::MakeRotFromX(GetVelocity()).Yaw;
-	return UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, GetActorRotation().Yaw, 0.0)).Yaw;
-}
-
 float AShooterCharacter::GetYawExceedingMaxLimit(float CurrentYaw) const
 {
 	if (CurrentYaw < -90.0f)
@@ -196,10 +192,10 @@ float AShooterCharacter::GetYawExceedingMaxLimit(float CurrentYaw) const
 	return 0.0f;
 }
 
-bool AShooterCharacter::HasVelocity() const
-{
-	return GetVelocity().SizeSquared2D() > 0.0f;
-}
+//bool AShooterCharacter::HasVelocity() const
+//{
+//	return GetVelocity().SizeSquared2D() > 0.0f;
+//}
 
 void AShooterCharacter::Init()
 {
@@ -225,10 +221,10 @@ void AShooterCharacter::Init()
 
 }
 
-bool AShooterCharacter::IsAccelerating() const
-{
-	return GetController() ? GetCharacterMovement() && GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f : bIsRemoteAccelerating;
-}
+//bool AShooterCharacter::IsAccelerating() const
+//{
+//	return GetController() ? GetCharacterMovement() && GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f : RemoteAcceleration.SizeSquared2D() > 0.0f;
+//}
 
 void AShooterCharacter::PostInitializeComponents()
 {
@@ -291,10 +287,11 @@ void AShooterCharacter::PreReplication(IRepChangedPropertyTracker& ChangedProper
 
 	if (HasAuthority())
 	{
-		if (GetCharacterMovement())
+		/*if (GetCharacterMovement())
 		{
 			SetIsRemoteAccelerating(GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f);
-		}
+			SetRemoteAcceleration(GetCharacterMovement()->GetCurrentAcceleration());
+		}*/
 		if (GetController())
 		{
 			SetRemoteViewYaw(GetController()->GetControlRotation().Yaw);
@@ -631,7 +628,7 @@ void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 void AShooterCharacter::OnCharacterAimAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CombatComponent && !(bIsToggleSprint && HasVelocity() && bIsMoveInputForward))
+	if (CombatComponent && !(bIsToggleSprint && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward))
 	{
 		CombatComponent->Server_SetIsAiming(CurrentValue);
 	}
@@ -706,7 +703,7 @@ void AShooterCharacter::OnCharacterHolsterWeaponAction(const FInputActionValue& 
 void AShooterCharacter::OnCharacterLeanLeftAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && !(bIsToggleSprint && HasVelocity() && bIsMoveInputForward))
+	if (CurrentValue && !(bIsToggleSprint && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward))
 	{
 		ELeanDirection NewLeanDirection = ELeanDirection::LD_Left;
 		float TransitionDuration = DefaultAnimationTransitionDuration;
@@ -729,7 +726,7 @@ void AShooterCharacter::OnCharacterLeanLeftAction(const FInputActionValue& Value
 void AShooterCharacter::OnCharacterLeanRightAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && !(bIsToggleSprint && HasVelocity() && bIsMoveInputForward))
+	if (CurrentValue && !(bIsToggleSprint && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward))
 	{
 		ELeanDirection NewLeanDirection = ELeanDirection::LD_Right;
 		float TransitionDuration = DefaultAnimationTransitionDuration;
@@ -809,6 +806,10 @@ void AShooterCharacter::OnCharacterMoveLeftAction(const FInputActionValue& Value
 		}
 		if (CurrentValue)
 		{
+			if (bIsMoveInputForward && bIsToggleSprint)
+			{
+				CurrentValue *= FMath::Tan(FMath::DegreesToRadians(20.0f));
+			}
 			AddMovementInput(GetActorRightVector(), CurrentValue);
 		}
 	}
@@ -826,6 +827,10 @@ void AShooterCharacter::OnCharacterMoveRightAction(const FInputActionValue& Valu
 		}
 		if (CurrentValue)
 		{
+			if (bIsMoveInputForward && bIsToggleSprint)
+			{
+				CurrentValue *= FMath::Tan(FMath::DegreesToRadians(20.0f));
+			}
 			AddMovementInput(GetActorRightVector(), CurrentValue);
 		}
 	}
@@ -874,7 +879,7 @@ void AShooterCharacter::OnCharacterSprintAction(const FInputActionValue& Value)
 	const bool CurrentValue = Value.Get<bool>();
 	Server_SetIsToggleSprint(CurrentValue);
 
-	if (CurrentValue && HasVelocity() && bIsMoveInputForward)
+	if (CurrentValue && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward)
 	{
 		TransitionToSprint();
 	}
@@ -1033,10 +1038,15 @@ void AShooterCharacter::Server_SetLeaningRate_Implementation(float NewLeaningRat
 	LeaningRate = NewLeaningRate;
 }
 
-void AShooterCharacter::SetIsRemoteAccelerating(bool bRemoteAccelerating)
-{
-	bIsRemoteAccelerating = bRemoteAccelerating;
-}
+//void AShooterCharacter::SetIsRemoteAccelerating(bool bRemoteAccelerating)
+//{
+//	bIsRemoteAccelerating = bRemoteAccelerating;
+//}
+
+//void AShooterCharacter::SetRemoteAcceleration(FVector NewRemoteAcceleration)
+//{
+//	RemoteAcceleration = NewRemoteAcceleration;
+//}
 
 void AShooterCharacter::SetRemoteViewYaw(float NewRemoteYaw)
 {

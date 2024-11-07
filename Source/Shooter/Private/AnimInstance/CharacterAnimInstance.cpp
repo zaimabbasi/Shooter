@@ -41,8 +41,8 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	AO_Yaw = ShooterCharacter->GetAO_Yaw(AO_Yaw, DeltaSeconds);
 	AO_Pitch = ShooterCharacter->GetAO_Pitch(AO_Pitch, DeltaSeconds);
-	bIsAccelerating = ShooterCharacter->IsAccelerating();
-	bHasVelocity = ShooterCharacter->HasVelocity();
+	bIsAccelerating = ShooterCharacter->GetCurrentAcceleration().SizeSquared2D() > 0.0f;
+	bHasVelocity = ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
 	TurnDirection = ShooterCharacter->GetTurnDirection(AO_Yaw);
 	LeanDirection = ShooterCharacter->GetLeanDirection();
 	bIsToggleSlow = ShooterCharacter->GetIsToggleSlow();
@@ -53,7 +53,13 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	
 	if (bHasVelocity)
 	{
-		VelocityYawOffset = ShooterCharacter->GetVelocityYawOffset();
+		float VelocityYaw = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetVelocity()).Yaw;
+		VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, ShooterCharacter->GetActorRotation().Yaw, 0.0)).Yaw;
+	}
+	if (bIsAccelerating)
+	{
+		float AccelerationYaw = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetCurrentAcceleration()).Yaw;
+		AccelerationYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, AccelerationYaw, 0.0), FRotator(0.0, ShooterCharacter->GetActorRotation().Yaw, 0.0)).Yaw;
 	}
 	
 	float bUseControllerDesiredRotation = ShooterCharacter->GetUseControllerDesiredRotation();
