@@ -30,7 +30,7 @@ AShooterCharacter::AShooterCharacter()
 	bUseControllerRotationYaw = false;
 
 	LegsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LegsMesh"));
-	LegsMesh->SetupAttachment(GetRootComponent());
+	LegsMesh->SetupAttachment(GetMesh());
 	LegsMesh->SetCastShadow(false);
 
 	HandsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandsMesh"));
