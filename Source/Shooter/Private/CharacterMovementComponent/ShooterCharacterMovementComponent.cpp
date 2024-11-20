@@ -30,7 +30,7 @@ void FSavedMove_ShooterCharacter::Clear()
 {
 	Super::Clear();
 
-	bWantsToSprint = 0;
+	bWantsToSprint = false;
 }
 
 uint8 FSavedMove_ShooterCharacter::GetCompressedFlags() const

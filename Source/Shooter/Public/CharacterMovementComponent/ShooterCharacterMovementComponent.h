@@ -28,7 +28,7 @@ public:
 	virtual void PrepMoveFor(ACharacter* C) override;
 	virtual void SetMoveFor(ACharacter* C, float InDeltaTime, FVector const& NewAccel, class FNetworkPredictionData_Client_Character& ClientData) override;
 
-	uint8 bWantsToSprint : 1 = 0;
+	uint8 bWantsToSprint : 1;
 
 };
 
@@ -45,7 +45,7 @@ public:
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly)
-	bool bWantsToSprint;
+	uint8 bWantsToSprint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement", meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
 	float MaxWalkSpeedWalk;
