@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ShooterCharacterMovementComponent.generated.h"
 
+class AShooterCharacter;
 class FNetworkPredictionData_Client;
 
 class FNetworkPredictionData_Client_ShooterCharacter : public FNetworkPredictionData_Client_Character
@@ -28,6 +29,8 @@ public:
 	virtual void PrepMoveFor(ACharacter* C) override;
 	virtual void SetMoveFor(ACharacter* C, float InDeltaTime, FVector const& NewAccel, class FNetworkPredictionData_Client_Character& ClientData) override;
 
+	uint8 bWantsToProne : 1;
+	uint8 bWantsToSlow : 1;
 	uint8 bWantsToSprint : 1;
 
 };
@@ -38,19 +41,111 @@ class SHOOTER_API UShooterCharacterMovementComponent : public UCharacterMovement
 	GENERATED_BODY()
 
 public:
-	UShooterCharacterMovementComponent();
-	bool CanSprintInCurrentState() const;
+	UShooterCharacterMovementComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	//virtual void ApplyVelocityBraking(float DeltaTime, float Friction, float BrakingDeceleration) override;
+	//virtual void CalcVelocity(float DeltaTime, float Friction, bool bFluid, float BrakingDeceleration) override;
+	virtual bool CanAttemptJump() const override;
+	virtual bool CanProneInCurrentState() const;
+	virtual bool CanSlowInCurrentState() const;
+	virtual bool CanSprintInCurrentState() const;
+	virtual bool CanWalkOffLedges() const override;
+	//virtual float GetMaxAcceleration() const override;
+	//virtual float GetMaxBrakingDeceleration() const override;
+	virtual float GetMaxSpeed() const override;
 	virtual FNetworkPredictionData_Client* GetPredictionData_Client() const override;
+
+	UFUNCTION(BlueprintGetter)
+	float GetPronedHalfHeight() const;
+
+	//float GetRemainingProneLockCooldown() const;
+	//float GetTimestamp() const;
+	virtual bool HasValidData() const override;
+
+	/*UFUNCTION(BlueprintPure, Category = "Character Movement")
+	bool IsProneLocked() const;*/
+
+	virtual bool IsProning() const;
+	//bool IsProneLockOnTimer() const;
+	virtual bool IsSlowing() const;
+	virtual bool IsSprinting() const;
 	virtual void OnMovementUpdated(float DeltaSeconds, const FVector& OldLocation, const FVector& OldVelocity) override;
+	virtual void PostLoad() override;
+	virtual void Prone(bool bClientSimulation = false);
+
+	UFUNCTION(BlueprintSetter)
+	void SetPronedHalfHeight(const float NewValue);
+
+	//void SetProneLock(bool bLock);
+	virtual void SetUpdatedComponent(USceneComponent* NewUpdatedComponent) override;
+	virtual void Slow();
+	virtual void Sprint();
+	virtual void UnProne(bool bClientSimulation = false);
+	virtual void UnSlow();
+	virtual void UnSprint();
+	virtual void UpdateCharacterStateAfterMovement(float DeltaSeconds) override;
+	virtual void UpdateCharacterStateBeforeMovement(float DeltaSeconds) override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement: Walking")
+	uint8 bCanWalkOffLedgesWhenProning : 1;
+
+	/*UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly)
+	uint8 bProneLocked : 1;*/
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Shooter Character Movement (General Settings)")
+	uint8 bWantsToProne : 1;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Shooter Character Movement (General Settings)")
+	uint8 bWantsToSlow : 1;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Shooter Character Movement (General Settings)")
+	uint8 bWantsToSprint : 1;
+
+	/*UPROPERTY(Category = "Character Movement: Walking", EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0", UIMin = "0"))
+	float BrakingDecelerationProned;*/
+
+	/*UPROPERTY(Category = "Character Movement (General Settings)", EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0", UIMin = "0", EditCondition = "bUseSeparateBrakingFriction"))
+	float BrakingFrictionProned;*/
+
+	/*UPROPERTY(Category = "Character Movement: Walking", EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0", UIMin = "0"))
+	float GroundFrictionProned;*/
+
+	/*UPROPERTY(Category = "Character Movement (General Settings)", EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0", UIMin = "0"))
+	float MaxAccelerationProned;*/
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement: Walking", meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
+	float MaxWalkSpeedProned;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement: Walking", meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
+	float MaxWalkSpeedCrouchedSlow;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement: Walking", meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
+	float MaxWalkSpeedSlow;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement: Walking", meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
+	float MaxWalkSpeedSprint;
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement: Walking", meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
+	float MaxWalkSpeedWalk;*/
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement: Walking", meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
+	float MaxWalkSpeedWalkCrouched;*/
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement (General Settings)", BlueprintSetter = SetPronedHalfHeight, BlueprintGetter = GetPronedHalfHeight, meta = (ClampMin = "0", UIMin = "0", ForceUnits = cm))
+	float PronedHalfHeight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement (General Settings)", meta = (ClampMin = "0", UIMin = "0", ForceUnits = cm))
+	float PronedRadius;
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement (General Settings)", meta = (ClampMin = "0", UIMin = "0", ForceUnits = cm))
+	float ProneLockDuration;*/
+
+protected:
+	virtual bool ClientUpdatePositionAfterServerUpdate() override;
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly)
-	uint8 bWantsToSprint;
+	UPROPERTY(Transient, DuplicateTransient)
+	TObjectPtr<AShooterCharacter> ShooterCharacterOwner;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement", meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
-	float MaxWalkSpeedWalk;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement", meta = (ClampMin = "0", UIMin = "0", ForceUnits = "cm/s"))
-	float MaxWalkSpeedSprint;
+	//float ProneLockTimestamp = -1.f;
 
 };

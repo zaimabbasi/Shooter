@@ -14,7 +14,7 @@ class UCombatComponent;
 class UInputAction;
 class UInputMappingContext;
 class UInventoryComponent;
-enum class ECharacterStance : uint8;
+class UShooterCharacterMovementComponent;
 enum class ECombatAction : uint8;
 enum class ELeanDirection : uint8;
 enum class ETurnDirection : uint8;
@@ -26,7 +26,17 @@ class SHOOTER_API AShooterCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	AShooterCharacter();
+	AShooterCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	UFUNCTION(BlueprintCallable, Category = Character)
+	virtual bool CanProne() const;
+
+	UFUNCTION(BlueprintCallable, Category = Character)
+	virtual bool CanSlow() const;
+
+	UFUNCTION(BlueprintCallable, Category = Character)
+	virtual bool CanSprint() const;
+
 	float GetAO_Pitch(float CurrentPitch, float DeltaTime) const;
 	float GetAO_Yaw(float CurrentYaw, float DeltaTime);
 	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
@@ -38,13 +48,51 @@ public:
 	ETurnDirection GetTurnDirection(float CurrentYaw);
 	bool GetUseControllerDesiredRotation() const;
 	float GetYawExceedingMaxLimit(float CurrentYaw) const;
-	//bool HasVelocity() const;
 	void Init();
-	//bool IsAccelerating() const;
+	virtual void OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
+
+	UFUNCTION()
+	virtual void OnRep_IsProned();
+
+	virtual void OnStartProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
 	virtual void PostInitializeComponents() override;
 	virtual void PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker) override;
+	
+	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
+	virtual void Prone(bool bClientSimulation = false);
+
+	virtual void RecalculateBaseEyeHeight() override;
+	void RecalculatePronedEyeHeight();
+
+	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
+	virtual void Slow();
+
+	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
+	virtual void Sprint();
+
+	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
+	virtual void UnProne(bool bClientSimulation = false);
+
+	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
+	virtual void UnSlow();
+
+	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
+	virtual void UnSprint();
+
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_IsProned, Category = Character)
+	uint32 bIsProned : 1;
+
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = Character)
+	uint32 bIsSlowing : 1;
+
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = Character)
+	uint32 bIsSprinting : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+	float PronedEyeHeight;
 
 protected:
 	virtual void BeginPlay() override;
@@ -53,12 +101,6 @@ private:
 	bool CanPerformCrouchAction() const;
 	bool CanPerformMoveAction() const;
 	bool CanPerformProneAction() const;
-	float GetMaxWalkSpeed() const;
-	float GetMaxWalkSpeedCrouched() const;
-	float GetMaxWalkSpeedCrouchedSlow() const;
-	float GetMaxWalkSpeedProned() const;
-	float GetMaxWalkSpeedSlow() const;
-	float GetMaxWalkSpeedSprint() const;
 
 	UFUNCTION()
 	void Handle_OnCharacterAnimInstanceTurnInPlace();
@@ -150,15 +192,6 @@ private:
 	void OnWeaponFiremodeAction(const FInputActionValue& Value);
 	void OnWeaponReloadAction(const FInputActionValue& Value);
 
-	UFUNCTION()
-	void OnRep_CurrentStance();
-
-	UFUNCTION()
-	void OnRep_IsToggleSlow();
-
-	UFUNCTION()
-	void OnRep_IsToggleSprint();
-
 	UFUNCTION(Server, Reliable)
 	void Server_EquipWeaponProgressive(AWeapon* WeaponToEquip);
 
@@ -166,16 +199,7 @@ private:
 	void Server_HolsterWeaponProgressive();
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetCurrentStance(ECharacterStance NewStance);
-
-	UFUNCTION(Server, Reliable)
 	void Server_SetIsAlterAction(bool bAlterAction);
-
-	UFUNCTION(Server, Reliable)
-	void Server_SetIsToggleSlow(bool bToggleSlow);
-
-	UFUNCTION(Server, Reliable)
-	void Server_SetIsToggleSprint(bool bToggleSprint);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetLeanDirection(ELeanDirection NewLeanDirection);
@@ -186,13 +210,9 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_SetLeaningRate(float Rate);
 
-	//void SetIsRemoteAccelerating(bool bRemoteAccelerating);
-	//void SetRemoteAcceleration(FVector NewRemoteAcceleration);
 	void SetRemoteViewYaw(float NewRemoteYaw);
-	void TransitionToSprint();
+	//void TransitionToSprint();
 	void UpdateCameraFOV(float DeltaTime);
-	void UpdateMaxWalkSpeed(ECharacterStance Stance, bool bToggleSlow, bool bToggleSprint);
-	//void UpdateMovement(float DeltaTime);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
@@ -208,6 +228,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInventoryComponent> InventoryComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UShooterCharacterMovementComponent> ShooterCharacterMovementComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCharacterDataAsset> CharacterDataAsset;
@@ -297,18 +320,6 @@ private:
 	bool bIsMoveInputLeft;
 	bool bIsMoveInputRight;
 
-	/*UPROPERTY(Replicated)
-	bool bIsRemoteAccelerating;*/
-
-	UPROPERTY(ReplicatedUsing = OnRep_IsToggleSlow)
-	bool bIsToggleSlow;
-
-	UPROPERTY(ReplicatedUsing = OnRep_IsToggleSprint)
-	bool bIsToggleSprint;
-
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentStance)
-	ECharacterStance CurrentStance;
-
 	const float DefaultAnimationTransitionDuration = 0.25f;
 	float DefaultCameraFOV;
 	const float DefaultToAimCameraFOVPercentage = 0.8f;
@@ -326,9 +337,6 @@ private:
 
 	TObjectPtr<AWeapon> NextWeaponToEquip;
 
-	/*UPROPERTY(Replicated)
-	FVector RemoteAcceleration;*/
-
 	UPROPERTY(Replicated)
 	uint8 RemoteViewYaw;
 
@@ -336,12 +344,9 @@ private:
 	ETurnDirection TurnDirection;
 
 public:
-	FORCEINLINE ECharacterStance GetCurrentStance() const { return CurrentStance; }
 	FORCEINLINE float GetDefaultAnimationTransitionDuration() const { return DefaultAnimationTransitionDuration; }
 	FORCEINLINE float GetDefaultToAimCameraFOVPercentage() const { return DefaultToAimCameraFOVPercentage; }
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
-	FORCEINLINE bool GetIsToggleSlow() const { return bIsToggleSlow; }
-	FORCEINLINE bool GetIsToggleSprint() const { return bIsToggleSprint; }
 	FORCEINLINE ELeanDirection GetLeanDirection() const { return LeanDirection; }
 	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
 	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }
