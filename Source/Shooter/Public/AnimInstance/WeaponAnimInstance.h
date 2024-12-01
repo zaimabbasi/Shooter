@@ -6,7 +6,6 @@
 #include "Animation/AnimInstance.h"
 #include "WeaponAnimInstance.generated.h"
 
-class AShooterCharacter;
 class AWeapon;
 enum class ECombatAction : uint8;
 enum class EWeaponFiremode : uint8;
@@ -105,7 +104,6 @@ protected:
 	void AnimNotify_ShellPort() const;
 
 private:
-	TObjectPtr<ACharacter> OwningCharacter;
 	TObjectPtr<AWeapon> Weapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
@@ -115,19 +113,7 @@ private:
 	ECombatAction CombatAction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	bool bIsHolster;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	bool bHasPatronInWeaponAmmo;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	EWeaponFiremode Firemode;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	float FireAnimPlayRate;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	bool bLoopFireAnim;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	FTransform WeaponRootAnimTransform;
@@ -137,5 +123,20 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	FTransform RCollarboneTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	bool bIsHolster;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	bool bHasPatronInWeaponAmmo;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	float FireAnimPlayRate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	bool bLoopFireAnim;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	bool bIsThirdAction;
 
 };

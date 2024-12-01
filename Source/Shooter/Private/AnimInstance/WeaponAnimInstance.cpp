@@ -3,7 +3,6 @@
 
 #include "AnimInstance/WeaponAnimInstance.h"
 #include "Actor/Weapon.h"
-#include "Character/ShooterCharacter.h"
 #include "Struct/ShooterUtility.h"
 #include "Type/ShooterNameType.h"
 
@@ -33,29 +32,25 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		return;
 	}
-	if (OwningCharacter == nullptr)
-	{
-		OwningCharacter = Cast<ACharacter>(Weapon->GetOwner());
-	}
 
+	USkeletalMeshComponent* WeaponMesh = Weapon->GetMesh();
+	CharacterMesh = Weapon->GetOwnerCharacterMesh();
 	CombatAction = Weapon->GetCombatAction();
 	bIsHolster = Weapon->GetIsHolster();
 	bHasPatronInWeaponAmmo = Weapon->HasPatronInWeaponAmmo();
 	Firemode = Weapon->GetFiremode();
+	bIsThirdAction = Weapon->IsThirdAction();
 
-	if (OwningCharacter && !bIsHolster)
+	if (bIsThirdAction && !bIsHolster && CharacterMesh && WeaponMesh)
 	{
-		CharacterMesh = OwningCharacter->GetMesh();
-		USkeletalMeshComponent* WeaponMesh = Weapon->GetMesh();
-		if (CharacterMesh && WeaponMesh)
-		{
-			LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			
-			RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			
-			WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		}
+		LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+
+		RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+
+		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		WeaponRootAnimTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_ROOT_SOCKET_NAME, WeaponRootAnimTransform);
 	}
+
 }
 
 void UWeaponAnimInstance::AnimNotify_ActionEnd() const

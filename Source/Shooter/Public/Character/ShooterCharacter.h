@@ -43,12 +43,17 @@ public:
 	ECombatAction GetCombatAction() const;
 	FVector GetCurrentAcceleration() const;
 	AWeapon* GetEquippedWeapon() const;
+	USkeletalMeshComponent* GetEquippedWeaponMesh() const;
 	bool GetIsAiming() const;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	ETurnDirection GetTurnDirection(float CurrentYaw);
 	bool GetUseControllerDesiredRotation() const;
 	float GetYawExceedingMaxLimit(float CurrentYaw) const;
 	void Init();
+	bool IsEquippedWeaponPistol() const;
+	bool IsEquippedWeaponOneHanded() const;
+	bool IsThirdAction() const;
+	bool IsWeaponEquipped() const;
 	virtual void OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
 
 	UFUNCTION()
@@ -79,6 +84,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
 	virtual void UnSprint();
 
+	void SetIsTransition(bool bNewIsTransition);
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void Tick(float DeltaTime) override;
 
@@ -103,11 +109,80 @@ private:
 	bool CanPerformProneAction() const;
 
 	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceControllerDesiredRotationNeeded(bool bControllerDesiredRotationNeeded);
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceCrouchAimSlowToTransitionIdleLowAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToSprintSlowStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceIdleLowAimToTransitionIdleLowAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleLowAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleLowAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToCrouchIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToProneIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceTransitionIdleAimToProneIdleAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceTransitionIdleAimToSprintSlowToSprintSlowStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceTransitionIdleLowAimToProneIdleAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleAimToIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleLowAimToIdleLowAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceTransitionSprintSlowToCrouchIdleAimToIdleLowAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleLowAimStarted();
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted();
+
+	UFUNCTION()
 	void Handle_OnCharacterAnimInstanceTurnInPlace();
 
 	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceControllerDesiredRotationNeeded(bool bControllerDesiredRotationNeeded);
+	void Handle_OnCharacterAnimInstanceWalkAimToTransitionIdleAimToProneIdleAimStarted();
 
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted();
+	
 	UFUNCTION()
 	void Handle_OnCombatComponentActionEnd(AWeapon* Weapon);
 
@@ -211,8 +286,7 @@ private:
 	void Server_SetLeaningRate(float Rate);
 
 	void SetRemoteViewYaw(float NewRemoteYaw);
-	//void TransitionToSprint();
-	void UpdateCameraFOV(float DeltaTime);
+	//void UpdateCameraFOV(float DeltaTime);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
@@ -229,7 +303,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInventoryComponent> InventoryComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY()
 	TObjectPtr<UShooterCharacterMovementComponent> ShooterCharacterMovementComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
@@ -319,6 +393,9 @@ private:
 	bool bIsMoveInputForward;
 	bool bIsMoveInputLeft;
 	bool bIsMoveInputRight;
+
+	UPROPERTY(Replicated)
+	bool bIsTransition;
 
 	const float DefaultAnimationTransitionDuration = 0.25f;
 	float DefaultCameraFOV;

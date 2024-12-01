@@ -144,6 +144,15 @@ AWeapon* AShooterCharacter::GetEquippedWeapon() const
 	return CombatComponent->GetEquippedWeapon();
 }
 
+USkeletalMeshComponent* AShooterCharacter::GetEquippedWeaponMesh() const
+{
+	if (CombatComponent == nullptr || CombatComponent->GetEquippedWeapon() == nullptr)
+	{
+		return nullptr;
+	}
+	return CombatComponent->GetEquippedWeapon()->GetMesh();
+}
+
 bool AShooterCharacter::GetIsAiming() const
 {
 	if (CombatComponent == nullptr)
@@ -164,6 +173,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsProned, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsSlowing, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsSprinting, COND_SimulatedOnly);
+	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsTransition, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, RemoteViewYaw, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, TurnDirection, COND_SkipOwner);
 
@@ -234,6 +244,26 @@ void AShooterCharacter::Init()
 
 }
 
+bool AShooterCharacter::IsEquippedWeaponPistol() const
+{
+	return CombatComponent && CombatComponent->GetEquippedWeapon() && CombatComponent->GetEquippedWeapon()->IsPistol();
+}
+
+bool AShooterCharacter::IsEquippedWeaponOneHanded() const
+{
+	return CombatComponent && CombatComponent->GetEquippedWeapon() && CombatComponent->GetEquippedWeapon()->GetIsOneHanded();
+}
+
+bool AShooterCharacter::IsThirdAction() const
+{
+	return bIsSprinting || bIsTransition || (bIsProned && GetVelocity().SizeSquared2D() > 0.0f);
+}
+
+bool AShooterCharacter::IsWeaponEquipped() const
+{
+	return CombatComponent && CombatComponent->GetEquippedWeapon() != nullptr;
+}
+
 void AShooterCharacter::OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
 {
 	RecalculateBaseEyeHeight();
@@ -300,8 +330,31 @@ void AShooterCharacter::PostInitializeComponents()
 		CharacterMesh->SetSkeletalMeshAsset(USkeletalMergingLibrary::MergeMeshes(CharacterMeshMergeParams));
 		if (UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(CharacterMesh->GetAnimInstance()))
 		{
-			CharacterAnimInstance->OnCharacterAnimInstanceTurnInPlace.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTurnInPlace);
 			CharacterAnimInstance->OnCharacterAnimInstanceControllerDesiredRotationNeeded.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceControllerDesiredRotationNeeded);
+			CharacterAnimInstance->OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceCrouchAimSlowToTransitionIdleLowAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceCrouchAimSlowToTransitionIdleLowAimToProneIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceIdleAimToTransitionIdleAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToProneIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceIdleAimToTransitionIdleAimToSprintSlowStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToSprintSlowStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceIdleLowAimToTransitionIdleLowAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceIdleLowAimToTransitionIdleLowAimToProneIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleLowAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleLowAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleLowAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleLowAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToCrouchIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToCrouchIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToProneIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceTransitionIdleAimToProneIdleAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionIdleAimToProneIdleAimToProneIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceTransitionIdleAimToSprintSlowToSprintSlowStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionIdleAimToSprintSlowToSprintSlowStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceTransitionIdleLowAimToProneIdleAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionIdleLowAimToProneIdleAimToProneIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceTransitionProneIdleAimToIdleAimToIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleAimToIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceTransitionProneIdleAimToIdleLowAimToIdleLowAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleLowAimToIdleLowAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceTransitionSprintSlowToCrouchIdleAimToIdleLowAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToCrouchIdleAimToIdleLowAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleLowAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleLowAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceTurnInPlace.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTurnInPlace);
+			CharacterAnimInstance->OnCharacterAnimInstanceWalkAimToTransitionIdleAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceWalkAimToTransitionIdleAimToProneIdleAimStarted);
+			CharacterAnimInstance->OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted);
 		}
 	}
 	if (HandsMesh)
@@ -429,6 +482,15 @@ void AShooterCharacter::UnSprint()
 	}
 }
 
+void AShooterCharacter::SetIsTransition(bool bNewIsTransition)
+{
+	if (GetController() && GetController()->IsLocalController())
+	{
+		GetController()->SetIgnoreMoveInput(bNewIsTransition);
+	}
+	bIsTransition = bNewIsTransition;
+}
+
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -514,22 +576,17 @@ void AShooterCharacter::BeginPlay()
 
 bool AShooterCharacter::CanPerformCrouchAction() const
 {
-	return TurnDirection == ETurnDirection::TD_None;
+	return TurnDirection == ETurnDirection::TD_None && bIsTransition == false;
 }
 
 bool AShooterCharacter::CanPerformMoveAction() const
 {
-	return true;
+	return bIsTransition == false;
 }
 
 bool AShooterCharacter::CanPerformProneAction() const
 {
-	return TurnDirection == ETurnDirection::TD_None;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceTurnInPlace()
-{
-	TurnDirection = ETurnDirection::TD_None;
+	return TurnDirection == ETurnDirection::TD_None && bIsTransition == false;
 }
 
 void AShooterCharacter::Handle_OnCharacterAnimInstanceControllerDesiredRotationNeeded(bool bControllerDesiredRotationNeeded)
@@ -538,6 +595,126 @@ void AShooterCharacter::Handle_OnCharacterAnimInstanceControllerDesiredRotationN
 	{
 		GetCharacterMovement()->bUseControllerDesiredRotation = bControllerDesiredRotationNeeded;
 	}
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceCrouchAimSlowToTransitionIdleLowAimToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToSprintSlowStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceIdleLowAimToTransitionIdleLowAimToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleLowAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleLowAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToCrouchIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionIdleAimToProneIdleAimToProneIdleAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionIdleAimToSprintSlowToSprintSlowStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionIdleLowAimToProneIdleAimToProneIdleAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleAimToIdleAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleLowAimToIdleLowAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToCrouchIdleAimToIdleLowAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleLowAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTurnInPlace()
+{
+	TurnDirection = ETurnDirection::TD_None;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceWalkAimToTransitionIdleAimToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted()
+{
+	bIsTransition = true;
 }
 
 void AShooterCharacter::Handle_OnCombatComponentActionEnd(AWeapon* Weapon)
@@ -941,10 +1118,6 @@ void AShooterCharacter::OnCharacterSprintAction(const FInputActionValue& Value)
 	{
 		UnSprint();
 	}
-	/*if (CurrentValue && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward)
-	{
-		TransitionToSprint();
-	}*/
 }
 
 void AShooterCharacter::OnWeaponChamberCheckAction(const FInputActionValue& Value)
@@ -1069,61 +1242,37 @@ void AShooterCharacter::SetRemoteViewYaw(float NewRemoteYaw)
 	RemoteViewYaw = FRotator::CompressAxisToByte(NewRemoteYaw);
 }
 
-//void AShooterCharacter::TransitionToSprint()
+//void AShooterCharacter::UpdateCameraFOV(float DeltaTime)
 //{
-//	if (bIsCrouched)
+//	if (FirstPersonCamera == nullptr)
 //	{
-//		UnCrouch();
+//		return;
 //	}
-//	else if (bIsProned)
+//	bool bIsAiming = GetIsAiming();
+//	if (!bIsAiming && FirstPersonCamera->FieldOfView == DefaultCameraFOV)
 //	{
-//		UnProne();
+//		return;
 //	}
-//
-//	if (GetIsAiming())
+//	if (bIsAiming && FirstPersonCamera->FieldOfView == AimCameraFOV)
 //	{
-//		CombatComponent->Server_SetIsAiming(false);
+//		return;
 //	}
-//
-//	if (LeanDirection != ELeanDirection::LD_None)
+//	float AimSpeed = 50.0f;
+//	float FOVStep = AimSpeed * DeltaTime;
+//	if (bIsAiming)
 //	{
-//		Server_SetLeanDirection(ELeanDirection::LD_None);
-//		Server_SetLeanTransitionDuration(DefaultAnimationTransitionDuration);
-//		Server_SetLeaningRate(MaxLean / DefaultAnimationTransitionDuration);
+//		FirstPersonCamera->FieldOfView -= FOVStep;
+//		if (FirstPersonCamera->FieldOfView < AimCameraFOV)
+//		{
+//			FirstPersonCamera->FieldOfView = AimCameraFOV;
+//		}
+//	}
+//	else
+//	{
+//		FirstPersonCamera->FieldOfView += FOVStep;
+//		if (FirstPersonCamera->FieldOfView > DefaultCameraFOV)
+//		{
+//			FirstPersonCamera->FieldOfView = DefaultCameraFOV;
+//		}
 //	}
 //}
-
-void AShooterCharacter::UpdateCameraFOV(float DeltaTime)
-{
-	if (FirstPersonCamera == nullptr)
-	{
-		return;
-	}
-	bool bIsAiming = GetIsAiming();
-	if (!bIsAiming && FirstPersonCamera->FieldOfView == DefaultCameraFOV)
-	{
-		return;
-	}
-	if (bIsAiming && FirstPersonCamera->FieldOfView == AimCameraFOV)
-	{
-		return;
-	}
-	float AimSpeed = 50.0f;
-	float FOVStep = AimSpeed * DeltaTime;
-	if (bIsAiming)
-	{
-		FirstPersonCamera->FieldOfView -= FOVStep;
-		if (FirstPersonCamera->FieldOfView < AimCameraFOV)
-		{
-			FirstPersonCamera->FieldOfView = AimCameraFOV;
-		}
-	}
-	else
-	{
-		FirstPersonCamera->FieldOfView += FOVStep;
-		if (FirstPersonCamera->FieldOfView > DefaultCameraFOV)
-		{
-			FirstPersonCamera->FieldOfView = DefaultCameraFOV;
-		}
-	}
-}

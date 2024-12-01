@@ -5,6 +5,7 @@
 #include "Actor/Weapon.h"
 #include "Character/ShooterCharacter.h"
 #include "Enum/LeanDirection.h"
+#include "Struct/ShooterUtility.h"
 #include "Type/ShooterNameType.h"
 
 void UHandsAnimInstance::NativeInitializeAnimation()
@@ -27,16 +28,20 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
+	USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh();
+	CharacterMesh = ShooterCharacter->GetMesh();
 	AO_Yaw = ShooterCharacter->GetAO_Yaw(AO_Yaw, DeltaSeconds);
 	AO_Pitch = ShooterCharacter->GetAO_Pitch(AO_Pitch, DeltaSeconds);
+	WeaponMesh = ShooterCharacter->GetEquippedWeaponMesh();
+	bIsWeaponEquipped = ShooterCharacter->IsWeaponEquipped();
+	CombatAction = ShooterCharacter->GetCombatAction();
+	bIsThirdAction = ShooterCharacter->IsThirdAction();
 	
-	USkeletalMeshComponent* CharacterMesh = ShooterCharacter->GetMesh();
-	USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh();
 	if (CharacterMesh && HandsMesh)
 	{
 		// Note: Maybe no longer required because of problems (Try sprinting character with this code)
-		/*FTransform CharacterWeaponRootTransform = CharacterMesh->GetSocketTransform(TEXT("Weapon_root"), ERelativeTransformSpace::RTS_Component);
-		FTransform HandsWeaponRootTransform = HandsMesh->GetSocketTransform(TEXT("Weapon_root"), ERelativeTransformSpace::RTS_Component);
+		/*FTransform CharacterWeaponRootTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
+		FTransform HandsWeaponRootTransform = HandsMesh->GetSocketTransform(WEAPON_ROOT_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
 		FTransform DeltaWeaponRootTransform = HandsWeaponRootTransform.GetRelativeTransformReverse(CharacterWeaponRootTransform);
 		HandsMesh->SetRelativeLocation(DeltaWeaponRootTransform.GetLocation());*/
 
@@ -69,19 +74,15 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		Lean += LeanStep;
 	}
 
-	AWeapon* EquippedWeapon = ShooterCharacter->GetEquippedWeapon();
-	if (EquippedWeapon)
+	if (bIsThirdAction && !bIsWeaponEquipped && CharacterMesh && HandsMesh)
 	{
-		WeaponMesh = EquippedWeapon->GetMesh();
-		bIsWeaponEquipped = true;
-	}
-	else
-	{
-		WeaponMesh = nullptr;
-		bIsWeaponEquipped = false;
-	}
+		LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 
-	CombatAction = ShooterCharacter->GetCombatAction();
+		RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+
+		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		WeaponRootAnimTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_ROOT_SOCKET_NAME, WeaponRootAnimTransform);
+	}
 	
 }
 

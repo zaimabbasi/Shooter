@@ -19,12 +19,12 @@ public:
 	TArray<EWeaponFiremode> Firemodes;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon")
+	bool IsOneHanded;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
 	uint16 RateOfFire;
 
 	UPROPERTY(EditAnywhere, Category = "DataAsset")
 	TSoftObjectPtr<UModDataAsset> ModDataAsset;
-
-	/*UPROPERTY(EditAnywhere, Category = "HandsAnimClass")
-	TSubclassOf<UAnimInstance> HandsAnimClass;*/
 
 };

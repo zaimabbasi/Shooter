@@ -93,11 +93,11 @@ UShooterCharacterMovementComponent::UShooterCharacterMovementComponent(const FOb
 	bWantsToSprint = false;
 
 	MaxWalkSpeedProned = 50.0f;
-	MaxWalkSpeedSlow = 168.0f;
+	MaxWalkSpeedSlow = 160.0f;
 	MaxWalkSpeedCrouchedSlow = 46.0f;
 	MaxWalkSpeedSprint = 500.0f;
 	MaxWalkSpeed = 250.0f;
-	MaxWalkSpeedCrouched = 160.0f;
+	MaxWalkSpeedCrouched = 168.0f;
 
 	SetCrouchedHalfHeight(68.0f);
 	SetPronedHalfHeight(30.0f);

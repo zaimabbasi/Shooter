@@ -10,6 +10,7 @@
 #include "Actor/Mag.h"
 #include "ActorComponent/ModComponent.h"
 #include "AnimInstance/WeaponAnimInstance.h"
+#include "Character/ShooterCharacter.h"
 #include "DataAsset/MagDataAsset.h"
 #include "DataAsset/ModDataAsset.h"
 #include "DataAsset/WeaponDataAsset.h"
@@ -60,6 +61,16 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 
 }
 
+bool AWeapon::GetIsOneHanded() const
+{
+	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
+	if (LoadedWeaponDataAsset == nullptr)
+	{
+		return false;
+	}
+	return LoadedWeaponDataAsset->IsOneHanded;
+}
+
 uint8 AWeapon::GetMagAmmoCount() const
 {
 	if (ModComponent == nullptr || ModComponent->GetMag() == nullptr)
@@ -81,6 +92,15 @@ uint8 AWeapon::GetMagAmmoSpace() const
 		return 0;
 	}
 	return Mag->GetAmmoSpace();
+}
+
+USkeletalMeshComponent* AWeapon::GetOwnerCharacterMesh() const
+{
+	if (ShooterCharacterOwner == nullptr)
+	{
+		return nullptr;
+	}
+	return ShooterCharacterOwner->GetMesh();
 }
 
 uint16 AWeapon::GetRateOfFire() const
@@ -126,6 +146,11 @@ void AWeapon::Init()
 			Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
 		}
 	}
+}
+
+bool AWeapon::IsThirdAction() const
+{
+	return ShooterCharacterOwner && ShooterCharacterOwner->IsThirdAction() && !bIsHolster;
 }
 
 void AWeapon::PostInitializeComponents()
@@ -199,6 +224,13 @@ void AWeapon::Server_SwitchFiremode_Implementation()
 void AWeapon::SetCombatAction(ECombatAction Action)
 {
 	CombatAction = Action;
+}
+
+void AWeapon::SetOwner(AActor* NewOwner)
+{
+	Super::SetOwner(NewOwner);
+
+	ShooterCharacterOwner = Cast<AShooterCharacter>(NewOwner);
 }
 
 void AWeapon::Tick(float DeltaTime)

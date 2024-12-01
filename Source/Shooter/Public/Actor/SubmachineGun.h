@@ -13,5 +13,5 @@ class SHOOTER_API ASubmachineGun : public AWeapon
 
 public:
 	ASubmachineGun();
-	
+
 };
