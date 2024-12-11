@@ -148,10 +148,16 @@ private:
 	ELeanDirection LeanDirection;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	FTransform LCollarboneTransform;
+	FTransform BendGoalLeftTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	FTransform RCollarboneTransform;
+	FTransform BendGoalRightTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	FTransform LPalmTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	FTransform RPalmTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	float AO_Yaw;

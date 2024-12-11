@@ -23,7 +23,7 @@
 
 // Common Types
 #define BEND_GOAL_LEFT_SOCKET_NAME							(TEXT("Bend_Goal_Left"))
-#define BEND_GOAL_RIGHT_SOCKET_NAME							(TEXT("Bend_Goal_Reft"))
+#define BEND_GOAL_RIGHT_SOCKET_NAME							(TEXT("Bend_Goal_Right"))
 
 // Mod Types
 #define MOD_BARREL_SOCKET_NAME								(TEXT("mod_barrel"))

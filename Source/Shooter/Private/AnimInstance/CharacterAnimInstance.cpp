@@ -50,11 +50,11 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	if (CharacterMesh && HandsMesh)
 	{
-		LCollarboneTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_L_COLLARBONE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		LCollarboneTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, L_COLLARBONE_ANIM_SOCKET_NAME, LCollarboneTransform);
+		BendGoalLeftTransform = HandsMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		BendGoalRightTransform = HandsMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 
-		RCollarboneTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_R_COLLARBONE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RCollarboneTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, R_COLLARBONE_ANIM_SOCKET_NAME, RCollarboneTransform);
+		LPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		RPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 	}
 
 	if (bHasVelocity)
