@@ -48,15 +48,6 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	LeanTransitionDuration = ShooterCharacter->GetLeanTransitionDuration();
 	AnimationTransitionDuration = ShooterCharacter->GetDefaultAnimationTransitionDuration();
 
-	if (CharacterMesh && HandsMesh)
-	{
-		BendGoalLeftTransform = HandsMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		BendGoalRightTransform = HandsMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-
-		LPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-	}
-
 	if (bHasVelocity)
 	{
 		float VelocityYaw = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetVelocity()).Yaw;
@@ -79,6 +70,22 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		AO_Yaw -= YawExceedingMaxLimit;
 	}
 
+	if (CharacterMesh && HandsMesh)
+	{
+		if (bIsThirdAction)
+		{
+			BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		}
+		else
+		{
+			BendGoalLeftTransform = HandsMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			BendGoalRightTransform = HandsMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		}
+
+		LPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		RPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+	}
 }
 
 void UCharacterAnimInstance::AnimNotify_IdleAimToTransitionIdleAimToSprintSlowStarted() const
