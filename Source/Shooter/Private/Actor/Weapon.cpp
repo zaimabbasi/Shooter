@@ -94,15 +94,6 @@ uint8 AWeapon::GetMagAmmoSpace() const
 	return Mag->GetAmmoSpace();
 }
 
-USkeletalMeshComponent* AWeapon::GetOwnerCharacterMesh() const
-{
-	if (ShooterCharacterOwner == nullptr)
-	{
-		return nullptr;
-	}
-	return ShooterCharacterOwner->GetMesh();
-}
-
 uint16 AWeapon::GetRateOfFire() const
 {
 	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
@@ -146,11 +137,6 @@ void AWeapon::Init()
 			Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
 		}
 	}
-}
-
-bool AWeapon::IsThirdAction() const
-{
-	return ShooterCharacterOwner && ShooterCharacterOwner->IsThirdAction() && !bIsHolster;
 }
 
 void AWeapon::PostInitializeComponents()
