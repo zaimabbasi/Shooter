@@ -337,28 +337,17 @@ void UCombatComponent::Handle_OnWeaponReloadCharge(AWeapon* Weapon)
 
 void UCombatComponent::OnRep_CombatAction()
 {
-	if (EquippedWeapon)
-	{
-		EquippedWeapon->SetCombatAction(CombatAction);
-	}
+	
 }
 
 void UCombatComponent::OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon)
 {
-	if (EquippedWeapon)
-	{
-		// In case when Authoritative Character's EquippedWeapon is null for Authonomous Characters
-		EquippedWeapon->SetCombatAction(CombatAction);
-	}
+	
 }
 
 void UCombatComponent::Server_SetCombatAction_Implementation(ECombatAction Action)
 {
 	CombatAction = Action;
-	if (EquippedWeapon)
-	{
-		EquippedWeapon->SetCombatAction(Action);
-	}
 }
 
 void UCombatComponent::Server_SetIsFiring_Implementation(const bool bFiring)

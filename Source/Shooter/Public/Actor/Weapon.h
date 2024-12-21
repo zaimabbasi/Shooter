@@ -28,17 +28,20 @@ class SHOOTER_API AWeapon : public AActor
 public:	
 	AWeapon();
 	bool DoesNeedCharge();
+	ECombatAction GetCombatAction() const;
 	EWeaponFiremode GetFiremode() const;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	bool GetIsOneHanded() const;
 	uint8 GetMagAmmoCount() const;
 	uint8 GetMagAmmoSpace() const;
 	uint16 GetRateOfFire() const;
+	USkeletalMeshComponent* GetShooterCharacterOwnerMesh() const;
 	bool HasFiremodes();
 	bool HasMag();
 	bool HasPatronInWeaponAmmo();
 	virtual void Init();
 	virtual bool IsPistol() const { return false; }
+	bool IsThirdAction() const;
 	virtual void PostInitializeComponents() override;
 
 	UFUNCTION(Server, Reliable)
@@ -53,7 +56,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_SwitchFiremode();
 
-	void SetCombatAction(ECombatAction Action);
 	virtual void SetOwner(AActor* NewOwner) override;
 	virtual void Tick(float DeltaTime) override;
 
@@ -96,8 +98,6 @@ protected:
 
 	UPROPERTY(Replicated)
 	bool bIsHolster;
-
-	ECombatAction CombatAction;
 
 	UPROPERTY(Replicated)
 	uint8 FiremodeIndex;
@@ -172,7 +172,6 @@ private:
 	void Handle_OnWeaponAnimInstanceWeaponSelector();
 
 public:
-	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }
 	FORCEINLINE bool GetIsHolster() const { return bIsHolster; }
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	FORCEINLINE AShooterCharacter* GetShooterCharacterOwner() const { return ShooterCharacterOwner; }

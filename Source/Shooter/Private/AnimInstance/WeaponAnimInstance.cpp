@@ -3,7 +3,6 @@
 
 #include "AnimInstance/WeaponAnimInstance.h"
 #include "Actor/Weapon.h"
-#include "Character/ShooterCharacter.h"
 #include "Struct/ShooterUtility.h"
 #include "Type/ShooterNameType.h"
 
@@ -34,16 +33,15 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
-	AShooterCharacter* ShooterCharacterOwner = Weapon->GetShooterCharacterOwner();
 	USkeletalMeshComponent* WeaponMesh = Weapon->GetMesh();
-	CharacterMesh = ShooterCharacterOwner ? ShooterCharacterOwner->GetMesh() : nullptr;
+	CharacterMesh = Weapon->GetShooterCharacterOwnerMesh();
 	CombatAction = Weapon->GetCombatAction();
-	bIsHolster = Weapon->GetIsHolster();
 	bHasPatronInWeaponAmmo = Weapon->HasPatronInWeaponAmmo();
 	Firemode = Weapon->GetFiremode();
-	bIsThirdAction = ShooterCharacterOwner && ShooterCharacterOwner->IsThirdAction();
+	bIsHolster = Weapon->GetIsHolster();
+	bIsThirdAction = Weapon->IsThirdAction();
 
-	if (bIsThirdAction && !bIsHolster && CharacterMesh && WeaponMesh)
+	if (bIsThirdAction && CharacterMesh)
 	{
 		BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);

@@ -18,7 +18,6 @@
 
 AWeapon::AWeapon() :
 	bIsHolster(false),
-	CombatAction(ECombatAction::CA_Out),
 	FiremodeIndex(0)
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -38,6 +37,15 @@ AWeapon::AWeapon() :
 bool AWeapon::DoesNeedCharge()
 {
 	return (GetMagAmmoCount() > 0 && PatronInWeaponAmmo == nullptr);
+}
+
+ECombatAction AWeapon::GetCombatAction() const
+{
+	if (ShooterCharacterOwner == nullptr || ShooterCharacterOwner->GetEquippedWeapon() != this)
+	{
+		return ECombatAction::CA_Out;
+	}
+	return ShooterCharacterOwner->GetCombatAction();
 }
 
 EWeaponFiremode AWeapon::GetFiremode() const
@@ -104,6 +112,15 @@ uint16 AWeapon::GetRateOfFire() const
 	return LoadedWeaponDataAsset->RateOfFire;
 }
 
+USkeletalMeshComponent* AWeapon::GetShooterCharacterOwnerMesh() const
+{
+	if (ShooterCharacterOwner == nullptr)
+	{
+		return nullptr;
+	}
+	return ShooterCharacterOwner->GetMesh();
+}
+
 bool AWeapon::HasFiremodes()
 {
 	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
@@ -137,6 +154,11 @@ void AWeapon::Init()
 			Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
 		}
 	}
+}
+
+bool AWeapon::IsThirdAction() const
+{
+	return ShooterCharacterOwner && ShooterCharacterOwner->IsThirdAction();
 }
 
 void AWeapon::PostInitializeComponents()
@@ -205,11 +227,6 @@ void AWeapon::Server_SwitchFiremode_Implementation()
 	{
 		FiremodeIndex = FMath::Modulo<uint8>(FiremodeIndex + 1, LoadedWeaponDataAsset->Firemodes.Num());
 	}
-}
-
-void AWeapon::SetCombatAction(ECombatAction Action)
-{
-	CombatAction = Action;
 }
 
 void AWeapon::SetOwner(AActor* NewOwner)
