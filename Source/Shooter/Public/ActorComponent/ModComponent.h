@@ -16,7 +16,7 @@ class AMag;
 //class AMount;
 class AMuzzle;
 class APistolgrip;
-class AReciever;
+class AReceiver;
 //class AScope;
 class ASightFront;
 class ASightRear;
@@ -62,7 +62,7 @@ private:
 	TObjectPtr<APistolgrip> Pistolgrip;
 
 	UPROPERTY(Replicated)
-	TObjectPtr<AReciever> Reciever;
+	TObjectPtr<AReceiver> Receiver;
 
 	UPROPERTY(Replicated)
 	TObjectPtr<ASightFront> SightFront;

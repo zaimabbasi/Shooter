@@ -12,7 +12,7 @@
 #include "Actor/Mag.h"
 //#include "Actor/Mount.h"
 #include "Actor/Muzzle.h"
-#include "Actor/Reciever.h"
+#include "Actor/Receiver.h"
 #include "Actor/Pistolgrip.h"
 //#include "Actor/Scope.h"
 #include "Actor/SightFront.h"
@@ -41,7 +41,7 @@ void UModComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(UModComponent, Mag);
 	DOREPLIFETIME(UModComponent, Muzzle);
 	DOREPLIFETIME(UModComponent, Pistolgrip);
-	DOREPLIFETIME(UModComponent, Reciever);
+	DOREPLIFETIME(UModComponent, Receiver);
 	DOREPLIFETIME(UModComponent, SightFront);
 	DOREPLIFETIME(UModComponent, SightRear);
 	DOREPLIFETIME(UModComponent, Stock);
@@ -135,15 +135,15 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 					Pistolgrip = SpawnedPistolgrip;
 				}
 			}
-			if (const TSubclassOf<AReciever>& RecieverClass = ModDataAsset->RecieverClass)
+			if (const TSubclassOf<AReceiver>& ReceiverClass = ModDataAsset->ReceiverClass)
 			{
-				if (AReciever* SpawnedReciever = World->SpawnActor<AReciever>(RecieverClass))
+				if (AReceiver* SpawnedReceiver = World->SpawnActor<AReceiver>(ReceiverClass))
 				{
-					SpawnedReciever->SetOwner(OwningActor);
-					SpawnedReciever->Init();
-					SpawnedReciever->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_RECIEVER_SOCKET_NAME);
+					SpawnedReceiver->SetOwner(OwningActor);
+					SpawnedReceiver->Init();
+					SpawnedReceiver->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_RECEIVER_SOCKET_NAME);
 
-					Reciever = SpawnedReciever;
+					Receiver = SpawnedReceiver;
 				}
 			}
 			if (const TSubclassOf<ASightFront>& SightFrontClass = ModDataAsset->SightFrontClass)

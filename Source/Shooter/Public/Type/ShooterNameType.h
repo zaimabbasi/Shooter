@@ -33,7 +33,7 @@
 #define MOD_MAGAZINE_SOCKET_NAME							(TEXT("mod_magazine"))
 #define MOD_MUZZLE_SOCKET_NAME								(TEXT("mod_muzzle"))
 #define MOD_PISTOL_GRIP_SOCKET_NAME							(TEXT("mod_pistol_grip"))
-#define MOD_RECIEVER_SOCKET_NAME							(TEXT("mod_reciever"))
+#define MOD_RECEIVER_SOCKET_NAME							(TEXT("mod_reciever"))
 #define MOD_SIGHT_FRONT_SOCKET_NAME							(TEXT("mod_sight_front"))
 #define MOD_SIGHT_REAR_SOCKET_NAME							(TEXT("mod_sight_rear"))
 #define MOD_STOCK_SOCKET_NAME								(TEXT("mod_stock"))

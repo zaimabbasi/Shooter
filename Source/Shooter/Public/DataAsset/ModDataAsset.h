@@ -16,7 +16,7 @@ class AMag;
 //class AMount;
 class AMuzzle;
 class APistolgrip;
-class AReciever;
+class AReceiver;
 //class AScope;
 class ASightFront;
 class ASightRear;
@@ -51,7 +51,7 @@ public:
 	TSubclassOf<APistolgrip> PistolgripClass;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AReciever> RecieverClass;
+	TSubclassOf<AReceiver> ReceiverClass;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<ASightFront> SightFrontClass;
