@@ -7,3 +7,8 @@ AMount::AMount()
 {
 
 }
+
+FName AMount::GetDefaultAttachParentSocketName() const
+{
+    return Super::GetDefaultAttachParentSocketName();
+}

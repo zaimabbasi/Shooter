@@ -7,3 +7,8 @@ AForegrip::AForegrip()
 {
 
 }
+
+FName AForegrip::GetDefaultAttachParentSocketName() const
+{
+    return Super::GetDefaultAttachParentSocketName();
+}

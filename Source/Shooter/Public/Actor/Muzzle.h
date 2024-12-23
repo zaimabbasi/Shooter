@@ -13,5 +13,6 @@ class SHOOTER_API AMuzzle : public AMod
 	
 public:	
 	AMuzzle();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };

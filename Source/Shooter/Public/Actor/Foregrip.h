@@ -13,5 +13,6 @@ class SHOOTER_API AForegrip : public AMod
 	
 public:
 	AForegrip();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };

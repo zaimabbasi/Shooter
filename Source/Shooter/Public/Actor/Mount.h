@@ -13,5 +13,6 @@ class SHOOTER_API AMount : public AMod
 	
 public:
 	AMount();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };

@@ -3,22 +3,8 @@
 
 #include "ActorComponent/ModComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "Actor/Barrel.h"
-#include "Actor/Charge.h"
-//#include "Actor/Flashlight.h"
-//#include "Actor/Foregrip.h"
-#include "Actor/GasBlock.h"
-#include "Actor/Handguard.h"
 #include "Actor/Mag.h"
-//#include "Actor/Mount.h"
-#include "Actor/Muzzle.h"
-#include "Actor/Receiver.h"
-#include "Actor/Pistolgrip.h"
-//#include "Actor/Scope.h"
-#include "Actor/SightFront.h"
-#include "Actor/SightRear.h"
-#include "Actor/Stock.h"
-//#include "Actor/Tactical.h"
+#include "Actor/Mod.h"
 #include "Actor/Weapon.h"
 #include "DataAsset/ModDataAsset.h"
 #include "Struct/ShooterUtility.h"
@@ -34,17 +20,8 @@ void UModComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UModComponent, Barrel);
-	DOREPLIFETIME(UModComponent, Charge);
-	DOREPLIFETIME(UModComponent, GasBlock);
-	DOREPLIFETIME(UModComponent, Handguard);
+	DOREPLIFETIME_CONDITION(UModComponent, ModArray, COND_OwnerOnly);
 	DOREPLIFETIME(UModComponent, Mag);
-	DOREPLIFETIME(UModComponent, Muzzle);
-	DOREPLIFETIME(UModComponent, Pistolgrip);
-	DOREPLIFETIME(UModComponent, Receiver);
-	DOREPLIFETIME(UModComponent, SightFront);
-	DOREPLIFETIME(UModComponent, SightRear);
-	DOREPLIFETIME(UModComponent, Stock);
 
 }
 
@@ -58,125 +35,20 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 	{
 		if (UWorld* World = GetWorld())
 		{
-			if (const TSubclassOf<ABarrel>& BarrelClass = ModDataAsset->BarrelClass)
+			for (const TSubclassOf<AMod>& ModClass : ModDataAsset->ModClassArray)
 			{
-				if (ABarrel* SpawnedBarrel = World->SpawnActor<ABarrel>(BarrelClass))
+				if (AMod* SpawnedMod = World->SpawnActor<AMod>(ModClass))
 				{
-					SpawnedBarrel->SetOwner(OwningActor);
-					SpawnedBarrel->Init();
-					SpawnedBarrel->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_BARREL_SOCKET_NAME);
+					SpawnedMod->SetOwner(OwningActor);
+					SpawnedMod->Init();
+					SpawnedMod->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, SpawnedMod->GetDefaultAttachParentSocketName());
 
-					Barrel = SpawnedBarrel;
-				}
-			}
-			if (const TSubclassOf<ACharge>& ChargeClass = ModDataAsset->ChargeClass)
-			{
-				if (ACharge* SpawnedCharge = World->SpawnActor<ACharge>(ChargeClass))
-				{
-					SpawnedCharge->SetOwner(OwningActor);
-					SpawnedCharge->Init();
-					SpawnedCharge->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_CHARGE_SOCKET_NAME);
+					ModArray.Add(SpawnedMod);
 
-					Charge = SpawnedCharge;
-				}
-			}
-			if (const TSubclassOf<AGasBlock>& GasBlockClass = ModDataAsset->GasBlockClass)
-			{
-				if (AGasBlock* SpawnedGasBlock = World->SpawnActor<AGasBlock>(GasBlockClass))
-				{
-					SpawnedGasBlock->SetOwner(OwningActor);
-					SpawnedGasBlock->Init();
-					SpawnedGasBlock->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_GAS_BLOCK_SOCKET_NAME);
-
-					GasBlock = SpawnedGasBlock;
-				}
-			}
-			if (const TSubclassOf<AHandguard>& HandguardClass = ModDataAsset->HandguardClass)
-			{
-				if (AHandguard* SpawnedHandguard = World->SpawnActor<AHandguard>(HandguardClass))
-				{
-					SpawnedHandguard->SetOwner(OwningActor);
-					SpawnedHandguard->Init();
-					SpawnedHandguard->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_HANDGUARD_SOCKET_NAME);
-
-					Handguard = SpawnedHandguard;
-				}
-			}
-			if (const TSubclassOf<AMag>& MagClass = ModDataAsset->MagClass)
-			{
-				if (AMag* SpawnedMag = World->SpawnActor<AMag>(MagClass))
-				{
-					SpawnedMag->SetOwner(OwningActor);
-					SpawnedMag->Init();
-					SpawnedMag->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_MAGAZINE_SOCKET_NAME);
-
-					Mag = SpawnedMag;
-				}
-			}
-			if (const TSubclassOf<AMuzzle>& MuzzleClass = ModDataAsset->MuzzleClass)
-			{
-				if (AMuzzle* SpawnedMuzzle = World->SpawnActor<AMuzzle>(MuzzleClass))
-				{
-					SpawnedMuzzle->SetOwner(OwningActor);
-					SpawnedMuzzle->Init();
-					SpawnedMuzzle->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_MUZZLE_SOCKET_NAME);
-
-					Muzzle = SpawnedMuzzle;
-				}
-			}
-			if (const TSubclassOf<APistolgrip>& PistolgripClass = ModDataAsset->PistolgripClass)
-			{
-				if (APistolgrip* SpawnedPistolgrip = World->SpawnActor<APistolgrip>(PistolgripClass))
-				{
-					SpawnedPistolgrip->SetOwner(OwningActor);
-					SpawnedPistolgrip->Init();
-					SpawnedPistolgrip->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_PISTOL_GRIP_SOCKET_NAME);
-
-					Pistolgrip = SpawnedPistolgrip;
-				}
-			}
-			if (const TSubclassOf<AReceiver>& ReceiverClass = ModDataAsset->ReceiverClass)
-			{
-				if (AReceiver* SpawnedReceiver = World->SpawnActor<AReceiver>(ReceiverClass))
-				{
-					SpawnedReceiver->SetOwner(OwningActor);
-					SpawnedReceiver->Init();
-					SpawnedReceiver->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_RECEIVER_SOCKET_NAME);
-
-					Receiver = SpawnedReceiver;
-				}
-			}
-			if (const TSubclassOf<ASightFront>& SightFrontClass = ModDataAsset->SightFrontClass)
-			{
-				if (ASightFront* SpawnedSightFront = World->SpawnActor<ASightFront>(SightFrontClass))
-				{
-					SpawnedSightFront->SetOwner(OwningActor);
-					SpawnedSightFront->Init();
-					SpawnedSightFront->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_SIGHT_FRONT_SOCKET_NAME);
-
-					SightFront = SpawnedSightFront;
-				}
-			}
-			if (const TSubclassOf<ASightRear>& SightRearClass = ModDataAsset->SightRearClass)
-			{
-				if (ASightRear* SpawnedSightRear = World->SpawnActor<ASightRear>(SightRearClass))
-				{
-					SpawnedSightRear->SetOwner(OwningActor);
-					SpawnedSightRear->Init();
-					SpawnedSightRear->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_SIGHT_REAR_SOCKET_NAME);
-
-					SpawnedSightRear = SightRear;
-				}
-			}
-			if (const TSubclassOf<AStock>& StockClass = ModDataAsset->StockClass)
-			{
-				if (AStock* SpawnedStock = World->SpawnActor<AStock>(StockClass))
-				{
-					SpawnedStock->SetOwner(OwningActor);
-					SpawnedStock->Init();
-					SpawnedStock->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, MOD_STOCK_SOCKET_NAME);
-
-					Stock = SpawnedStock;
+					if (SpawnedMod->IsA(AMag::StaticClass()))
+					{
+						Mag = Cast<AMag>(SpawnedMod);
+					}
 				}
 			}
 		}

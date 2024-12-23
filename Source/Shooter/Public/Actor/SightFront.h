@@ -13,5 +13,6 @@ class SHOOTER_API ASightFront : public AMod
 	
 public:	
 	ASightFront();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };

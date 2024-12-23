@@ -13,5 +13,6 @@ class SHOOTER_API AGasBlock : public AMod
 	
 public:	
 	AGasBlock();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };

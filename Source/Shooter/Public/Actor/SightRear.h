@@ -13,5 +13,6 @@ class SHOOTER_API ASightRear : public AMod
 	
 public:	
 	ASightRear();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };

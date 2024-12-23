@@ -4,6 +4,7 @@
 #include "Actor/Mod.h"
 #include "ActorComponent/ModComponent.h"
 #include "DataAsset/ModDataAsset.h"
+#include "Type/ShooterNameType.h"
 
 AMod::AMod()
 {
@@ -16,6 +17,11 @@ AMod::AMod()
 	ModComponent = CreateDefaultSubobject<UModComponent>(TEXT("ModComponent"));
 	ModComponent->SetIsReplicated(true);
 
+}
+
+FName AMod::GetDefaultAttachParentSocketName() const
+{
+	return NAME_None;
 }
 
 void AMod::Init()

@@ -2,9 +2,15 @@
 
 
 #include "Actor/SightRear.h"
+#include "Type/ShooterNameType.h"
 
 ASightRear::ASightRear()
 {
 	
+}
+
+FName ASightRear::GetDefaultAttachParentSocketName() const
+{
+	return MOD_SIGHT_REAR_SOCKET_NAME;
 }
 

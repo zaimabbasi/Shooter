@@ -13,5 +13,6 @@ class SHOOTER_API AStock : public AMod
 	
 public:	
 	AStock();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };

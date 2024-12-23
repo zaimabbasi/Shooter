@@ -13,5 +13,6 @@ class SHOOTER_API AFlashlight : public AMod
 
 public:
 	AFlashlight();
-	
+	virtual FName GetDefaultAttachParentSocketName() const override;
+
 };

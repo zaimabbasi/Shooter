@@ -7,3 +7,8 @@ ATactical::ATactical()
 {
 
 }
+
+FName ATactical::GetDefaultAttachParentSocketName() const
+{
+    return Super::GetDefaultAttachParentSocketName();
+}

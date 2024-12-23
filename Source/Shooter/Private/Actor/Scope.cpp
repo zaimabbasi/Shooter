@@ -7,3 +7,8 @@ AScope::AScope()
 {
 
 }
+
+FName AScope::GetDefaultAttachParentSocketName() const
+{
+    return Super::GetDefaultAttachParentSocketName();
+}

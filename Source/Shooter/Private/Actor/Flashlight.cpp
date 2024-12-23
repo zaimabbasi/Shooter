@@ -7,3 +7,8 @@ AFlashlight::AFlashlight()
 {
 
 }
+
+FName AFlashlight::GetDefaultAttachParentSocketName() const
+{
+    return Super::GetDefaultAttachParentSocketName();
+}

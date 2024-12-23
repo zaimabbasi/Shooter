@@ -22,6 +22,11 @@ uint8 AMag::GetAmmoSpace()
 	return GetAmmoCapacity() - AmmoCount;
 }
 
+FName AMag::GetDefaultAttachParentSocketName() const
+{
+	return MOD_MAGAZINE_SOCKET_NAME;
+}
+
 void AMag::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

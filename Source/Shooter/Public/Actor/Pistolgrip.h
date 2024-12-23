@@ -13,5 +13,6 @@ class SHOOTER_API APistolgrip : public AMod
 
 public:
 	APistolgrip();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };

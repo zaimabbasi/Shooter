@@ -20,6 +20,7 @@ public:
 	AMag();
 	uint8 GetAmmoCapacity();
 	uint8 GetAmmoSpace();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION(Server, Reliable)

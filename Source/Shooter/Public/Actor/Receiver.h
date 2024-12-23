@@ -13,5 +13,6 @@ class SHOOTER_API AReceiver : public AMod
 	
 public:	
 	AReceiver();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };

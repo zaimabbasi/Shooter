@@ -16,6 +16,7 @@ class SHOOTER_API AMod : public AActor
 	
 public:
 	AMod();
+	virtual FName GetDefaultAttachParentSocketName() const;
 	virtual void Init();
 	virtual void PostInitializeComponents() override;
 	virtual void Tick(float DeltaTime) override;

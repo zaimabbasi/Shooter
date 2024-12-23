@@ -13,5 +13,6 @@ class SHOOTER_API AScope : public AMod
 
 public:
 	AScope();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 	
 };

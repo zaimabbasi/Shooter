@@ -13,5 +13,6 @@ class SHOOTER_API ACharge : public AMod
 	
 public:
 	ACharge();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };

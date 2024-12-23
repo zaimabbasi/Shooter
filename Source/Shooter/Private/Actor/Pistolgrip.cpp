@@ -2,9 +2,15 @@
 
 
 #include "Actor/Pistolgrip.h"
+#include "Type/ShooterNameType.h"
 
 APistolgrip::APistolgrip()
 {
 	
+}
+
+FName APistolgrip::GetDefaultAttachParentSocketName() const
+{
+	return MOD_PISTOL_GRIP_SOCKET_NAME;
 }
 

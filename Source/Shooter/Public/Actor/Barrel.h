@@ -13,5 +13,6 @@ class SHOOTER_API ABarrel : public AMod
 	
 public:	
 	ABarrel();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };

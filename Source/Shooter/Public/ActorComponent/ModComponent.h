@@ -13,6 +13,7 @@ class ACharge;
 class AGasBlock;
 class AHandguard;
 class AMag;
+class AMod;
 //class AMount;
 class AMuzzle;
 class APistolgrip;
@@ -41,37 +42,10 @@ protected:
 	
 private:
 	UPROPERTY(Replicated)
-	TObjectPtr<ABarrel> Barrel;
-
-	UPROPERTY(Replicated)
-	TObjectPtr<ACharge> Charge;
-
-	UPROPERTY(Replicated)
-	TObjectPtr<AGasBlock> GasBlock;
-
-	UPROPERTY(Replicated)
-	TObjectPtr<AHandguard> Handguard;
+	TArray<TObjectPtr<AMod>> ModArray;
 
 	UPROPERTY(Replicated)
 	TObjectPtr<AMag> Mag;
-
-	UPROPERTY(Replicated)
-	TObjectPtr<AMuzzle> Muzzle;
-
-	UPROPERTY(Replicated)
-	TObjectPtr<APistolgrip> Pistolgrip;
-
-	UPROPERTY(Replicated)
-	TObjectPtr<AReceiver> Receiver;
-
-	UPROPERTY(Replicated)
-	TObjectPtr<ASightFront> SightFront;
-
-	UPROPERTY(Replicated)
-	TObjectPtr<ASightRear> SightRear;
-
-	UPROPERTY(Replicated)
-	TObjectPtr<AStock> Stock;
 
 public:
 	FORCEINLINE AMag* GetMag() const { return Mag; }

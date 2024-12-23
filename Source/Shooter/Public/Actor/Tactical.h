@@ -13,5 +13,6 @@ class SHOOTER_API ATactical : public AMod
 	
 public:
 	ATactical();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };

@@ -13,5 +13,6 @@ class SHOOTER_API AHandguard : public AMod
 	
 public:	
 	AHandguard();
+	virtual FName GetDefaultAttachParentSocketName() const override;
 
 };
