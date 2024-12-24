@@ -105,6 +105,8 @@ protected:
 	UPROPERTY(Replicated)
 	TObjectPtr<AAmmo> PatronInWeaponAmmo;
 
+	TObjectPtr<AMag> Mag;
+
 private:
 	void EjectShellPortAmmo();
 

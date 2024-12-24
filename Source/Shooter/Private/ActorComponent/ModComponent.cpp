@@ -3,9 +3,7 @@
 
 #include "ActorComponent/ModComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "Actor/Mag.h"
 #include "Actor/Mod.h"
-#include "Actor/Weapon.h"
 #include "DataAsset/ModDataAsset.h"
 #include "Struct/ShooterUtility.h"
 #include "Type/ShooterNameType.h"
@@ -21,7 +19,6 @@ void UModComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(UModComponent, ModArray, COND_OwnerOnly);
-	DOREPLIFETIME(UModComponent, Mag);
 
 }
 
@@ -44,11 +41,6 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 					SpawnedMod->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, SpawnedMod->GetDefaultAttachParentSocketName());
 
 					ModArray.Add(SpawnedMod);
-
-					if (SpawnedMod->IsA(AMag::StaticClass()))
-					{
-						Mag = Cast<AMag>(SpawnedMod);
-					}
 				}
 			}
 		}

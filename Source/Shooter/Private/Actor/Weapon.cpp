@@ -81,20 +81,15 @@ bool AWeapon::GetIsOneHanded() const
 
 uint8 AWeapon::GetMagAmmoCount() const
 {
-	if (ModComponent == nullptr || ModComponent->GetMag() == nullptr)
+	if (Mag == nullptr)
 	{
 		return 0;
 	}
-	return ModComponent->GetMag()->GetAmmoCount();
+	return Mag->GetAmmoCount();
 }
 
 uint8 AWeapon::GetMagAmmoSpace() const
 {
-	if (ModComponent == nullptr)
-	{
-		return 0;
-	}
-	AMag* Mag = ModComponent->GetMag();
 	if (Mag == nullptr)
 	{
 		return 0;
@@ -133,7 +128,7 @@ bool AWeapon::HasFiremodes()
 
 bool AWeapon::HasMag()
 {
-	return ModComponent && ModComponent->GetMag();
+	return Mag != nullptr;
 }
 
 bool AWeapon::HasPatronInWeaponAmmo()
@@ -149,9 +144,19 @@ void AWeapon::Init()
 		{
 			ModComponent->Init(LoadedWeaponDataAsset->ModDataAsset.LoadSynchronous());
 		}
-		if (AMag* Mag = ModComponent->GetMag())
+	}
+
+	TArray<AActor*> AttachedChildActors;
+	GetAttachedActors(AttachedChildActors, false, true);
+	for (AActor* ChildActor : AttachedChildActors)
+	{
+		if (ChildActor->IsA(AMag::StaticClass()))
 		{
-			Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
+			Mag = Cast<AMag>(ChildActor);
+			if (Mag)
+			{
+				Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
+			}
 		}
 	}
 }
@@ -196,20 +201,20 @@ void AWeapon::PostInitializeComponents()
 
 void AWeapon::Server_MagAddAmmo_Implementation(const uint8 Count)
 {
-	if (ModComponent == nullptr || ModComponent->GetMag() == nullptr)
+	if (Mag == nullptr)
 	{
 		return;
 	}
-	ModComponent->GetMag()->Server_AddAmmo(Count);
+	Mag->Server_AddAmmo(Count);
 }
 
 void AWeapon::Server_MagPopAmmo_Implementation()
 {
-	if (ModComponent == nullptr || ModComponent->GetMag() == nullptr)
+	if (Mag == nullptr)
 	{
 		return;
 	}
-	ModComponent->GetMag()->Server_PopAmmo();
+	Mag->Server_PopAmmo();
 }
 
 void AWeapon::Server_SetIsHolster_Implementation(const bool bHolster)
@@ -266,9 +271,9 @@ void AWeapon::EjectShellPortAmmo()
 
 void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
 {
-	if (PoppedAmmo == nullptr && ModComponent && ModComponent->GetMag())
+	if (PoppedAmmo == nullptr && Mag)
 	{
-		if (const UMagDataAsset* MagDataAsset = ModComponent->GetMag()->GetMagDataAsset().LoadSynchronous())
+		if (const UMagDataAsset* MagDataAsset = Mag->GetMagDataAsset().LoadSynchronous())
 		{
 			if (UWorld* World = GetWorld())
 			{

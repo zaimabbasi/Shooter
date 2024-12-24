@@ -6,24 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "ModComponent.generated.h"
 
-class ABarrel;
-class ACharge;
-//class AFlashlight;
-//class AForegrip;
-class AGasBlock;
-class AHandguard;
-class AMag;
 class AMod;
-//class AMount;
-class AMuzzle;
-class APistolgrip;
-class AReceiver;
-//class AScope;
-class ASightFront;
-class ASightRear;
-class AStock;
-//class ATactical;
-class AWeapon;
 class UModDataAsset;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -43,11 +26,5 @@ protected:
 private:
 	UPROPERTY(Replicated)
 	TArray<TObjectPtr<AMod>> ModArray;
-
-	UPROPERTY(Replicated)
-	TObjectPtr<AMag> Mag;
-
-public:
-	FORCEINLINE AMag* GetMag() const { return Mag; }
 
 };
