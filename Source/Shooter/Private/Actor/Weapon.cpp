@@ -107,15 +107,6 @@ uint16 AWeapon::GetRateOfFire() const
 	return LoadedWeaponDataAsset->RateOfFire;
 }
 
-USkeletalMeshComponent* AWeapon::GetShooterCharacterOwnerMesh() const
-{
-	if (ShooterCharacterOwner == nullptr)
-	{
-		return nullptr;
-	}
-	return ShooterCharacterOwner->GetMesh();
-}
-
 bool AWeapon::HasFiremodes()
 {
 	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
@@ -159,11 +150,6 @@ void AWeapon::Init()
 			}
 		}
 	}
-}
-
-bool AWeapon::IsThirdAction() const
-{
-	return ShooterCharacterOwner && ShooterCharacterOwner->IsThirdAction();
 }
 
 void AWeapon::PostInitializeComponents()

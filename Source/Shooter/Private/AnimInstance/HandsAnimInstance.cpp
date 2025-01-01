@@ -35,6 +35,9 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	WeaponMesh = ShooterCharacter->GetEquippedWeaponMesh();
 	bIsWeaponEquipped = ShooterCharacter->IsWeaponEquipped();
 	CombatAction = ShooterCharacter->GetCombatAction();
+	bHasVelocity = ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
+	bIsProned = ShooterCharacter->bIsProned;
+	bIsSprinting = ShooterCharacter->bIsSprinting;
 	bIsThirdAction = ShooterCharacter->IsThirdAction();
 	
 	if (CharacterMesh && HandsMesh)
@@ -74,19 +77,18 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		Lean += LeanStep;
 	}
 
-	if (bIsThirdAction && !bIsWeaponEquipped && CharacterMesh && HandsMesh)
+	if (CharacterMesh && HandsMesh && bIsThirdAction && !bIsWeaponEquipped)
 	{
 		BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 
-		LPalmTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-
 		LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 
+		LPalmTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+
 		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		//WeaponRootAnimTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_ROOT_SOCKET_NAME, WeaponRootAnimTransform);
 	}
 	
 }

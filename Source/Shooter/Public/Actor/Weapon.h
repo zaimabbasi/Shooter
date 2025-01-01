@@ -35,13 +35,11 @@ public:
 	uint8 GetMagAmmoCount() const;
 	uint8 GetMagAmmoSpace() const;
 	uint16 GetRateOfFire() const;
-	USkeletalMeshComponent* GetShooterCharacterOwnerMesh() const;
 	bool HasFiremodes();
 	bool HasMag();
 	bool HasPatronInWeaponAmmo();
 	virtual void Init();
 	virtual bool IsPistol() const { return false; }
-	bool IsThirdAction() const;
 	virtual void PostInitializeComponents() override;
 
 	UFUNCTION(Server, Reliable)

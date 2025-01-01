@@ -3,6 +3,7 @@
 
 #include "AnimInstance/WeaponAnimInstance.h"
 #include "Actor/Weapon.h"
+#include "Character/ShooterCharacter.h"
 #include "Struct/ShooterUtility.h"
 #include "Type/ShooterNameType.h"
 
@@ -15,8 +16,8 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 	if (Weapon)
 	{
 		CombatAction = Weapon->GetCombatAction();
-		//FireAnimPlayRate = Weapon->GetRateOfFire() / 60.0f;
-		FireAnimPlayRate = 1.0f;
+		FireAnimPlayRate = Weapon->GetRateOfFire() / 60.0f;
+		//FireAnimPlayRate = 1.0f;
 	}
 }
 
@@ -34,26 +35,32 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	USkeletalMeshComponent* WeaponMesh = Weapon->GetMesh();
-	CharacterMesh = Weapon->GetShooterCharacterOwnerMesh();
 	CombatAction = Weapon->GetCombatAction();
-	bHasPatronInWeaponAmmo = Weapon->HasPatronInWeaponAmmo();
 	Firemode = Weapon->GetFiremode();
 	bIsHolster = Weapon->GetIsHolster();
-	bIsThirdAction = Weapon->IsThirdAction();
+	bHasPatronInWeaponAmmo = Weapon->HasPatronInWeaponAmmo();
+	bIsPistol = Weapon->IsPistol();
+	bIsOneHanded = Weapon->GetIsOneHanded();
 
-	if (bIsThirdAction && CharacterMesh)
+	AShooterCharacter* ShooterCharacter = Weapon->GetShooterCharacterOwner();
+	CharacterMesh = ShooterCharacter == nullptr ? nullptr : ShooterCharacter->GetMesh();
+	bHasCharacterVelocity = ShooterCharacter && ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
+	bIsCharacterProned = ShooterCharacter && ShooterCharacter->bIsProned;
+	bIsCharacterSprinting = ShooterCharacter && ShooterCharacter->bIsSprinting;
+	bIsCharacterThirdAction = ShooterCharacter && ShooterCharacter->IsThirdAction();
+
+	if (CharacterMesh && bIsCharacterThirdAction)
 	{
 		BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 
-		LPalmTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-
 		LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 
+		LPalmTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+
 		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		//WeaponRootAnimTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_ROOT_SOCKET_NAME, WeaponRootAnimTransform);
 	}
 
 }
