@@ -32,17 +32,21 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 	{
 		if (UWorld* World = GetWorld())
 		{
-			for (const TSubclassOf<AMod>& ModClass : ModDataAsset->ModClassArray)
+			for (const FModData& ModData : ModDataAsset->ModDataArray)
 			{
-				if (AMod* SpawnedMod = World->SpawnActor<AMod>(ModClass))
+				//if (const TSubclassOf<AMod>& ModClass = ModData.ModClass)
 				{
-					SpawnedMod->SetOwner(OwningActor);
-					SpawnedMod->Init();
-					SpawnedMod->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, SpawnedMod->GetDefaultAttachParentSocketName());
+					if (AMod* SpawnedMod = World->SpawnActor<AMod>(ModData.ModClass))
+					{
+						SpawnedMod->SetOwner(OwningActor);
+						SpawnedMod->Init();
+						SpawnedMod->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, ModData.AttachParentSocketName);
 
-					ModArray.Add(SpawnedMod);
+						ModArray.Add(SpawnedMod);
+					}
 				}
 			}
+			
 		}
 	}
 }

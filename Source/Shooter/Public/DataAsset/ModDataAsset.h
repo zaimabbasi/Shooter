@@ -8,6 +8,19 @@
 
 class AMod;
 
+USTRUCT()
+struct FModData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere)
+	FName AttachParentSocketName;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AMod> ModClass;
+};
+
 UCLASS()
 class SHOOTER_API UModDataAsset : public UDataAsset
 {
@@ -15,6 +28,6 @@ class SHOOTER_API UModDataAsset : public UDataAsset
 
 public:
 	UPROPERTY(EditAnywhere)
-	TArray<TSubclassOf<AMod>> ModClassArray;
+	TArray<FModData> ModDataArray;
 	
 };
