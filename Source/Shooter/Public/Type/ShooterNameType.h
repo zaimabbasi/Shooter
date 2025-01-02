@@ -28,9 +28,11 @@
 // Mod Types
 #define MOD_BARREL_SOCKET_NAME								(TEXT("mod_barrel"))
 #define MOD_CHARGE_SOCKET_NAME								(TEXT("mod_charge"))
+#define MOD_FOREGRIP_SOCKET_NAME							(TEXT("mod_foregrip"))
 #define MOD_GAS_BLOCK_SOCKET_NAME							(TEXT("mod_gas_block"))
 #define MOD_HANDGUARD_SOCKET_NAME							(TEXT("mod_handguard"))
 #define MOD_MAGAZINE_SOCKET_NAME							(TEXT("mod_magazine"))
+#define MOD_MOUNT_003_SOCKET_NAME							(TEXT("mod_mount_003"))
 #define MOD_MUZZLE_SOCKET_NAME								(TEXT("mod_muzzle"))
 #define MOD_PISTOL_GRIP_SOCKET_NAME							(TEXT("mod_pistol_grip"))
 #define MOD_RECEIVER_SOCKET_NAME							(TEXT("mod_reciever"))
