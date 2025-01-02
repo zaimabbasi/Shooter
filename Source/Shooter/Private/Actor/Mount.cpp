@@ -2,6 +2,7 @@
 
 
 #include "Actor/Mount.h"
+#include "Type/ShooterNameType.h"
 
 AMount::AMount()
 {
@@ -10,5 +11,5 @@ AMount::AMount()
 
 FName AMount::GetDefaultAttachParentSocketName() const
 {
-    return Super::GetDefaultAttachParentSocketName();
+    return MOD_MOUNT_003_SOCKET_NAME;
 }

@@ -2,6 +2,7 @@
 
 
 #include "Actor/Foregrip.h"
+#include "Type/ShooterNameType.h"
 
 AForegrip::AForegrip()
 {
@@ -10,5 +11,5 @@ AForegrip::AForegrip()
 
 FName AForegrip::GetDefaultAttachParentSocketName() const
 {
-    return Super::GetDefaultAttachParentSocketName();
+    return MOD_FOREGRIP_SOCKET_NAME;
 }
