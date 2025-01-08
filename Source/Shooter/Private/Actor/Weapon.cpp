@@ -7,7 +7,10 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Actor/Ammo.h"
+#include "Actor/Foregrip.h"
+#include "Actor/Handguard.h"
 #include "Actor/Mag.h"
+#include "Actor/Mod.h"
 #include "ActorComponent/ModComponent.h"
 #include "AnimInstance/WeaponAnimInstance.h"
 #include "Character/ShooterCharacter.h"
@@ -39,6 +42,21 @@ bool AWeapon::DoesNeedCharge()
 	return (GetMagAmmoCount() > 0 && PatronInWeaponAmmo == nullptr);
 }
 
+//AMod* AWeapon::GetAttachedModForegripHandguard() const
+//{
+//	TArray<AActor*> AttachedActors;
+//	AMod* ModForegripHandguard = nullptr;
+//	GetAttachedActors(AttachedActors, false, true);
+//	for (AActor* AttachedActor : AttachedActors)
+//	{
+//		if (AttachedActor->IsA(AForegrip::StaticClass()) || (AttachedActor->IsA(AHandguard::StaticClass()) && ModForegripHandguard == nullptr))
+//		{
+//			ModForegripHandguard = Cast<AMod>(AttachedActor);
+//		}
+//	}
+//	return ModForegripHandguard;
+//}
+
 ECombatAction AWeapon::GetCombatAction() const
 {
 	if (ShooterCharacterOwner == nullptr || ShooterCharacterOwner->GetEquippedWeapon() != this)
@@ -64,23 +82,20 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 
 	DOREPLIFETIME(AWeapon, bIsHolster);
 	DOREPLIFETIME(AWeapon, FiremodeIndex);
-	DOREPLIFETIME(AWeapon, ShellPortAmmo);
 	DOREPLIFETIME(AWeapon, PatronInWeaponAmmo);
+	DOREPLIFETIME(AWeapon, ShellPortAmmo);
 
 }
 
 bool AWeapon::GetIsOneHanded() const
 {
 	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
-	if (LoadedWeaponDataAsset == nullptr)
-	{
-		return false;
-	}
-	return LoadedWeaponDataAsset->IsOneHanded;
+	return LoadedWeaponDataAsset && LoadedWeaponDataAsset->IsOneHanded;
 }
 
 uint8 AWeapon::GetMagAmmoCount() const
 {
+	AMag* Mag = GetMag();
 	if (Mag == nullptr)
 	{
 		return 0;
@@ -90,6 +105,7 @@ uint8 AWeapon::GetMagAmmoCount() const
 
 uint8 AWeapon::GetMagAmmoSpace() const
 {
+	AMag* Mag = GetMag();
 	if (Mag == nullptr)
 	{
 		return 0;
@@ -110,16 +126,12 @@ uint16 AWeapon::GetRateOfFire() const
 bool AWeapon::HasFiremodes()
 {
 	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
-	if (LoadedWeaponDataAsset && LoadedWeaponDataAsset->Firemodes.Num() > 1)
-	{
-		return true;
-	}
-	return false;
+	return LoadedWeaponDataAsset && LoadedWeaponDataAsset->Firemodes.Num() > 1;
 }
 
 bool AWeapon::HasMag()
 {
-	return Mag != nullptr;
+	return GetMag() != nullptr;
 }
 
 bool AWeapon::HasPatronInWeaponAmmo()
@@ -137,18 +149,9 @@ void AWeapon::Init()
 		}
 	}
 
-	TArray<AActor*> AttachedChildActors;
-	GetAttachedActors(AttachedChildActors, false, true);
-	for (AActor* ChildActor : AttachedChildActors)
+	if (AMag* Mag = GetMag())
 	{
-		if (ChildActor->IsA(AMag::StaticClass()))
-		{
-			Mag = Cast<AMag>(ChildActor);
-			if (Mag)
-			{
-				Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
-			}
-		}
+		Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
 	}
 }
 
@@ -187,6 +190,7 @@ void AWeapon::PostInitializeComponents()
 
 void AWeapon::Server_MagAddAmmo_Implementation(const uint8 Count)
 {
+	AMag* Mag = GetMag();
 	if (Mag == nullptr)
 	{
 		return;
@@ -196,6 +200,7 @@ void AWeapon::Server_MagAddAmmo_Implementation(const uint8 Count)
 
 void AWeapon::Server_MagPopAmmo_Implementation()
 {
+	AMag* Mag = GetMag();
 	if (Mag == nullptr)
 	{
 		return;
@@ -239,6 +244,14 @@ void AWeapon::BeginPlay()
 
 }
 
+AMag* AWeapon::GetMag() const
+{
+	AMag* Mag = nullptr;
+	ModComponent->GetModArray().FindItemByClass(&Mag);
+
+	return Mag;
+}
+
 void AWeapon::EjectShellPortAmmo()
 {
 	if (ShellPortAmmo)
@@ -257,6 +270,7 @@ void AWeapon::EjectShellPortAmmo()
 
 void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
 {
+	AMag* Mag = GetMag();
 	if (PoppedAmmo == nullptr && Mag)
 	{
 		if (const UMagDataAsset* MagDataAsset = Mag->GetMagDataAsset().LoadSynchronous())

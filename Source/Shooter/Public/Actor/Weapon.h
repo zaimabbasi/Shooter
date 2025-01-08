@@ -9,6 +9,7 @@
 
 class AAmmo;
 class AMag;
+class AMod;
 class AShooterCharacter;
 class UBoxComponent;
 class UHandsAnimationDataAsset;
@@ -28,6 +29,7 @@ class SHOOTER_API AWeapon : public AActor
 public:	
 	AWeapon();
 	bool DoesNeedCharge();
+	//AMod* GetAttachedModForegripHandguard() const;
 	ECombatAction GetCombatAction() const;
 	EWeaponFiremode GetFiremode() const;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -76,6 +78,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	AMag* GetMag() const;
 
 	TObjectPtr<AShooterCharacter> ShooterCharacterOwner;
 
@@ -92,9 +95,6 @@ protected:
 	TSoftObjectPtr<UWeaponDataAsset> WeaponDataAsset;
 
 	UPROPERTY(Replicated)
-	TObjectPtr<AAmmo> ShellPortAmmo;
-
-	UPROPERTY(Replicated)
 	bool bIsHolster;
 
 	UPROPERTY(Replicated)
@@ -103,7 +103,8 @@ protected:
 	UPROPERTY(Replicated)
 	TObjectPtr<AAmmo> PatronInWeaponAmmo;
 
-	TObjectPtr<AMag> Mag;
+	UPROPERTY(Replicated)
+	TObjectPtr<AAmmo> ShellPortAmmo;
 
 private:
 	void EjectShellPortAmmo();

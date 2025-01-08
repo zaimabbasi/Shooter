@@ -27,4 +27,7 @@ private:
 	UPROPERTY(Replicated)
 	TArray<TObjectPtr<AMod>> ModArray;
 
+public:
+	FORCEINLINE TArray<AMod*> GetModArray() const { return ModArray; }
+
 };
