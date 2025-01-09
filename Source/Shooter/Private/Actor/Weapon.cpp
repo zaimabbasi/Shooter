@@ -246,10 +246,11 @@ void AWeapon::BeginPlay()
 
 AMag* AWeapon::GetMag() const
 {
-	AMag* Mag = nullptr;
-	ModComponent->GetModArray().FindItemByClass(&Mag);
-
-	return Mag;
+	if (ModComponent == nullptr)
+	{
+		return nullptr;
+	}
+	return ModComponent->GetMod<AMag>();
 }
 
 void AWeapon::EjectShellPortAmmo()
