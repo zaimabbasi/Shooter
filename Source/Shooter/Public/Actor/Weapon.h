@@ -44,6 +44,7 @@ public:
 	ECombatAction GetCombatAction() const;
 	EWeaponFiremode GetFiremode() const;
 	AForegrip* GetForegrip() const;
+	USkeletalMeshComponent* GetForegripHandguardMesh() const;
 	AHandguard* GetHandguard() const;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	bool GetIsOneHanded() const;

@@ -10,6 +10,7 @@
 #include "Actor/Foregrip.h"
 #include "Actor/Handguard.h"
 #include "Actor/Mag.h"
+#include "Actor/Mod.h"
 #include "ActorComponent/ModComponent.h"
 #include "AnimInstance/WeaponAnimInstance.h"
 #include "Character/ShooterCharacter.h"
@@ -63,6 +64,16 @@ EWeaponFiremode AWeapon::GetFiremode() const
 AForegrip* AWeapon::GetForegrip() const
 {
 	return GetAttachedActor<AForegrip>();
+}
+
+USkeletalMeshComponent* AWeapon::GetForegripHandguardMesh() const
+{
+	AMod* ForegripHandguard = GetForegrip();
+	if (ForegripHandguard == nullptr)
+	{
+		ForegripHandguard = GetHandguard();
+	}
+	return ForegripHandguard == nullptr ? nullptr : ForegripHandguard->GetMesh();
 }
 
 AHandguard* AWeapon::GetHandguard() const
