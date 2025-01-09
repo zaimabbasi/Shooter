@@ -61,25 +61,25 @@ EWeaponFiremode AWeapon::GetFiremode() const
 	return LoadedWeaponDataAsset->Firemodes[FiremodeIndex];
 }
 
-AForegrip* AWeapon::GetForegrip() const
-{
-	return GetAttachedActor<AForegrip>();
-}
+//AForegrip* AWeapon::GetForegrip() const
+//{
+//	return GetAttachedActor<AForegrip>();
+//}
 
 USkeletalMeshComponent* AWeapon::GetForegripHandguardMesh() const
 {
-	AMod* ForegripHandguard = GetForegrip();
+	AMod* ForegripHandguard = GetAttachedActor<AForegrip>();
 	if (ForegripHandguard == nullptr)
 	{
-		ForegripHandguard = GetHandguard();
+		ForegripHandguard = GetAttachedActor<AHandguard>();
 	}
 	return ForegripHandguard == nullptr ? nullptr : ForegripHandguard->GetMesh();
 }
 
-AHandguard* AWeapon::GetHandguard() const
-{
-	return GetAttachedActor<AHandguard>();
-}
+//AHandguard* AWeapon::GetHandguard() const
+//{
+//	return GetAttachedActor<AHandguard>();
+//}
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

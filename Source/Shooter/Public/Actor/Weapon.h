@@ -8,8 +8,8 @@
 #include "Weapon.generated.h"
 
 class AAmmo;
-class AForegrip;
-class AHandguard;
+//class AForegrip;
+//class AHandguard;
 class AMag;
 class AShooterCharacter;
 class UBoxComponent;
@@ -43,9 +43,9 @@ public:
 	
 	ECombatAction GetCombatAction() const;
 	EWeaponFiremode GetFiremode() const;
-	AForegrip* GetForegrip() const;
+	//AForegrip* GetForegrip() const;
 	USkeletalMeshComponent* GetForegripHandguardMesh() const;
-	AHandguard* GetHandguard() const;
+	//AHandguard* GetHandguard() const;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	bool GetIsOneHanded() const;
 	uint8 GetMagAmmoCount() const;
