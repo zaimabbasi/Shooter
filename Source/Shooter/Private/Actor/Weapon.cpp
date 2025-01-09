@@ -42,21 +42,6 @@ bool AWeapon::DoesNeedCharge()
 	return (GetMagAmmoCount() > 0 && PatronInWeaponAmmo == nullptr);
 }
 
-//AMod* AWeapon::GetAttachedModForegripHandguard() const
-//{
-//	TArray<AActor*> AttachedActors;
-//	AMod* ModForegripHandguard = nullptr;
-//	GetAttachedActors(AttachedActors, false, true);
-//	for (AActor* AttachedActor : AttachedActors)
-//	{
-//		if (AttachedActor->IsA(AForegrip::StaticClass()) || (AttachedActor->IsA(AHandguard::StaticClass()) && ModForegripHandguard == nullptr))
-//		{
-//			ModForegripHandguard = Cast<AMod>(AttachedActor);
-//		}
-//	}
-//	return ModForegripHandguard;
-//}
-
 ECombatAction AWeapon::GetCombatAction() const
 {
 	if (ShooterCharacterOwner == nullptr || ShooterCharacterOwner->GetEquippedWeapon() != this)

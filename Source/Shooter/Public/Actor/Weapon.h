@@ -29,7 +29,17 @@ class SHOOTER_API AWeapon : public AActor
 public:	
 	AWeapon();
 	bool DoesNeedCharge();
-	//AMod* GetAttachedModForegripHandguard() const;
+	
+	template<class T>
+	T* GetAttachedActor() const
+	{
+		T* AttachedMod = nullptr;
+		TArray<AActor*> AttachedActors;
+		GetAttachedActors(AttachedActors, false, true);
+		AttachedActors.FindItemByClass(&AttachedMod);
+		return AttachedMod;
+	}
+	
 	ECombatAction GetCombatAction() const;
 	EWeaponFiremode GetFiremode() const;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
