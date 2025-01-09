@@ -10,7 +10,6 @@
 #include "Actor/Foregrip.h"
 #include "Actor/Handguard.h"
 #include "Actor/Mag.h"
-#include "Actor/Mod.h"
 #include "ActorComponent/ModComponent.h"
 #include "AnimInstance/WeaponAnimInstance.h"
 #include "Character/ShooterCharacter.h"
@@ -59,6 +58,16 @@ EWeaponFiremode AWeapon::GetFiremode() const
 		return EWeaponFiremode::WF_None;
 	}
 	return LoadedWeaponDataAsset->Firemodes[FiremodeIndex];
+}
+
+AForegrip* AWeapon::GetForegrip() const
+{
+	return GetAttachedActor<AForegrip>();
+}
+
+AHandguard* AWeapon::GetHandguard() const
+{
+	return GetAttachedActor<AHandguard>();
 }
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
