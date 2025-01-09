@@ -35,6 +35,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	USkeletalMeshComponent* WeaponMesh = Weapon->GetMesh();
+	ForegripHandguardMesh = Weapon->GetForegripHandguardMesh();
 	CombatAction = Weapon->GetCombatAction();
 	Firemode = Weapon->GetFiremode();
 	bIsHolster = Weapon->GetIsHolster();
@@ -48,6 +49,8 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsCharacterProned = ShooterCharacter && ShooterCharacter->bIsProned;
 	bIsCharacterSprinting = ShooterCharacter && ShooterCharacter->bIsSprinting;
 	bIsCharacterThirdAction = ShooterCharacter && ShooterCharacter->IsThirdAction();
+
+	
 
 	if (CharacterMesh && bIsCharacterThirdAction)
 	{
