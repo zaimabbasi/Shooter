@@ -39,6 +39,7 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsProned = ShooterCharacter->bIsProned;
 	bIsSprinting = ShooterCharacter->bIsSprinting;
 	bIsThirdAction = ShooterCharacter->IsThirdAction();
+	IKAlpha = (bIsThirdAction && !bIsWeaponEquipped) ? 1.0f : 0.0f;
 	
 	if (CharacterMesh && HandsMesh)
 	{
