@@ -19,6 +19,11 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 		FireAnimPlayRate = Weapon->GetRateOfFire() / 60.0f;
 		//FireAnimPlayRate = 1.0f;
 	}
+
+	IKAlpha = 0.0f;
+	IKBlendInOutFlag = 0;
+	IKBlendDuration = 0.3f;
+	IKBlendDurationCounter = 0.0f;
 }
 
 void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -51,6 +56,28 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsCharacterSprinting = ShooterCharacter && ShooterCharacter->bIsSprinting;
 	bIsCharacterThirdAction = ShooterCharacter && ShooterCharacter->IsThirdAction();
 
+	if (bIsCharacterThirdAction)
+	{
+		IKAlpha = 1.0f;
+	}
+	else
+	{
+		if (bHasForegripHandguardMesh)
+		{
+			IKBlendDurationCounter += IKBlendInOutFlag * DeltaSeconds;
+			IKBlendDurationCounter = FMath::Clamp(IKBlendDurationCounter, 0.0f, IKBlendDuration);
+			IKAlpha = IKBlendDurationCounter / IKBlendDuration;
+		}
+		else
+		{
+			IKAlpha = 0.0f;
+		}
+	}
+
+	if (ForegripHandguardMesh)
+	{
+		LPalmTransform = ForegripHandguardMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+	}
 	if (CharacterMesh && bIsCharacterThirdAction)
 	{
 		BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
@@ -59,8 +86,11 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 
-		LPalmTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		if ((bIsCharacterProned && bHasCharacterVelocity) || (bIsCharacterSprinting && (bIsPistol || bIsOneHanded)))
+		{
+			LPalmTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		}
 
 		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 	}
@@ -165,4 +195,14 @@ void UWeaponAnimInstance::AnimNotify_WeaponHammer() const
 void UWeaponAnimInstance::AnimNotify_ShellPort() const
 {
 	OnWeaponAnimInstanceShellPort.Broadcast();
+}
+
+void UWeaponAnimInstance::AnimNotify_WeaponLHandMarker()
+{
+	IKBlendInOutFlag = 1;
+}
+
+void UWeaponAnimInstance::AnimNotify_WeaponLIKMarker()
+{
+	IKBlendInOutFlag = -1;
 }

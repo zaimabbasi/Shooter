@@ -103,6 +103,12 @@ protected:
 	UFUNCTION()
 	void AnimNotify_ShellPort() const;
 
+	UFUNCTION()
+	void AnimNotify_WeaponLHandMarker();
+
+	UFUNCTION()
+	void AnimNotify_WeaponLIKMarker();
+
 private:
 	TObjectPtr<AWeapon> Weapon;
 
@@ -171,5 +177,14 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	bool bIsCharacterThirdAction;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	float IKAlpha;
+
+	int8 IKBlendInOutFlag;
+
+	float IKBlendDuration;
+
+	float IKBlendDurationCounter;
 
 };
