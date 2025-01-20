@@ -41,16 +41,22 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsThirdAction = ShooterCharacter->IsThirdAction();
 	IKAlpha = bIsThirdAction ? 1.0f : 0.0f;
 	
-	if (CharacterMesh && HandsMesh)
-	{
-		// Note: Maybe no longer required because of problems (Try sprinting character with this code)
-		/*FTransform CharacterWeaponRootTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
-		FTransform HandsWeaponRootTransform = HandsMesh->GetSocketTransform(WEAPON_ROOT_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
-		FTransform DeltaWeaponRootTransform = HandsWeaponRootTransform.GetRelativeTransformReverse(CharacterWeaponRootTransform);
-		HandsMesh->SetRelativeLocation(DeltaWeaponRootTransform.GetLocation());*/
+	//if (CharacterMesh && HandsMesh)
+	//{
+	//	// Note: Maybe no longer required because of problems (Try sprinting character with this code)
+	//	/*FTransform CharacterWeaponRootTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
+	//	FTransform HandsWeaponRootTransform = HandsMesh->GetSocketTransform(WEAPON_ROOT_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
+	//	FTransform DeltaWeaponRootTransform = HandsWeaponRootTransform.GetRelativeTransformReverse(CharacterWeaponRootTransform);
+	//	HandsMesh->SetRelativeLocation(DeltaWeaponRootTransform.GetLocation());*/
 
-		FTransform CharacterBaseHumanRibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
-		HandsMesh->SetRelativeLocation(CharacterBaseHumanRibcageTransform.GetLocation());
+	//	FTransform CharacterBaseHumanRibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
+	//	HandsMesh->SetRelativeLocation(CharacterBaseHumanRibcageTransform.GetLocation());
+	//}
+
+	if (CharacterMesh)
+	{
+		RibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		RibcageTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, ROOT_JOINT_SOCKET_NAME, RibcageTransform);
 	}
 
 	ELeanDirection LeanDirection = ShooterCharacter->GetLeanDirection();
