@@ -56,7 +56,7 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	if (CharacterMesh)
 	{
 		RibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RibcageTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, ROOT_JOINT_SOCKET_NAME, RibcageTransform);
+		RibcageTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, CharacterMesh->GetBoneName(0), RibcageTransform);
 	}
 
 	ELeanDirection LeanDirection = ShooterCharacter->GetLeanDirection();
