@@ -11,6 +11,8 @@
 #include "Actor/Handguard.h"
 #include "Actor/Mag.h"
 #include "Actor/Mod.h"
+#include "Actor/Scope.h"
+#include "Actor/SightRear.h"
 #include "ActorComponent/ModComponent.h"
 #include "AnimInstance/WeaponAnimInstance.h"
 #include "Character/ShooterCharacter.h"
@@ -116,6 +118,16 @@ uint8 AWeapon::GetMagAmmoSpace() const
 		return 0;
 	}
 	return Mag->GetAmmoSpace();
+}
+
+USkeletalMeshComponent* AWeapon::GetScopeSightMesh() const
+{
+	AMod* ScopeSight = GetAttachedActor<AScope>();
+	if (ScopeSight == nullptr)
+	{
+		ScopeSight = GetAttachedActor<ASightRear>();
+	}
+	return ScopeSight == nullptr ? nullptr : ScopeSight->GetMesh();
 }
 
 uint16 AWeapon::GetRateOfFire() const

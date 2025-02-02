@@ -40,6 +40,17 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsSprinting = ShooterCharacter->bIsSprinting;
 	bIsThirdAction = ShooterCharacter->IsThirdAction();
 	IKAlpha = bIsThirdAction ? 1.0f : 0.0f;
+
+	AWeapon* EquippedWeapon = ShooterCharacter->GetEquippedWeapon();
+	USkeletalMeshComponent* ScopeSightMesh = EquippedWeapon == nullptr ? nullptr : EquippedWeapon->GetScopeSightMesh();
+	bIsAiming = ShooterCharacter->GetIsAiming();
+
+	if (bIsAiming && HandsMesh && ScopeSightMesh)
+	{	
+		CameraAnimatedTransform = ScopeSightMesh->GetSocketTransform(TEXT("mod_aim_camera"), ERelativeTransformSpace::RTS_World);
+		//CameraAnimatedTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, HandsMesh->GetBoneName(0), CameraAnimatedTransform);
+	}
+	
 	
 	//if (CharacterMesh && HandsMesh)
 	//{

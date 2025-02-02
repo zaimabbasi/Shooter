@@ -16,8 +16,12 @@ class SHOOTER_API AMagnifyingScope : public AScope
 public:
 	AMagnifyingScope();
 	virtual FName GetDefaultAttachParentSocketName() const override;
+	virtual void PostInitializeComponents() override;
 
 private:
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshComponent> LensMesh;*/
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USceneCaptureComponent2D> OpticCamera;
 

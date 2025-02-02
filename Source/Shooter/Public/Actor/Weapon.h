@@ -50,6 +50,7 @@ public:
 	bool GetIsOneHanded() const;
 	uint8 GetMagAmmoCount() const;
 	uint8 GetMagAmmoSpace() const;
+	USkeletalMeshComponent* GetScopeSightMesh() const;
 	uint16 GetRateOfFire() const;
 	bool HasFiremodes();
 	bool HasMag();
