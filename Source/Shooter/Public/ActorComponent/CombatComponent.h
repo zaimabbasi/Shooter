@@ -42,9 +42,6 @@ public:
 	void Server_OutToIdle();
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetIsAiming(bool bAiming);
-
-	UFUNCTION(Server, Reliable)
 	void Server_UnequipWeapon(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName);
 
 	UFUNCTION(Server, Reliable)
@@ -70,6 +67,8 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void Server_WeaponReloadCharge();
+
+	void SetIsAiming(bool bAiming);
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -152,7 +151,13 @@ private:
 	void Server_SetCombatAction(ECombatAction Action);
 
 	UFUNCTION(Server, Reliable)
+	void Server_SetIsAiming(bool bAiming);
+
+	UFUNCTION(Server, Reliable)
 	void Server_SetIsFiring(const bool bFiring);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true", UIMin = "0.0", ClampMin = "0.0", ForceUnits = "s"))
+	float ADSTime;
 
 	UPROPERTY(Replicated)
 	bool bIsAiming;
@@ -167,6 +172,7 @@ private:
 	TObjectPtr<AWeapon> EquippedWeapon;
 
 public:
+	FORCEINLINE float GetADSTime() const { return ADSTime; }
 	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }

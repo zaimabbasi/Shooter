@@ -20,6 +20,7 @@
 #include "DataAsset/CharacterDataAsset.h"
 #include "Enum/LeanDirection.h"
 #include "Enum/TurnDirection.h"
+#include "Struct/ShooterUtility.h"
 #include "Type/ShooterNameType.h"
 
 AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer) :
@@ -55,6 +56,13 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCharacterMovement()->RotationRate.Yaw = 180.0f;
 
+	AimCameraFOV = 60.0f;
+
+}
+
+float AShooterCharacter::CalculateFPCameraDesiredFOV() const
+{
+	return GetIsAiming() ? AimCameraFOV : DefaultCameraFOV;
 }
 
 bool AShooterCharacter::CanProne() const
@@ -70,6 +78,15 @@ bool AShooterCharacter::CanSlow() const
 bool AShooterCharacter::CanSprint() const
 {
 	return !bIsSprinting && !bIsSlowing && GetRootComponent() && !GetRootComponent()->IsSimulatingPhysics();
+}
+
+float AShooterCharacter::GetADSTime() const
+{
+	if (CombatComponent == nullptr)
+	{
+		return 0.0f;
+	}
+	return CombatComponent->GetADSTime();
 }
 
 float AShooterCharacter::GetAO_Pitch(float CurrentPitch, float DeltaTime) const
@@ -370,7 +387,6 @@ void AShooterCharacter::PostInitializeComponents()
 	if (FirstPersonCamera)
 	{
 		DefaultCameraFOV = FirstPersonCamera->FieldOfView;
-		AimCameraFOV = DefaultToAimCameraFOVPercentage * DefaultCameraFOV;
 	}
 
 	if (CombatComponent)
@@ -572,6 +588,33 @@ void AShooterCharacter::BeginPlay()
 		}
 	}
 
+}
+
+FVector AShooterCharacter::CalculateFPCameraDesiredLocationOffset() const
+{
+	FVector DesiredLocationOffset;
+	if (GetIsAiming())
+	{
+		if (AWeapon* EquippedWeapon = GetEquippedWeapon())
+		{
+			FTransform AimCameraTransform;
+			if (USkeletalMeshComponent* WeaponScopeSightMesh = EquippedWeapon->GetScopeSightMesh())
+			{
+				AimCameraTransform = WeaponScopeSightMesh->GetSocketTransform(MOD_AIM_CAMERA_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			}
+			else if (USkeletalMeshComponent* WeaponMesh = EquippedWeapon->GetMesh())
+			{
+				AimCameraTransform = WeaponMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			}
+
+			if (HandsMesh)
+			{
+				DesiredLocationOffset = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, AimCameraTransform).GetLocation();
+			}
+		}
+	}
+
+	return DesiredLocationOffset;
 }
 
 bool AShooterCharacter::CanPerformCrouchAction() const
@@ -884,7 +927,9 @@ void AShooterCharacter::OnCharacterAimAction(const FInputActionValue& Value)
 	bool bIsToggleSprint = false;	// temp
 	if (CombatComponent && !(bIsToggleSprint && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward))
 	{
-		CombatComponent->Server_SetIsAiming(CurrentValue);
+		CombatComponent->SetIsAiming(CurrentValue);
+
+		FPCameraDesiredLocationOffset = CalculateFPCameraDesiredLocationOffset();
 	}
 }
 

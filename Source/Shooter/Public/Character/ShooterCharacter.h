@@ -28,6 +28,8 @@ class SHOOTER_API AShooterCharacter : public ACharacter
 public:
 	AShooterCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+	float CalculateFPCameraDesiredFOV() const;
+
 	UFUNCTION(BlueprintCallable, Category = Character)
 	virtual bool CanProne() const;
 
@@ -37,6 +39,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Character)
 	virtual bool CanSprint() const;
 
+	float GetADSTime() const;
 	float GetAO_Pitch(float CurrentPitch, float DeltaTime) const;
 	float GetAO_Yaw(float CurrentYaw, float DeltaTime);
 	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
@@ -104,6 +107,7 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	FVector CalculateFPCameraDesiredLocationOffset() const;
 	bool CanPerformCrouchAction() const;
 	bool CanPerformMoveAction() const;
 	bool CanPerformProneAction() const;
@@ -288,7 +292,7 @@ private:
 	void SetRemoteViewYaw(float NewRemoteYaw);
 	//void UpdateCameraFOV(float DeltaTime);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
@@ -384,7 +388,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> WeaponReloadAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true", UIMin = "5.0", UIMax = "170", ClampMin = "0.001", ClampMax = "360.0", Units = deg))
 	float AimCameraFOV;
+
+	float DefaultCameraFOV;
 
 	UPROPERTY(Replicated)
 	bool bIsAlterAction;
@@ -398,8 +405,8 @@ private:
 	bool bIsTransition;
 
 	const float DefaultAnimationTransitionDuration = 0.25f;
-	float DefaultCameraFOV;
-	const float DefaultToAimCameraFOVPercentage = 0.8f;
+
+	FVector FPCameraDesiredLocationOffset;
 
 	UPROPERTY(Replicated)
 	ELeanDirection LeanDirection;
@@ -422,7 +429,8 @@ private:
 
 public:
 	FORCEINLINE float GetDefaultAnimationTransitionDuration() const { return DefaultAnimationTransitionDuration; }
-	FORCEINLINE float GetDefaultToAimCameraFOVPercentage() const { return DefaultToAimCameraFOVPercentage; }
+	FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
+	FORCEINLINE FVector GetFPCameraDesiredLocationOffset() const { return FPCameraDesiredLocationOffset; }
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	FORCEINLINE ELeanDirection GetLeanDirection() const { return LeanDirection; }
 	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }

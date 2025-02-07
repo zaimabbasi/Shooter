@@ -26,6 +26,7 @@
 #define BEND_GOAL_RIGHT_SOCKET_NAME							(TEXT("Bend_Goal_Right"))
 
 // Mod Types
+#define MOD_AIM_CAMERA_SOCKET_NAME							(TEXT("mod_aim_camera"))
 #define MOD_BARREL_SOCKET_NAME								(TEXT("mod_barrel"))
 #define MOD_CHARGE_SOCKET_NAME								(TEXT("mod_charge"))
 #define MOD_FOREGRIP_SOCKET_NAME							(TEXT("mod_foregrip"))
@@ -42,6 +43,7 @@
 #define PATRON_SOCKET_NAME(Index)							(*FString::Printf(TEXT("patron_%03d"), Index))
 
 // Weapon Types
+#define AIM_CAMERA_SOCKET_NAME								(TEXT("aim_camera"))
 #define WEAPON_L_COLLARBONE_MARKER_SOCKET_NAME				(TEXT("weapon_LCollarbone_marker"))
 #define WEAPON_L_HAND_MARKER_SOCKET_NAME					(TEXT("weapon_L_hand_marker"))	// Sticks (sometimes not) with the palm in animations
 #define WEAPON_L_IK_MARKER_SOCKET_NAME						(TEXT("weapon_L_IK_marker"))	// Sticks with the palm in animations

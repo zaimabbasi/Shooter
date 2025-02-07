@@ -2,7 +2,7 @@
 
 
 #include "AnimInstance/HandsAnimInstance.h"
-#include "Actor/Weapon.h"
+#include "Camera/CameraComponent.h"
 #include "Character/ShooterCharacter.h"
 #include "Enum/LeanDirection.h"
 #include "Struct/ShooterUtility.h"
@@ -29,9 +29,13 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh();
+	UCameraComponent* FirstPersonCamera = ShooterCharacter->GetFirstPersonCamera();
+	FVector FPCameraDesiredLocationOffset = ShooterCharacter->GetFPCameraDesiredLocationOffset();
+	float FPCameraDesiredFOV = ShooterCharacter->CalculateFPCameraDesiredFOV();
 	CharacterMesh = ShooterCharacter->GetMesh();
 	AO_Yaw = ShooterCharacter->GetAO_Yaw(AO_Yaw, DeltaSeconds);
 	AO_Pitch = ShooterCharacter->GetAO_Pitch(AO_Pitch, DeltaSeconds);
+	bIsAiming = ShooterCharacter->GetIsAiming();
 	WeaponMesh = ShooterCharacter->GetEquippedWeaponMesh();
 	bIsWeaponEquipped = ShooterCharacter->IsWeaponEquipped();
 	CombatAction = ShooterCharacter->GetCombatAction();
@@ -40,29 +44,6 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsSprinting = ShooterCharacter->bIsSprinting;
 	bIsThirdAction = ShooterCharacter->IsThirdAction();
 	IKAlpha = bIsThirdAction ? 1.0f : 0.0f;
-
-	AWeapon* EquippedWeapon = ShooterCharacter->GetEquippedWeapon();
-	USkeletalMeshComponent* ScopeSightMesh = EquippedWeapon == nullptr ? nullptr : EquippedWeapon->GetScopeSightMesh();
-	bIsAiming = ShooterCharacter->GetIsAiming();
-
-	if (bIsAiming && HandsMesh && ScopeSightMesh)
-	{	
-		CameraAnimatedTransform = ScopeSightMesh->GetSocketTransform(TEXT("mod_aim_camera"), ERelativeTransformSpace::RTS_World);
-		//CameraAnimatedTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, HandsMesh->GetBoneName(0), CameraAnimatedTransform);
-	}
-	
-	
-	//if (CharacterMesh && HandsMesh)
-	//{
-	//	// Note: Maybe no longer required because of problems (Try sprinting character with this code)
-	//	/*FTransform CharacterWeaponRootTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
-	//	FTransform HandsWeaponRootTransform = HandsMesh->GetSocketTransform(WEAPON_ROOT_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
-	//	FTransform DeltaWeaponRootTransform = HandsWeaponRootTransform.GetRelativeTransformReverse(CharacterWeaponRootTransform);
-	//	HandsMesh->SetRelativeLocation(DeltaWeaponRootTransform.GetLocation());*/
-
-	//	FTransform CharacterBaseHumanRibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_Component);
-	//	HandsMesh->SetRelativeLocation(CharacterBaseHumanRibcageTransform.GetLocation());
-	//}
 
 	if (CharacterMesh)
 	{
@@ -93,6 +74,13 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			LeanStep = -LeanStep;
 		}
 		Lean += LeanStep;
+	}
+
+	float InterpSpeed = 5.0f;
+	if (FirstPersonCamera)
+	{
+		FirstPersonCamera->SetRelativeLocation(FMath::VInterpTo(FirstPersonCamera->GetRelativeLocation(), FPCameraDesiredLocationOffset, DeltaSeconds, InterpSpeed));
+		FirstPersonCamera->SetFieldOfView(FMath::FInterpTo(FirstPersonCamera->FieldOfView, FPCameraDesiredFOV, DeltaSeconds, InterpSpeed));
 	}
 
 	if (CharacterMesh && HandsMesh && bIsThirdAction && !bIsWeaponEquipped)

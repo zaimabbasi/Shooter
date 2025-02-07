@@ -16,6 +16,8 @@ UCombatComponent::UCombatComponent() :
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
+	ADSTime = 1.0f;
+
 }
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -97,15 +99,6 @@ void UCombatComponent::Server_OutToIdle_Implementation()
 	{
 		Server_SetCombatAction(EquippedWeapon && EquippedWeapon->DoesNeedCharge() ? ECombatAction::CA_OutToIdleArm : ECombatAction::CA_OutToIdle);
 	}
-}
-
-void UCombatComponent::Server_SetIsAiming_Implementation(bool bAiming)
-{
-	if (EquippedWeapon == nullptr)
-	{
-		return;
-	}
-	bIsAiming = bAiming;
 }
 
 void UCombatComponent::Server_UnequipWeapon_Implementation(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName)
@@ -206,6 +199,19 @@ void UCombatComponent::Server_WeaponReloadCharge_Implementation()
 	if (CombatAction == ECombatAction::CA_MagIn && EquippedWeapon && EquippedWeapon->DoesNeedCharge())
 	{
 		Server_SetCombatAction(ECombatAction::CA_ReloadCharge);
+	}
+}
+
+void UCombatComponent::SetIsAiming(bool bAiming)
+{
+	if (EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	bIsAiming = bAiming;
+	if (!HasAuthority())
+	{
+		Server_SetIsAiming(bAiming);
 	}
 }
 
@@ -348,6 +354,15 @@ void UCombatComponent::OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon)
 void UCombatComponent::Server_SetCombatAction_Implementation(ECombatAction Action)
 {
 	CombatAction = Action;
+}
+
+void UCombatComponent::Server_SetIsAiming_Implementation(bool bAiming)
+{
+	if (EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	bIsAiming = bAiming;
 }
 
 void UCombatComponent::Server_SetIsFiring_Implementation(const bool bFiring)
