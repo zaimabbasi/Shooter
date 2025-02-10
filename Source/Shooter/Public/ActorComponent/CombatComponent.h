@@ -18,8 +18,16 @@ class SHOOTER_API UCombatComponent : public UActorComponent
 
 public:
 	UCombatComponent();
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	friend class AShooterCharacter;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+protected:
+	virtual void BeginPlay() override;
+
+public:
 	UFUNCTION(Server, Reliable)
 	void Server_ActionEnd();
 
@@ -68,10 +76,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_WeaponReloadCharge();
 
-	void SetIsAiming(bool bAiming);
-
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionEnd;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionStart;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponChamberCheck;
@@ -88,9 +92,6 @@ public:
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOutToIdle;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOutToIdleArm;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponReloadCharge;
-
-protected:
-	virtual void BeginPlay() override;
 
 private:
 	UFUNCTION()
@@ -151,16 +152,7 @@ private:
 	void Server_SetCombatAction(ECombatAction Action);
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetIsAiming(bool bAiming);
-
-	UFUNCTION(Server, Reliable)
 	void Server_SetIsFiring(const bool bFiring);
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true", UIMin = "0.0", ClampMin = "0.0", ForceUnits = "s"))
-	float ADSTime;
-
-	UPROPERTY(Replicated)
-	bool bIsAiming;
 
 	UPROPERTY(Replicated)
 	bool bIsFiring;
@@ -172,10 +164,8 @@ private:
 	TObjectPtr<AWeapon> EquippedWeapon;
 
 public:
-	FORCEINLINE float GetADSTime() const { return ADSTime; }
 	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
-	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
 
 };

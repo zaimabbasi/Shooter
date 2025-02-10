@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "SkeletalMergingLibrary.h"
 #include "ShooterCharacter.generated.h"
@@ -27,9 +28,16 @@ class SHOOTER_API AShooterCharacter : public ACharacter
 
 public:
 	AShooterCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PostInitializeComponents() override;
+	virtual void PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void Tick(float DeltaTime) override;
 
-	float CalculateFPCameraDesiredFOV() const;
+protected:
+	virtual void BeginPlay() override;
 
+public:
 	UFUNCTION(BlueprintCallable, Category = Character)
 	virtual bool CanProne() const;
 
@@ -39,16 +47,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Character)
 	virtual bool CanSprint() const;
 
-	float GetADSTime() const;
 	float GetAO_Pitch(float CurrentPitch, float DeltaTime) const;
-	float GetAO_Yaw(float CurrentYaw, float DeltaTime);
+	float GetAO_Yaw(float CurrentYaw, float DeltaTime) const;
 	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
 	ECombatAction GetCombatAction() const;
 	FVector GetCurrentAcceleration() const;
 	AWeapon* GetEquippedWeapon() const;
 	USkeletalMeshComponent* GetEquippedWeaponMesh() const;
-	bool GetIsAiming() const;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
 	ETurnDirection GetTurnDirection(float CurrentYaw);
 	bool GetUseControllerDesiredRotation() const;
 	float GetYawExceedingMaxLimit(float CurrentYaw) const;
@@ -63,14 +69,14 @@ public:
 	virtual void OnRep_IsProned();
 
 	virtual void OnStartProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
-	virtual void PostInitializeComponents() override;
-	virtual void PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker) override;
 	
 	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
 	virtual void Prone(bool bClientSimulation = false);
 
 	virtual void RecalculateBaseEyeHeight() override;
 	void RecalculatePronedEyeHeight();
+
+	void SetIsSprinting(bool bSprinting);
 
 	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
 	virtual void Slow();
@@ -88,9 +94,7 @@ public:
 	virtual void UnSprint();
 
 	void SetIsTransition(bool bNewIsTransition);
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	virtual void Tick(float DeltaTime) override;
-
+	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_IsProned, Category = Character)
 	uint32 bIsProned : 1;
 
@@ -103,14 +107,24 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
 	float PronedEyeHeight;
 
-protected:
-	virtual void BeginPlay() override;
-
 private:
-	FVector CalculateFPCameraDesiredLocationOffset() const;
+	bool CanAim() const;
+	void Aim();
+	void UnAim();
+
+	bool IsCrawling() const;
+	bool HasVelocity() const;
+	bool HasAcceleration() const;
+
 	bool CanPerformCrouchAction() const;
 	bool CanPerformMoveAction() const;
 	bool CanPerformProneAction() const;
+
+	UFUNCTION()
+	void Handle_ADSTimelineUpdate(float Value);
+
+	/*UFUNCTION()
+	void Handle_ADSTimelineFinished();*/
 
 	UFUNCTION()
 	void Handle_OnCharacterAnimInstanceControllerDesiredRotationNeeded(bool bControllerDesiredRotationNeeded);
@@ -290,7 +304,8 @@ private:
 	void Server_SetLeaningRate(float Rate);
 
 	void SetRemoteViewYaw(float NewRemoteYaw);
-	//void UpdateCameraFOV(float DeltaTime);
+
+	void UpdateADSCameraTargetLocation();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
@@ -388,10 +403,23 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> WeaponReloadAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true", UIMin = "5.0", UIMax = "170", ClampMin = "0.001", ClampMax = "360.0", Units = deg))
-	float AimCameraFOV;
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTimelineComponent> ADSTimeline;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UCurveFloat> ADSTimelineCurve;
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true", UIMin = "0.0", UIMax = "1.0", ClampMin = "0.001", ClampMax = "1.0"))
+	float ADSCameraFOVRatio;*/
 
 	float DefaultCameraFOV;
+
+	FVector ADSCameraTargetLocation;
+
+	FOnTimelineFloat OnADSTimelineUpdate;
+	//FOnTimelineEventStatic OnADSTimelineFinished;
+
+	bool bIsAiming;
 
 	UPROPERTY(Replicated)
 	bool bIsAlterAction;
@@ -405,8 +433,6 @@ private:
 	bool bIsTransition;
 
 	const float DefaultAnimationTransitionDuration = 0.25f;
-
-	FVector FPCameraDesiredLocationOffset;
 
 	UPROPERTY(Replicated)
 	ELeanDirection LeanDirection;
@@ -430,8 +456,8 @@ private:
 public:
 	FORCEINLINE float GetDefaultAnimationTransitionDuration() const { return DefaultAnimationTransitionDuration; }
 	FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
-	FORCEINLINE FVector GetFPCameraDesiredLocationOffset() const { return FPCameraDesiredLocationOffset; }
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
+	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE ELeanDirection GetLeanDirection() const { return LeanDirection; }
 	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
 	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }

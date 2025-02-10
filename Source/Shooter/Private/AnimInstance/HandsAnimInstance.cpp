@@ -2,7 +2,6 @@
 
 
 #include "AnimInstance/HandsAnimInstance.h"
-#include "Camera/CameraComponent.h"
 #include "Character/ShooterCharacter.h"
 #include "Enum/LeanDirection.h"
 #include "Struct/ShooterUtility.h"
@@ -29,9 +28,6 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh();
-	UCameraComponent* FirstPersonCamera = ShooterCharacter->GetFirstPersonCamera();
-	FVector FPCameraDesiredLocationOffset = ShooterCharacter->GetFPCameraDesiredLocationOffset();
-	float FPCameraDesiredFOV = ShooterCharacter->CalculateFPCameraDesiredFOV();
 	CharacterMesh = ShooterCharacter->GetMesh();
 	AO_Yaw = ShooterCharacter->GetAO_Yaw(AO_Yaw, DeltaSeconds);
 	AO_Pitch = ShooterCharacter->GetAO_Pitch(AO_Pitch, DeltaSeconds);
@@ -74,13 +70,6 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			LeanStep = -LeanStep;
 		}
 		Lean += LeanStep;
-	}
-
-	float InterpSpeed = 5.0f;
-	if (FirstPersonCamera)
-	{
-		FirstPersonCamera->SetRelativeLocation(FMath::VInterpTo(FirstPersonCamera->GetRelativeLocation(), FPCameraDesiredLocationOffset, DeltaSeconds, InterpSpeed));
-		FirstPersonCamera->SetFieldOfView(FMath::FInterpTo(FirstPersonCamera->FieldOfView, FPCameraDesiredFOV, DeltaSeconds, InterpSpeed));
 	}
 
 	if (CharacterMesh && HandsMesh && bIsThirdAction && !bIsWeaponEquipped)

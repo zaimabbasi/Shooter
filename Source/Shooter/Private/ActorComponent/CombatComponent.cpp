@@ -9,14 +9,23 @@
 #include "Enum/WeaponFiremode.h"
 
 UCombatComponent::UCombatComponent() :
-	bIsAiming(false),
 	bIsFiring(false),
 	CombatAction(ECombatAction::CA_Idle),
 	EquippedWeapon(nullptr)
 {
 	PrimaryComponentTick.bCanEverTick = false;
+	
+}
 
-	ADSTime = 1.0f;
+void UCombatComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+}
+
+void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 }
 
@@ -24,7 +33,6 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UCombatComponent, bIsAiming);
 	DOREPLIFETIME(UCombatComponent, bIsFiring);
 	DOREPLIFETIME(UCombatComponent, CombatAction);
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
@@ -202,31 +210,6 @@ void UCombatComponent::Server_WeaponReloadCharge_Implementation()
 	}
 }
 
-void UCombatComponent::SetIsAiming(bool bAiming)
-{
-	if (EquippedWeapon == nullptr)
-	{
-		return;
-	}
-	bIsAiming = bAiming;
-	if (!HasAuthority())
-	{
-		Server_SetIsAiming(bAiming);
-	}
-}
-
-void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-}
-
-void UCombatComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-}
-
 void UCombatComponent::Handle_OnWeaponActionEnd(AWeapon* Weapon)
 {
 	if (HasAuthority() && Weapon && Weapon == EquippedWeapon)
@@ -354,15 +337,6 @@ void UCombatComponent::OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon)
 void UCombatComponent::Server_SetCombatAction_Implementation(ECombatAction Action)
 {
 	CombatAction = Action;
-}
-
-void UCombatComponent::Server_SetIsAiming_Implementation(bool bAiming)
-{
-	if (EquippedWeapon == nullptr)
-	{
-		return;
-	}
-	bIsAiming = bAiming;
 }
 
 void UCombatComponent::Server_SetIsFiring_Implementation(const bool bFiring)
