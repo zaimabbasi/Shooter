@@ -19,6 +19,24 @@ AMod::AMod()
 
 }
 
+void AMod::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+}
+
+void AMod::BeginPlay()
+{
+	Super::BeginPlay();
+
+}
+
+void AMod::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
 FName AMod::GetDefaultAttachParentSocketName() const
 {
 	return NAME_None;
@@ -31,22 +49,3 @@ void AMod::Init()
 		ModComponent->Init(ModDataAsset.LoadSynchronous());
 	}
 }
-
-void AMod::PostInitializeComponents()
-{
-	Super::PostInitializeComponents();
-
-}
-
-void AMod::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void AMod::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-

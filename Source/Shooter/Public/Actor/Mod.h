@@ -17,13 +17,14 @@ class SHOOTER_API AMod : public AActor
 public:
 	AMod();
 	virtual FName GetDefaultAttachParentSocketName() const;
-	virtual void Init();
 	virtual void PostInitializeComponents() override;
 	virtual void Tick(float DeltaTime) override;
 	
+	virtual void Init();
+
 protected:
 	virtual void BeginPlay() override;
-	
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> Mesh;
 

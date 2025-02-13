@@ -3,6 +3,7 @@
 
 #include "AnimInstance/WeaponAnimInstance.h"
 #include "Actor/Weapon.h"
+#include "ActorComponent/CombatComponent.h"
 #include "Character/ShooterCharacter.h"
 #include "Struct/ShooterUtility.h"
 #include "Type/ShooterNameType.h"
@@ -15,10 +16,11 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 
 	if (Weapon)
 	{
-		CombatAction = Weapon->GetCombatAction();
 		FireAnimPlayRate = Weapon->GetRateOfFire() / 60.0f;
 		//FireAnimPlayRate = 1.0f;
 	}
+
+	CombatAction = ECombatAction::CA_None;
 
 	IKAlpha = 0.0f;
 	IKBlendInOutFlag = 0;
@@ -39,22 +41,26 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
-	USkeletalMeshComponent* WeaponMesh = Weapon->GetMesh();
 	ForegripHandguardMesh = Weapon->GetForegripHandguardMesh();
-	CombatAction = Weapon->GetCombatAction();
+	bHasForegripHandguardMesh = ForegripHandguardMesh != nullptr;
 	Firemode = Weapon->GetFiremode();
 	bIsHolster = Weapon->GetIsHolster();
-	bHasForegripHandguardMesh = ForegripHandguardMesh != nullptr;
-	bHasPatronInWeaponAmmo = Weapon->HasPatronInWeaponAmmo();
+	bHasPatronInWeaponAmmo = Weapon->GetPatronInWeaponAmmo() != nullptr;
 	bIsPistol = Weapon->IsPistol();
 	bIsOneHanded = Weapon->GetIsOneHanded();
 
 	AShooterCharacter* ShooterCharacter = Weapon->GetShooterCharacterOwner();
-	CharacterMesh = ShooterCharacter == nullptr ? nullptr : ShooterCharacter->GetMesh();
+	CharacterMesh = ShooterCharacter ? ShooterCharacter->GetMesh() : nullptr;
 	bHasCharacterVelocity = ShooterCharacter && ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
 	bIsCharacterProned = ShooterCharacter && ShooterCharacter->bIsProned;
 	bIsCharacterSprinting = ShooterCharacter && ShooterCharacter->bIsSprinting;
-	bIsCharacterThirdAction = ShooterCharacter && ShooterCharacter->IsThirdAction();
+
+	bool bIsCharacterTransition = ShooterCharacter && ShooterCharacter->GetIsTransition();
+	bIsCharacterThirdAction = bIsCharacterSprinting || bIsCharacterTransition || (bIsCharacterProned && bHasCharacterVelocity);
+
+	UCombatComponent* CombatComponent = ShooterCharacter ? ShooterCharacter->GetCombatComponent() : nullptr;
+	AWeapon* CharacterEquippedWeapon = CombatComponent ? CombatComponent->GetEquippedWeapon() : nullptr;
+	CombatAction = CombatComponent && Weapon == CharacterEquippedWeapon ? CombatComponent->GetCombatAction() : ECombatAction::CA_Out;
 
 	if (bIsCharacterThirdAction)
 	{

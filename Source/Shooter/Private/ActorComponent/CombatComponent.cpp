@@ -2,8 +2,8 @@
 
 
 #include "ActorComponent/CombatComponent.h"
-#include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
+#include "Actor/Mag.h"
 #include "Actor/Weapon.h"
 #include "Character/ShooterCharacter.h"
 #include "Enum/WeaponFiremode.h"
@@ -39,26 +39,143 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 }
 
-void UCombatComponent::Server_ActionEnd_Implementation()
+void UCombatComponent::ActionEnd()
 {
 	if (CombatAction == ECombatAction::CA_MagIn)
 	{
-		Server_SetCombatAction(ECombatAction::CA_ActionEnd);
+		CombatAction = ECombatAction::CA_ActionEnd;
 	}
 }
 
-void UCombatComponent::Server_ActionStart_Implementation()
+void UCombatComponent::ActionStart()
 {
 }
 
-void UCombatComponent::Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName)
+void UCombatComponent::Idle()
+{
+	CombatAction = ECombatAction::CA_Idle;
+}
+
+void UCombatComponent::IdleToOut()
+{
+	if (CombatAction == ECombatAction::CA_Idle)
+	{
+		CombatAction = ECombatAction::CA_IdleToOut;
+	}
+}
+
+void UCombatComponent::Out()
+{
+	if (CombatAction == ECombatAction::CA_IdleToOut)
+	{
+		CombatAction = ECombatAction::CA_Out;
+	}
+}
+
+void UCombatComponent::OutToIdle()
+{
+	if (CombatAction == ECombatAction::CA_Out)
+	{
+		const AMag* WeaponMag = EquippedWeapon ? EquippedWeapon->GetMag() : nullptr;
+		const uint8 MagAmmoCount = WeaponMag ? WeaponMag->GetAmmoCount() : 0;
+		const bool bHasPatronInWeaponAmmo = EquippedWeapon && EquippedWeapon->GetPatronInWeaponAmmo() != nullptr;
+		if (EquippedWeapon && MagAmmoCount > 0 && !bHasPatronInWeaponAmmo)
+		{
+			CombatAction = ECombatAction::CA_OutToIdleArm;
+		}
+		else
+		{
+			CombatAction = ECombatAction::CA_OutToIdle;
+		}
+	}
+}
+
+void UCombatComponent::WeaponChamberCheck()
+{
+	if (CombatAction == ECombatAction::CA_Idle && EquippedWeapon)
+	{
+		CombatAction = ECombatAction::CA_ChamberCheck;
+	}
+}
+
+void UCombatComponent::WeaponFire(bool bFiring)
+{
+	if (EquippedWeapon)
+	{
+		if (CombatAction == ECombatAction::CA_Idle && bFiring)
+		{
+			bIsFiring = true;
+			CombatAction = ECombatAction::CA_Fire;
+		}
+		else if (!bFiring)
+		{
+			bIsFiring = false;
+		}
+	}
+}
+
+void UCombatComponent::WeaponFiremode()
+{
+	if (CombatAction == ECombatAction::CA_Idle && EquippedWeapon && EquippedWeapon->GetNumFiremodes() > 1)
+	{
+		CombatAction = ECombatAction::CA_Firemode;
+	}
+}
+
+void UCombatComponent::WeaponFiremodeCheck()
+{
+	if (CombatAction == ECombatAction::CA_Idle && EquippedWeapon && EquippedWeapon->GetNumFiremodes() > 1)
+	{
+		CombatAction = ECombatAction::CA_FiremodeCheck;
+	}
+}
+
+void UCombatComponent::WeaponMagCheck()
+{
+	const bool bHasWeaponMag = EquippedWeapon && EquippedWeapon->GetMag() != nullptr;
+	if (CombatAction == ECombatAction::CA_Idle && EquippedWeapon && bHasWeaponMag)
+	{
+		CombatAction = ECombatAction::CA_MagCheck;
+	}
+}
+
+void UCombatComponent::WeaponMagIn()
+{
+	const bool bHasWeaponMag = EquippedWeapon && EquippedWeapon->GetMag() != nullptr;
+	if (CombatAction == ECombatAction::CA_MagOut && EquippedWeapon && bHasWeaponMag)
+	{
+		CombatAction = ECombatAction::CA_MagIn;
+	}
+}
+
+void UCombatComponent::WeaponMagOut()
+{
+	const bool bHasWeaponMag = EquippedWeapon && EquippedWeapon->GetMag() != nullptr;
+	if (CombatAction == ECombatAction::CA_Idle && EquippedWeapon && bHasWeaponMag)
+	{
+		CombatAction = ECombatAction::CA_MagOut;
+	}
+}
+
+void UCombatComponent::WeaponReloadCharge()
+{
+	const AMag* WeaponMag = EquippedWeapon ? EquippedWeapon->GetMag() : nullptr;
+	const uint8 MagAmmoCount = WeaponMag ? WeaponMag->GetAmmoCount() : 0;
+	const bool bHasPatronInWeaponAmmo = EquippedWeapon && EquippedWeapon->GetPatronInWeaponAmmo() != nullptr;
+	if (CombatAction == ECombatAction::CA_MagIn && EquippedWeapon && MagAmmoCount > 0 && !bHasPatronInWeaponAmmo)
+	{
+		CombatAction = ECombatAction::CA_ReloadCharge;
+	}
+}
+
+void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName)
 {
 	if (WeaponToEquip == nullptr || EquippedWeapon)
 	{
 		return;
 	}
 	WeaponToEquip->AttachToComponent(ParentSkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform, InParentSocketName);
-	WeaponToEquip->Server_SetIsHolster(false);
+	WeaponToEquip->bIsHolster = false;
 
 	WeaponToEquip->OnWeaponActionEnd.AddDynamic(this, &UCombatComponent::Handle_OnWeaponActionEnd);
 	WeaponToEquip->OnWeaponActionStart.AddDynamic(this, &UCombatComponent::Handle_OnWeaponActionStart);
@@ -80,43 +197,14 @@ void UCombatComponent::Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip,
 	EquippedWeapon = WeaponToEquip;
 }
 
-void UCombatComponent::Server_Idle_Implementation()
-{
-	Server_SetCombatAction(ECombatAction::CA_Idle);
-}
-
-void UCombatComponent::Server_IdleToOut_Implementation()
-{
-	if (CombatAction == ECombatAction::CA_Idle)
-	{
-		Server_SetCombatAction(ECombatAction::CA_IdleToOut);
-	}
-}
-
-void UCombatComponent::Server_Out_Implementation()
-{
-	if (CombatAction == ECombatAction::CA_IdleToOut)
-	{
-		Server_SetCombatAction(ECombatAction::CA_Out);
-	}
-}
-
-void UCombatComponent::Server_OutToIdle_Implementation()
-{
-	if (CombatAction == ECombatAction::CA_Out)
-	{
-		Server_SetCombatAction(EquippedWeapon && EquippedWeapon->DoesNeedCharge() ? ECombatAction::CA_OutToIdleArm : ECombatAction::CA_OutToIdle);
-	}
-}
-
-void UCombatComponent::Server_UnequipWeapon_Implementation(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName)
+void UCombatComponent::UnequipWeapon(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName)
 {
 	if (EquippedWeapon == nullptr)
 	{
 		return;
 	}
 	EquippedWeapon->AttachToComponent(ParentSkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform, InParentSocketName);
-	EquippedWeapon->Server_SetIsHolster(true);
+	EquippedWeapon->bIsHolster = true;
 
 	EquippedWeapon->OnWeaponActionEnd.RemoveAll(this);
 	EquippedWeapon->OnWeaponActionStart.RemoveAll(this);
@@ -138,83 +226,11 @@ void UCombatComponent::Server_UnequipWeapon_Implementation(USkeletalMeshComponen
 	EquippedWeapon = nullptr;
 }
 
-void UCombatComponent::Server_WeaponChamberCheck_Implementation()
-{
-	if (CombatAction == ECombatAction::CA_Idle && EquippedWeapon)
-	{
-		Server_SetCombatAction(ECombatAction::CA_ChamberCheck);
-	}
-}
-
-void UCombatComponent::Server_WeaponFire_Implementation(const bool bFiring)
-{
-	if (EquippedWeapon)
-	{
-		if (CombatAction == ECombatAction::CA_Idle && bFiring)
-		{
-			Server_SetIsFiring(true);
-			Server_SetCombatAction(ECombatAction::CA_Fire);
-		}
-		else if (!bFiring)
-		{
-			Server_SetIsFiring(false);
-		}
-	}
-}
-
-void UCombatComponent::Server_WeaponFiremode_Implementation()
-{
-	if (CombatAction == ECombatAction::CA_Idle && EquippedWeapon && EquippedWeapon->HasFiremodes())
-	{
-		Server_SetCombatAction(ECombatAction::CA_Firemode);
-	}
-}
-
-void UCombatComponent::Server_WeaponFiremodeCheck_Implementation()
-{
-	if (CombatAction == ECombatAction::CA_Idle && EquippedWeapon && EquippedWeapon->HasFiremodes())
-	{
-		Server_SetCombatAction(ECombatAction::CA_FiremodeCheck);
-	}
-}
-
-void UCombatComponent::Server_WeaponMagCheck_Implementation()
-{
-	if (CombatAction == ECombatAction::CA_Idle && EquippedWeapon && EquippedWeapon->HasMag())
-	{
-		Server_SetCombatAction(ECombatAction::CA_MagCheck);
-	}
-}
-
-void UCombatComponent::Server_WeaponMagIn_Implementation()
-{
-	if (CombatAction == ECombatAction::CA_MagOut && EquippedWeapon && EquippedWeapon->HasMag())
-	{
-		Server_SetCombatAction(ECombatAction::CA_MagIn);
-	}
-}
-
-void UCombatComponent::Server_WeaponMagOut_Implementation()
-{
-	if (CombatAction == ECombatAction::CA_Idle && EquippedWeapon && EquippedWeapon->HasMag())
-	{
-		Server_SetCombatAction(ECombatAction::CA_MagOut);
-	}
-}
-
-void UCombatComponent::Server_WeaponReloadCharge_Implementation()
-{
-	if (CombatAction == ECombatAction::CA_MagIn && EquippedWeapon && EquippedWeapon->DoesNeedCharge())
-	{
-		Server_SetCombatAction(ECombatAction::CA_ReloadCharge);
-	}
-}
-
 void UCombatComponent::Handle_OnWeaponActionEnd(AWeapon* Weapon)
 {
 	if (HasAuthority() && Weapon && Weapon == EquippedWeapon)
 	{
-		Server_SetCombatAction(ECombatAction::CA_Idle);
+		CombatAction = ECombatAction::CA_Idle;
 	}
 	OnCombatComponentWeaponActionEnd.Broadcast(Weapon);
 }
@@ -228,7 +244,7 @@ void UCombatComponent::Handle_OnWeaponChamberCheck(AWeapon* Weapon)
 {
 	if (HasAuthority() && Weapon && Weapon == EquippedWeapon)
 	{
-		Server_SetCombatAction(ECombatAction::CA_Idle);
+		CombatAction = ECombatAction::CA_Idle;;
 	}
 	OnCombatComponentWeaponChamberCheck.Broadcast(Weapon);
 }
@@ -237,15 +253,16 @@ void UCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
 {
 	if (Weapon && Weapon == EquippedWeapon)
 	{
-		EWeaponFiremode WeaponFiremode = Weapon->GetFiremode();
-		if (WeaponFiremode == EWeaponFiremode::WF_SingleShot || !Weapon->HasPatronInWeaponAmmo())
+		const EWeaponFiremode WeaponFiremode = Weapon->GetFiremode();
+		const bool bHasPatronInWeaponAmmo = Weapon->GetPatronInWeaponAmmo() != nullptr;
+		if (WeaponFiremode == EWeaponFiremode::WF_SingleShot || !bHasPatronInWeaponAmmo)
 		{
-			Server_SetIsFiring(false);
-			Server_SetCombatAction(ECombatAction::CA_Idle);
+			bIsFiring = false;
+			CombatAction = ECombatAction::CA_Idle;
 		}
 		if (!bIsFiring)
 		{
-			Server_SetCombatAction(ECombatAction::CA_Idle);
+			CombatAction = ECombatAction::CA_Idle;
 		}
 	}
 	OnCombatComponentWeaponFire.Broadcast(Weapon);
@@ -255,8 +272,8 @@ void UCombatComponent::Handle_OnWeaponFireDry(AWeapon* Weapon)
 {
 	if (Weapon && Weapon == EquippedWeapon)
 	{
-		Server_SetIsFiring(false);
-		Server_SetCombatAction(ECombatAction::CA_Idle);
+		bIsFiring = false;
+		CombatAction = ECombatAction::CA_Idle;
 	}
 	OnCombatComponentWeaponFireDry.Broadcast(Weapon);
 }
@@ -285,7 +302,7 @@ void UCombatComponent::Handle_OnWeaponMagCheck(AWeapon* Weapon)
 {
 	if (HasAuthority() && Weapon && Weapon == EquippedWeapon)
 	{
-		Server_SetCombatAction(ECombatAction::CA_Idle);
+		CombatAction = ECombatAction::CA_Idle;
 	}
 	OnCombatComponentWeaponMagCheck.Broadcast(Weapon);
 }
@@ -319,7 +336,7 @@ void UCombatComponent::Handle_OnWeaponReloadCharge(AWeapon* Weapon)
 {
 	if (HasAuthority() && Weapon && Weapon == EquippedWeapon)
 	{
-		Server_SetCombatAction(ECombatAction::CA_Idle);
+		CombatAction = ECombatAction::CA_Idle;
 	}
 	OnCombatComponentWeaponReloadCharge.Broadcast(Weapon);
 }
@@ -332,14 +349,4 @@ void UCombatComponent::OnRep_CombatAction()
 void UCombatComponent::OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon)
 {
 	
-}
-
-void UCombatComponent::Server_SetCombatAction_Implementation(ECombatAction Action)
-{
-	CombatAction = Action;
-}
-
-void UCombatComponent::Server_SetIsFiring_Implementation(const bool bFiring)
-{
-	bIsFiring = bFiring;
 }

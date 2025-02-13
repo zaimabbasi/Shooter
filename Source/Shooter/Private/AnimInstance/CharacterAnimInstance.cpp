@@ -4,6 +4,8 @@
 #include "AnimInstance/CharacterAnimInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Actor/Weapon.h"
+#include "ActorComponent/CombatComponent.h"
 #include "Character/ShooterCharacter.h"
 #include "Enum/TurnDirection.h"
 #include "Struct/ShooterUtility.h"
@@ -29,32 +31,41 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 	
-	USkeletalMeshComponent* CharacterMesh = ShooterCharacter->GetMesh();
 	HandsMesh = ShooterCharacter->GetHandsMesh();
 	AO_Yaw = ShooterCharacter->GetAO_Yaw(AO_Yaw, DeltaSeconds);
 	AO_Pitch = ShooterCharacter->GetAO_Pitch(AO_Pitch, DeltaSeconds);
 	bIsAccelerating = ShooterCharacter->GetCurrentAcceleration().SizeSquared2D() > 0.0f;
-	bHasVelocity = ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
 	TurnDirection = ShooterCharacter->GetTurnDirection(AO_Yaw);
 	LeanDirection = ShooterCharacter->GetLeanDirection();
 	bIsCrouched = ShooterCharacter->bIsCrouched;
 	bIsProned = ShooterCharacter->bIsProned;
 	bIsSlowing = ShooterCharacter->bIsSlowing;
 	bIsSprinting = ShooterCharacter->bIsSprinting;
-	bIsThirdAction = ShooterCharacter->IsThirdAction();
-	bIsWeaponEquipped = ShooterCharacter->IsWeaponEquipped();
-	bIsEquippedWeaponPistol = ShooterCharacter->IsEquippedWeaponPistol();
-	bIsEquippedWeaponOneHanded = ShooterCharacter->IsEquippedWeaponOneHanded();
 	LeanTransitionDuration = ShooterCharacter->GetLeanTransitionDuration();
 	AnimationTransitionDuration = ShooterCharacter->GetDefaultAnimationTransitionDuration();
 
+	FVector Velocity = ShooterCharacter->GetVelocity();
+	bHasVelocity = Velocity.SizeSquared2D() > 0.0f;
+
 	if (bHasVelocity)
 	{
-		float VelocityYaw = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetVelocity()).Yaw;
-		VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, ShooterCharacter->GetActorRotation().Yaw, 0.0)).Yaw;
+		float VelocityYaw = UKismetMathLibrary::MakeRotFromX(Velocity).Yaw;
+		float ActorRotationYaw = ShooterCharacter->GetActorRotation().Yaw;
+		VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, ActorRotationYaw, 0.0)).Yaw;
 	}
-	
-	float bUseControllerDesiredRotation = ShooterCharacter->GetUseControllerDesiredRotation();
+
+	bool bIsTransition = ShooterCharacter->GetIsTransition();
+	bIsThirdAction = bIsSprinting || bIsTransition || (bIsProned && bHasVelocity);
+
+	UCombatComponent* CombatComponent = ShooterCharacter->GetCombatComponent();
+	AWeapon* EquippedWeapon = CombatComponent ? CombatComponent->GetEquippedWeapon() : nullptr;
+	bIsWeaponEquipped = EquippedWeapon != nullptr;
+	bIsEquippedWeaponPistol = EquippedWeapon && EquippedWeapon->IsPistol();
+	bIsEquippedWeaponOneHanded = EquippedWeapon && EquippedWeapon->GetIsOneHanded();
+
+	UCharacterMovementComponent* MovementComponent = ShooterCharacter->GetCharacterMovement();
+	float bUseControllerDesiredRotation = MovementComponent && MovementComponent->bUseControllerDesiredRotation;
+
 	if (!bUseControllerDesiredRotation && (bHasVelocity || TurnDirection != ETurnDirection::TD_None))
 	{
 		OnCharacterAnimInstanceControllerDesiredRotationNeeded.Broadcast(true);
@@ -64,13 +75,14 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		OnCharacterAnimInstanceControllerDesiredRotationNeeded.Broadcast(false);
 	}
 
-	if (float YawExceedingMaxLimit = ShooterCharacter->GetYawExceedingMaxLimit(AO_Yaw))
+	float YawExceedingMaxLimit = ShooterCharacter->GetYawExceedingMaxLimit(AO_Yaw);
+	if (!FMath::IsNearlyZero(YawExceedingMaxLimit))
 	{
 		ShooterCharacter->AddActorLocalRotation(FRotator(0.0, YawExceedingMaxLimit, 0.0));
 		AO_Yaw -= YawExceedingMaxLimit;
 	}
 
-	if (CharacterMesh && HandsMesh && !bIsThirdAction)
+	if (HandsMesh && !bIsThirdAction)
 	{
 		BendGoalLeftTransform = HandsMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		BendGoalRightTransform = HandsMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);

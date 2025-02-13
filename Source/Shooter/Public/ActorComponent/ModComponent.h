@@ -17,6 +17,9 @@ class SHOOTER_API UModComponent : public UActorComponent
 public:
 	UModComponent();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	void Init(const UModDataAsset* ModDataAsset);
 
 	template<class T>
 	T* GetMod() const
@@ -25,9 +28,6 @@ public:
 		ModArray.FindItemByClass(&Mod);
 		return Mod;
 	};
-
-	void Init(const UModDataAsset* ModDataAsset);
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
 	virtual void BeginPlay() override;	

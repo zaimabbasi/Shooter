@@ -17,17 +17,14 @@ class SHOOTER_API AMag: public AMod
 	GENERATED_BODY()
 	
 public:	
-	AMag();
-	uint8 GetAmmoCapacity();
-	uint8 GetAmmoSpace();
-	virtual FName GetDefaultAttachParentSocketName() const override;
+	AMag();	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	UFUNCTION(Server, Reliable)
-	void Server_AddAmmo(const uint8 Count);
+	virtual FName GetDefaultAttachParentSocketName() const override;
+	uint8 GetAmmoCapacity() const;
 
-	UFUNCTION(Server, Reliable)
-	void Server_PopAmmo();
+	void AddAmmo(const uint8 Count);
+	void PopAmmo();
 
 	FOnMagAmmoPoppedSignature OnMagAmmoPopped;
 

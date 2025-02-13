@@ -33,67 +33,56 @@ public:
 	virtual void PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void Tick(float DeltaTime) override;
+	virtual void RecalculateBaseEyeHeight() override;
 
 protected:
 	virtual void BeginPlay() override;
 
 public:
+	void Init();
+
 	UFUNCTION(BlueprintCallable, Category = Character)
 	virtual bool CanProne() const;
 
-	UFUNCTION(BlueprintCallable, Category = Character)
-	virtual bool CanSlow() const;
-
-	UFUNCTION(BlueprintCallable, Category = Character)
-	virtual bool CanSprint() const;
-
-	float GetAO_Pitch(float CurrentPitch, float DeltaTime) const;
-	float GetAO_Yaw(float CurrentYaw, float DeltaTime) const;
-	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
-	ECombatAction GetCombatAction() const;
-	FVector GetCurrentAcceleration() const;
-	AWeapon* GetEquippedWeapon() const;
-	USkeletalMeshComponent* GetEquippedWeaponMesh() const;
-	
-	ETurnDirection GetTurnDirection(float CurrentYaw);
-	bool GetUseControllerDesiredRotation() const;
-	float GetYawExceedingMaxLimit(float CurrentYaw) const;
-	void Init();
-	bool IsEquippedWeaponPistol() const;
-	bool IsEquippedWeaponOneHanded() const;
-	bool IsThirdAction() const;
-	bool IsWeaponEquipped() const;
-	virtual void OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
-
-	UFUNCTION()
-	virtual void OnRep_IsProned();
-
-	virtual void OnStartProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
-	
 	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
 	virtual void Prone(bool bClientSimulation = false);
 
-	virtual void RecalculateBaseEyeHeight() override;
-	void RecalculatePronedEyeHeight();
+	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
+	virtual void UnProne(bool bClientSimulation = false);
 
-	void SetIsSprinting(bool bSprinting);
+	UFUNCTION(BlueprintCallable, Category = Character)
+	virtual bool CanSlow() const;
 
 	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
 	virtual void Slow();
 
 	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
-	virtual void Sprint();
-
-	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
-	virtual void UnProne(bool bClientSimulation = false);
-
-	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
 	virtual void UnSlow();
+
+	UFUNCTION(BlueprintCallable, Category = Character)
+	virtual bool CanSprint() const;
+
+	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
+	virtual void Sprint();
 
 	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
 	virtual void UnSprint();
 
-	void SetIsTransition(bool bNewIsTransition);
+	float GetAO_Pitch(float CurrentPitch, float DeltaTime) const;
+	float GetAO_Yaw(float CurrentYaw, float DeltaTime) const;
+	FVector GetCurrentAcceleration() const;
+	ETurnDirection GetTurnDirection(float CurrentYaw);
+	float GetYawExceedingMaxLimit(float CurrentYaw) const;
+	
+	virtual void OnStartProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
+	virtual void OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
+
+	UFUNCTION()
+	virtual void OnRep_IsProned();
+
+	void RecalculatePronedEyeHeight();
+
+	//void SetIsTransition(bool bNewIsTransition);
 	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_IsProned, Category = Character)
 	uint32 bIsProned : 1;
@@ -113,12 +102,12 @@ private:
 	void UnAim();
 
 	bool IsCrawling() const;
-	bool HasVelocity() const;
-	bool HasAcceleration() const;
 
 	bool CanPerformCrouchAction() const;
 	bool CanPerformMoveAction() const;
 	bool CanPerformProneAction() const;
+
+	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
 
 	UFUNCTION()
 	void Handle_ADSTimelineUpdate(float Value);
@@ -292,7 +281,22 @@ private:
 	void Server_HolsterWeaponProgressive();
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetIsAlterAction(bool bAlterAction);
+	void Server_CheckWeaponChamber();
+
+	UFUNCTION(Server, Reliable)
+	void Server_FireWeapon(bool bFire);
+
+	UFUNCTION(Server, Reliable)
+	void Server_ChangeWeaponFiremode();
+
+	UFUNCTION(Server, Reliable)
+	void Server_CheckWeaponFiremode();
+
+	UFUNCTION(Server, Reliable)
+	void Server_CheckWeaponMag();
+
+	UFUNCTION(Server, Reliable)
+	void Server_WeaponMagOut();
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetLeanDirection(ELeanDirection NewLeanDirection);
@@ -304,7 +308,6 @@ private:
 	void Server_SetLeaningRate(float Rate);
 
 	void SetRemoteViewYaw(float NewRemoteYaw);
-
 	void UpdateADSCameraTargetLocation();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -409,9 +412,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCurveFloat> ADSTimelineCurve;
 
-	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true", UIMin = "0.0", UIMax = "1.0", ClampMin = "0.001", ClampMax = "1.0"))
-	float ADSCameraFOVRatio;*/
-
 	float DefaultCameraFOV;
 
 	FVector ADSCameraTargetLocation;
@@ -421,7 +421,6 @@ private:
 
 	bool bIsAiming;
 
-	UPROPERTY(Replicated)
 	bool bIsAlterAction;
 
 	bool bIsMoveInputBackward;
@@ -456,8 +455,10 @@ private:
 public:
 	FORCEINLINE float GetDefaultAnimationTransitionDuration() const { return DefaultAnimationTransitionDuration; }
 	FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
+	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
+	FORCEINLINE bool GetIsTransition() const { return bIsTransition; }
 	FORCEINLINE ELeanDirection GetLeanDirection() const { return LeanDirection; }
 	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
 	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }

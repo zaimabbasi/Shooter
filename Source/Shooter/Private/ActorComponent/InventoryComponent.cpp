@@ -14,14 +14,16 @@ UInventoryComponent::UInventoryComponent()
 
 }
 
-int8 UInventoryComponent::FindWeapon(AWeapon*& Weapon) const
+void UInventoryComponent::BeginPlay()
 {
-	return WeaponArray.Find(Weapon);
+	Super::BeginPlay();
+
 }
 
-uint8 UInventoryComponent::GetAmmoAtIndex(uint8 Index)
+void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	return WeaponAmmoArray.IsValidIndex(Index) ? WeaponAmmoArray[Index] : 0;
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
 }
 
 void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -31,11 +33,6 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME_CONDITION(UInventoryComponent, WeaponArray, COND_OwnerOnly);
 	DOREPLIFETIME(UInventoryComponent, WeaponAmmoArray);
 
-}
-
-AWeapon* UInventoryComponent::GetWeaponAtIndex(uint8 Index)
-{
-	return WeaponArray.IsValidIndex(Index) ? WeaponArray[Index] : nullptr;
 }
 
 void UInventoryComponent::Init(const FInventoryParams& InventoryParams)
@@ -61,35 +58,36 @@ void UInventoryComponent::Init(const FInventoryParams& InventoryParams)
 
 }
 
-void UInventoryComponent::Server_LoadAmmoInWeaponMag_Implementation(AWeapon* Weapon, const uint8 AmmoCount)
+int8 UInventoryComponent::FindWeapon(AWeapon*& Weapon) const
 {
-	if (Weapon == nullptr || AmmoCount == 0)
+	return WeaponArray.Find(Weapon);
+}
+
+uint8 UInventoryComponent::GetWeaponAmmoAtIndex(uint8 Index) const
+{
+	return WeaponAmmoArray.IsValidIndex(Index) ? WeaponAmmoArray[Index] : 0;
+}
+
+void UInventoryComponent::LoadAmmoInWeaponMag(uint8 WeaponIndex)
+{
+	if (const AWeapon* Weapon = GetWeaponAtIndex(WeaponIndex))
 	{
-		return;
-	}
-	const int8 WeaponIndex = FindWeapon(Weapon);
-	if (WeaponAmmoArray.IsValidIndex(WeaponIndex))
-	{
-		const uint8 WeaponAmmo = WeaponAmmoArray[WeaponIndex];
-		if (WeaponAmmo >= AmmoCount)
+		if (AMag* WeaponMag = Weapon->GetMag())
 		{
-			Weapon->Server_MagAddAmmo(AmmoCount);
-			// What if weapon does not have a mag?
-			WeaponAmmoArray[WeaponIndex] -= AmmoCount;
+			const uint8 MagAmmoSpace = WeaponMag->GetAmmoCapacity() - WeaponMag->GetAmmoCount();
+			const uint8 AmmoCount = FMath::Min(MagAmmoSpace, GetWeaponAmmoAtIndex(WeaponIndex));
+			if (AmmoCount > 0)
+			{
+				WeaponMag->AddAmmo(AmmoCount);
+				WeaponAmmoArray[WeaponIndex] -= AmmoCount;
+			}
 		}
 	}
 }
 
-void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+AWeapon* UInventoryComponent::GetWeaponAtIndex(uint8 Index) const
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-}
-
-void UInventoryComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
+	return WeaponArray.IsValidIndex(Index) ? WeaponArray[Index] : nullptr;
 }
 
 void UInventoryComponent::OnRep_WeaponArray() const

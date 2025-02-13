@@ -14,6 +14,18 @@ UModComponent::UModComponent()
 
 }
 
+void UModComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+}
+
+void UModComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+}
+
 void UModComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -49,16 +61,4 @@ void UModComponent::Init(const UModDataAsset* ModDataAsset)
 			
 		}
 	}
-}
-
-void UModComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-}
-
-void UModComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
 }

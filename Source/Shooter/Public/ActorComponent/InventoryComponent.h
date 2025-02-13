@@ -21,16 +21,14 @@ class SHOOTER_API UInventoryComponent : public UActorComponent
 
 public:
 	UInventoryComponent();
-	int8 FindWeapon(AWeapon*& Weapon) const;
-	uint8 GetAmmoAtIndex(uint8 Index);
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	AWeapon* GetWeaponAtIndex(uint8 Index);
-	void Init(const FInventoryParams& InventoryParams);
-	
-	UFUNCTION(Server, Reliable)
-	void Server_LoadAmmoInWeaponMag(AWeapon* Weapon, const uint8 AmmoCount);
-
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	void Init(const FInventoryParams& InventoryParams);
+	int8 FindWeapon(AWeapon*& Weapon) const;
+	AWeapon* GetWeaponAtIndex(uint8 Index) const;
+	uint8 GetWeaponAmmoAtIndex(uint8 Index) const;
+	void LoadAmmoInWeaponMag(uint8 WeaponIndex);
 
 	FOnInventoryComponentWeaponArrayReplicatedSignature OnInventoryComponentWeaponArrayReplicated;
 
@@ -41,11 +39,11 @@ private:
 	UFUNCTION()
 	void OnRep_WeaponArray() const;
 
-	UPROPERTY(Replicated)
-	TArray<uint8> WeaponAmmoArray;
-	
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponArray)
 	TArray<TObjectPtr<AWeapon>> WeaponArray;
+
+	UPROPERTY(Replicated)
+	TArray<uint8> WeaponAmmoArray;
 
 public:
 	FORCEINLINE TArray<AWeapon*> GetWeaponArray() const { return WeaponArray; }

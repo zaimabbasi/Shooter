@@ -418,8 +418,7 @@ void UShooterCharacterMovementComponent::Slow()
 
 void UShooterCharacterMovementComponent::Sprint()
 {
-	//ShooterCharacterOwner->bIsSprinting = true;
-	ShooterCharacterOwner->SetIsSprinting(true);
+	ShooterCharacterOwner->bIsSprinting = true;
 }
 
 void UShooterCharacterMovementComponent::UnProne(bool bClientSimulation)
@@ -579,8 +578,7 @@ void UShooterCharacterMovementComponent::UnSlow()
 
 void UShooterCharacterMovementComponent::UnSprint()
 {
-	//ShooterCharacterOwner->bIsSprinting = false;
-	ShooterCharacterOwner->SetIsSprinting(false);
+	ShooterCharacterOwner->bIsSprinting = false;
 }
 
 void UShooterCharacterMovementComponent::UpdateCharacterStateAfterMovement(float DeltaSeconds)

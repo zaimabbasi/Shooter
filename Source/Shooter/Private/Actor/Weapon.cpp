@@ -39,139 +39,6 @@ AWeapon::AWeapon() :
 
 }
 
-bool AWeapon::DoesNeedCharge()
-{
-	return (GetMagAmmoCount() > 0 && PatronInWeaponAmmo == nullptr);
-}
-
-ECombatAction AWeapon::GetCombatAction() const
-{
-	if (ShooterCharacterOwner == nullptr || ShooterCharacterOwner->GetEquippedWeapon() != this)
-	{
-		return ECombatAction::CA_Out;
-	}
-	return ShooterCharacterOwner->GetCombatAction();
-}
-
-EWeaponFiremode AWeapon::GetFiremode() const
-{
-	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
-	if (LoadedWeaponDataAsset == nullptr || !LoadedWeaponDataAsset->Firemodes.IsValidIndex(FiremodeIndex))
-	{
-		return EWeaponFiremode::WF_None;
-	}
-	return LoadedWeaponDataAsset->Firemodes[FiremodeIndex];
-}
-
-//AForegrip* AWeapon::GetForegrip() const
-//{
-//	return GetAttachedActor<AForegrip>();
-//}
-
-USkeletalMeshComponent* AWeapon::GetForegripHandguardMesh() const
-{
-	AMod* ForegripHandguard = GetAttachedActor<AForegrip>();
-	if (ForegripHandguard == nullptr)
-	{
-		ForegripHandguard = GetAttachedActor<AHandguard>();
-	}
-	return ForegripHandguard == nullptr ? nullptr : ForegripHandguard->GetMesh();
-}
-
-//AHandguard* AWeapon::GetHandguard() const
-//{
-//	return GetAttachedActor<AHandguard>();
-//}
-
-void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(AWeapon, bIsHolster);
-	DOREPLIFETIME(AWeapon, FiremodeIndex);
-	DOREPLIFETIME(AWeapon, PatronInWeaponAmmo);
-	DOREPLIFETIME(AWeapon, ShellPortAmmo);
-
-}
-
-bool AWeapon::GetIsOneHanded() const
-{
-	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
-	return LoadedWeaponDataAsset && LoadedWeaponDataAsset->IsOneHanded;
-}
-
-uint8 AWeapon::GetMagAmmoCount() const
-{
-	AMag* Mag = GetMag();
-	if (Mag == nullptr)
-	{
-		return 0;
-	}
-	return Mag->GetAmmoCount();
-}
-
-uint8 AWeapon::GetMagAmmoSpace() const
-{
-	AMag* Mag = GetMag();
-	if (Mag == nullptr)
-	{
-		return 0;
-	}
-	return Mag->GetAmmoSpace();
-}
-
-USkeletalMeshComponent* AWeapon::GetScopeSightMesh() const
-{
-	AMod* ScopeSight = GetAttachedActor<AScope>();
-	if (ScopeSight == nullptr)
-	{
-		ScopeSight = GetAttachedActor<ASightRear>();
-	}
-	return ScopeSight == nullptr ? nullptr : ScopeSight->GetMesh();
-}
-
-uint16 AWeapon::GetRateOfFire() const
-{
-	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
-	if (LoadedWeaponDataAsset == nullptr)
-	{
-		return 0;
-	}
-	return LoadedWeaponDataAsset->RateOfFire;
-}
-
-bool AWeapon::HasFiremodes()
-{
-	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
-	return LoadedWeaponDataAsset && LoadedWeaponDataAsset->Firemodes.Num() > 1;
-}
-
-bool AWeapon::HasMag()
-{
-	return GetMag() != nullptr;
-}
-
-bool AWeapon::HasPatronInWeaponAmmo()
-{
-	return PatronInWeaponAmmo != nullptr;
-}
-
-void AWeapon::Init()
-{
-	if (ModComponent)
-	{
-		if (const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous())
-		{
-			ModComponent->Init(LoadedWeaponDataAsset->ModDataAsset.LoadSynchronous());
-		}
-	}
-
-	if (AMag* Mag = GetMag())
-	{
-		Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
-	}
-}
-
 void AWeapon::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
@@ -205,41 +72,27 @@ void AWeapon::PostInitializeComponents()
 
 }
 
-void AWeapon::Server_MagAddAmmo_Implementation(const uint8 Count)
+void AWeapon::BeginPlay()
 {
-	AMag* Mag = GetMag();
-	if (Mag == nullptr)
-	{
-		return;
-	}
-	Mag->Server_AddAmmo(Count);
+	Super::BeginPlay();
+
 }
 
-void AWeapon::Server_MagPopAmmo_Implementation()
+void AWeapon::Tick(float DeltaTime)
 {
-	AMag* Mag = GetMag();
-	if (Mag == nullptr)
-	{
-		return;
-	}
-	Mag->Server_PopAmmo();
+	Super::Tick(DeltaTime);
+
 }
 
-void AWeapon::Server_SetIsHolster_Implementation(const bool bHolster)
+void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	bIsHolster = bHolster;
-}
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-void AWeapon::Server_SwitchFiremode_Implementation()
-{
-	if (!HasFiremodes())
-	{
-		return;
-	}
-	if (const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous())
-	{
-		FiremodeIndex = FMath::Modulo<uint8>(FiremodeIndex + 1, LoadedWeaponDataAsset->Firemodes.Num());
-	}
+	DOREPLIFETIME(AWeapon, bIsHolster);
+	DOREPLIFETIME(AWeapon, FiremodeIndex);
+	DOREPLIFETIME(AWeapon, PatronInWeaponAmmo);
+	DOREPLIFETIME(AWeapon, ShellPortAmmo);
+
 }
 
 void AWeapon::SetOwner(AActor* NewOwner)
@@ -249,41 +102,79 @@ void AWeapon::SetOwner(AActor* NewOwner)
 	ShooterCharacterOwner = Cast<AShooterCharacter>(NewOwner);
 }
 
-void AWeapon::Tick(float DeltaTime)
+void AWeapon::Init()
 {
-	Super::Tick(DeltaTime);
+	if (ModComponent)
+	{
+		if (const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous())
+		{
+			ModComponent->Init(LoadedWeaponDataAsset->ModDataAsset.LoadSynchronous());
+		}
+	}
 
+	if (AMag* Mag = GetMag())
+	{
+		Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
+	}
 }
 
-void AWeapon::BeginPlay()
+bool AWeapon::GetIsOneHanded() const
 {
-	Super::BeginPlay();
-
+	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
+	return LoadedWeaponDataAsset && LoadedWeaponDataAsset->IsOneHanded;
 }
+
+uint16 AWeapon::GetRateOfFire() const
+{
+	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
+	return LoadedWeaponDataAsset ? LoadedWeaponDataAsset->RateOfFire : 0;
+}
+
+uint8 AWeapon::GetNumFiremodes() const
+{
+	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
+	return LoadedWeaponDataAsset ? LoadedWeaponDataAsset->Firemodes.Num() : 0;
+}
+
+EWeaponFiremode AWeapon::GetFiremode() const
+{
+	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
+	return LoadedWeaponDataAsset && LoadedWeaponDataAsset->Firemodes.IsValidIndex(FiremodeIndex) ? LoadedWeaponDataAsset->Firemodes[FiremodeIndex] : EWeaponFiremode::WF_None;
+}
+
+//AForegrip* AWeapon::GetForegrip() const
+//{
+//	return GetAttachedActor<AForegrip>();
+//}
+
+//AHandguard* AWeapon::GetHandguard() const
+//{
+//	return GetAttachedActor<AHandguard>();
+//}
 
 AMag* AWeapon::GetMag() const
 {
-	if (ModComponent == nullptr)
-	{
-		return nullptr;
-	}
-	return ModComponent->GetMod<AMag>();
+	return ModComponent ? ModComponent->GetMod<AMag>() : nullptr;
 }
 
-void AWeapon::EjectShellPortAmmo()
+USkeletalMeshComponent* AWeapon::GetForegripHandguardMesh() const
 {
-	if (ShellPortAmmo)
+	AMod* ForegripHandguard = GetAttachedActor<AForegrip>();
+	if (ForegripHandguard == nullptr)
 	{
-		ShellPortAmmo->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		if (USkeletalMeshComponent* ShellPortAmmoMesh = ShellPortAmmo->GetMesh())
-		{
-			ShellPortAmmoMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-			ShellPortAmmoMesh->SetSimulatePhysics(true);
-			ShellPortAmmoMesh->SetEnableGravity(true);
-			FVector ImpulseVector = (-3.0f * ShellPortAmmoMesh->GetForwardVector()) + (-2.0f * ShellPortAmmoMesh->GetRightVector()) + (3.0f * ShellPortAmmoMesh->GetUpVector());
-			ShellPortAmmoMesh->AddImpulse(ImpulseVector);
-		}
+		ForegripHandguard = GetAttachedActor<AHandguard>();
 	}
+	return ForegripHandguard == nullptr ? nullptr : ForegripHandguard->GetMesh();
+}
+
+USkeletalMeshComponent* AWeapon::GetScopeSightMesh() const
+{
+	AMod* ScopeSight = GetAttachedActor<AScope>();
+	if (ScopeSight == nullptr)
+	{
+		ScopeSight = GetAttachedActor<ASightRear>();
+	}
+	return ScopeSight == nullptr ? nullptr : ScopeSight->GetMesh();
 }
 
 void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
@@ -386,7 +277,10 @@ void AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon()
 {
 	if (HasAuthority())
 	{
-		Server_MagPopAmmo();
+		if (AMag* Mag = GetMag())
+		{
+			Mag->PopAmmo();
+		}
 	}
 }
 
@@ -397,7 +291,18 @@ void AWeapon::Handle_OnWeaponAnimInstanceReloadCharge()
 
 void AWeapon::Handle_OnWeaponAnimInstanceShellPort()
 {
-	EjectShellPortAmmo();
+	if (ShellPortAmmo)
+	{
+		ShellPortAmmo->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		if (USkeletalMeshComponent* ShellPortAmmoMesh = ShellPortAmmo->GetMesh())
+		{
+			ShellPortAmmoMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+			ShellPortAmmoMesh->SetSimulatePhysics(true);
+			ShellPortAmmoMesh->SetEnableGravity(true);
+			FVector ImpulseVector = (-3.0f * ShellPortAmmoMesh->GetForwardVector()) + (-2.0f * ShellPortAmmoMesh->GetRightVector()) + (3.0f * ShellPortAmmoMesh->GetUpVector());
+			ShellPortAmmoMesh->AddImpulse(ImpulseVector);
+		}
+	}
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
@@ -407,7 +312,7 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 		if (PatronInWeaponAmmo)
 		{
 			PatronInWeaponAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, SHELL_PORT_SOCKET_NAME);
-			PatronInWeaponAmmo->Server_SetIsEmpty(true);
+			PatronInWeaponAmmo->SetIsEmpty(true);
 			ShellPortAmmo = PatronInWeaponAmmo;
 			PatronInWeaponAmmo = nullptr;
 		}
@@ -418,6 +323,6 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector()
 {
 	if (HasAuthority())
 	{
-		Server_SwitchFiremode();
+		FiremodeIndex = FMath::Modulo<uint8>(FiremodeIndex + 1, GetNumFiremodes());
 	}
 }

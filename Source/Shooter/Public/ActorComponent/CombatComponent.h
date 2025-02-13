@@ -18,63 +18,28 @@ class SHOOTER_API UCombatComponent : public UActorComponent
 
 public:
 	UCombatComponent();
-	
 	friend class AShooterCharacter;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-protected:
-	virtual void BeginPlay() override;
+	void ActionEnd();
+	void ActionStart();
+	void Idle();
+	void IdleToOut();
+	void Out();
+	void OutToIdle();
+	void WeaponChamberCheck();
+	void WeaponFire(bool bFiring);
+	void WeaponFiremode();
+	void WeaponFiremodeCheck();
+	void WeaponMagCheck();
+	void WeaponMagIn();
+	void WeaponMagOut();
+	void WeaponReloadCharge();
 
-public:
-	UFUNCTION(Server, Reliable)
-	void Server_ActionEnd();
-
-	UFUNCTION(Server, Reliable)
-	void Server_ActionStart();
-
-	UFUNCTION(Server, Reliable)
-	void Server_EquipWeapon(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName = NAME_None);
-
-	UFUNCTION(Server, Reliable)
-	void Server_Idle();
-
-	UFUNCTION(Server, Reliable)
-	void Server_IdleToOut();
-
-	UFUNCTION(Server, Reliable)
-	void Server_Out();
-
-	UFUNCTION(Server, Reliable)
-	void Server_OutToIdle();
-
-	UFUNCTION(Server, Reliable)
-	void Server_UnequipWeapon(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName);
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponChamberCheck();
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponFire(const bool bFiring);
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponFiremode();
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponFiremodeCheck();
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponMagCheck();
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponMagIn();
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponMagOut();
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponReloadCharge();
+	void EquipWeapon(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName = NAME_None);
+	void UnequipWeapon(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName);
 
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionEnd;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionStart;
@@ -92,6 +57,9 @@ public:
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOutToIdle;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOutToIdleArm;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponReloadCharge;
+
+protected:
+	virtual void BeginPlay() override;
 
 private:
 	UFUNCTION()
@@ -147,12 +115,6 @@ private:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon);
-
-	UFUNCTION(Server, Reliable)
-	void Server_SetCombatAction(ECombatAction Action);
-
-	UFUNCTION(Server, Reliable)
-	void Server_SetIsFiring(const bool bFiring);
 
 	UPROPERTY(Replicated)
 	bool bIsFiring;

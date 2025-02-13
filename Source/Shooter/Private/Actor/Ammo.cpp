@@ -5,13 +5,26 @@
 #include "Net/UnrealNetwork.h"
 #include "DataAsset/AmmoDataAsset.h"
 
-AAmmo::AAmmo()
+AAmmo::AAmmo() :
+	bIsEmpty(false)
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
+
+}
+
+void AAmmo::BeginPlay()
+{
+	Super::BeginPlay();
+
+}
+
+void AAmmo::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
 
 }
 
@@ -23,31 +36,21 @@ void AAmmo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePro
 
 }
 
-void AAmmo::Server_SetIsEmpty_Implementation(bool bEmpty)
+void AAmmo::SetIsEmpty(bool bEmpty)
 {
 	bIsEmpty = bEmpty;
-	UAmmoDataAsset* LoadedAmmoDataAsset = AmmoDataAsset.LoadSynchronous();
-	if (Mesh && LoadedAmmoDataAsset)
-	{
-		Mesh->SetSkeletalMesh(bEmpty ? LoadedAmmoDataAsset->ShellMesh : LoadedAmmoDataAsset->FullMesh);
-	}
-}
 
-void AAmmo::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void AAmmo::BeginPlay()
-{
-	Super::BeginPlay();
-	
+	UpdateMesh();
 }
 
 void AAmmo::OnRep_IsEmpty()
 {
-	UAmmoDataAsset* LoadedAmmoDataAsset = AmmoDataAsset.LoadSynchronous();
+	UpdateMesh();
+}
+
+void AAmmo::UpdateMesh() const
+{
+	const UAmmoDataAsset* LoadedAmmoDataAsset = AmmoDataAsset.LoadSynchronous();
 	if (Mesh && LoadedAmmoDataAsset)
 	{
 		Mesh->SetSkeletalMesh(bIsEmpty ? LoadedAmmoDataAsset->ShellMesh : LoadedAmmoDataAsset->FullMesh);

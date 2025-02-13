@@ -2,6 +2,8 @@
 
 
 #include "AnimInstance/HandsAnimInstance.h"
+#include "Actor/Weapon.h"
+#include "ActorComponent/CombatComponent.h"
 #include "Character/ShooterCharacter.h"
 #include "Enum/LeanDirection.h"
 #include "Struct/ShooterUtility.h"
@@ -27,19 +29,24 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
-	USkeletalMeshComponent* HandsMesh = ShooterCharacter->GetHandsMesh();
 	CharacterMesh = ShooterCharacter->GetMesh();
 	AO_Yaw = ShooterCharacter->GetAO_Yaw(AO_Yaw, DeltaSeconds);
 	AO_Pitch = ShooterCharacter->GetAO_Pitch(AO_Pitch, DeltaSeconds);
 	bIsAiming = ShooterCharacter->GetIsAiming();
-	WeaponMesh = ShooterCharacter->GetEquippedWeaponMesh();
-	bIsWeaponEquipped = ShooterCharacter->IsWeaponEquipped();
-	CombatAction = ShooterCharacter->GetCombatAction();
 	bHasVelocity = ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
 	bIsProned = ShooterCharacter->bIsProned;
 	bIsSprinting = ShooterCharacter->bIsSprinting;
-	bIsThirdAction = ShooterCharacter->IsThirdAction();
 	IKAlpha = bIsThirdAction ? 1.0f : 0.0f;
+
+	bool bIsTransition = ShooterCharacter->GetIsTransition();
+	bIsThirdAction = bIsSprinting || bIsTransition || (bIsProned && bHasVelocity);
+
+	UCombatComponent* CombatComponent = ShooterCharacter->GetCombatComponent();
+	CombatAction = CombatComponent ? CombatComponent->GetCombatAction() : ECombatAction::CA_None;
+
+	AWeapon* EquippedWeapon = CombatComponent ? CombatComponent->GetEquippedWeapon() : nullptr;
+	WeaponMesh = EquippedWeapon ? EquippedWeapon->GetMesh() : nullptr;
+	bIsWeaponEquipped = EquippedWeapon != nullptr;
 
 	if (CharacterMesh)
 	{
@@ -72,7 +79,7 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		Lean += LeanStep;
 	}
 
-	if (CharacterMesh && HandsMesh && bIsThirdAction && !bIsWeaponEquipped)
+	if (CharacterMesh && bIsThirdAction && !bIsWeaponEquipped)
 	{
 		BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);

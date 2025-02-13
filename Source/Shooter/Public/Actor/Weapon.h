@@ -27,10 +27,20 @@ class SHOOTER_API AWeapon : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
+public:
 	AWeapon();
-	bool DoesNeedCharge();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PostInitializeComponents() override;
+	virtual void SetOwner(AActor* NewOwner) override;
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void Init();
+	virtual bool IsPistol() const { return false; }
 	
+	bool GetIsOneHanded() const;
+	uint16 GetRateOfFire() const;
+	uint8 GetNumFiremodes() const;
+
 	template<class T>
 	T* GetAttachedActor() const
 	{
@@ -40,39 +50,15 @@ public:
 		AttachedActors.FindItemByClass(&AttachedMod);
 		return AttachedMod;
 	}
-	
-	ECombatAction GetCombatAction() const;
+
 	EWeaponFiremode GetFiremode() const;
+
 	//AForegrip* GetForegrip() const;
-	USkeletalMeshComponent* GetForegripHandguardMesh() const;
 	//AHandguard* GetHandguard() const;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	bool GetIsOneHanded() const;
-	uint8 GetMagAmmoCount() const;
-	uint8 GetMagAmmoSpace() const;
+	AMag* GetMag() const;
+
+	USkeletalMeshComponent* GetForegripHandguardMesh() const;
 	USkeletalMeshComponent* GetScopeSightMesh() const;
-	uint16 GetRateOfFire() const;
-	bool HasFiremodes();
-	bool HasMag();
-	bool HasPatronInWeaponAmmo();
-	virtual void Init();
-	virtual bool IsPistol() const { return false; }
-	virtual void PostInitializeComponents() override;
-
-	UFUNCTION(Server, Reliable)
-	void Server_MagAddAmmo(const uint8 Count);
-
-	UFUNCTION(Server, Reliable)
-	void Server_MagPopAmmo();
-
-	UFUNCTION(Server, Reliable)
-	void Server_SetIsHolster(const bool bHolster);
-
-	UFUNCTION(Server, Reliable)
-	void Server_SwitchFiremode();
-
-	virtual void SetOwner(AActor* NewOwner) override;
-	virtual void Tick(float DeltaTime) override;
 
 	FOnWeaponAnimNotifySignature OnWeaponActionEnd;
 	FOnWeaponAnimNotifySignature OnWeaponActionStart;
@@ -91,9 +77,11 @@ public:
 	FOnWeaponAnimNotifySignature OnWeaponOutToIdleArm;
 	FOnWeaponAnimNotifySignature OnWeaponReloadCharge;
 
+	UPROPERTY(Replicated)
+	bool bIsHolster;
+
 protected:
 	virtual void BeginPlay() override;
-	AMag* GetMag() const;
 
 	TObjectPtr<AShooterCharacter> ShooterCharacterOwner;
 
@@ -110,9 +98,6 @@ protected:
 	TSoftObjectPtr<UWeaponDataAsset> WeaponDataAsset;
 
 	UPROPERTY(Replicated)
-	bool bIsHolster;
-
-	UPROPERTY(Replicated)
 	uint8 FiremodeIndex;
 
 	UPROPERTY(Replicated)
@@ -122,8 +107,6 @@ protected:
 	TObjectPtr<AAmmo> ShellPortAmmo;
 
 private:
-	void EjectShellPortAmmo();
-
 	UFUNCTION()
 	void Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo);
 
@@ -190,6 +173,7 @@ private:
 public:
 	FORCEINLINE bool GetIsHolster() const { return bIsHolster; }
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
+	FORCEINLINE AAmmo* GetPatronInWeaponAmmo() const { return PatronInWeaponAmmo; }
 	FORCEINLINE AShooterCharacter* GetShooterCharacterOwner() const { return ShooterCharacterOwner; }
 	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
 

@@ -11,6 +11,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Actor/Mag.h"
 #include "Actor/Weapon.h"
 #include "ActorComponent/CombatComponent.h"
 #include "ActorComponent/InventoryComponent.h"
@@ -234,7 +235,6 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AShooterCharacter, bIsAlterAction);
 	DOREPLIFETIME(AShooterCharacter, LeanDirection);
 	DOREPLIFETIME(AShooterCharacter, LeaningRate);
 	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
@@ -258,6 +258,30 @@ void AShooterCharacter::PreReplication(IRepChangedPropertyTracker& ChangedProper
 			SetRemoteViewYaw(GetController()->GetControlRotation().Yaw);
 		}
 	}
+}
+
+void AShooterCharacter::Init()
+{
+	if (InventoryComponent)
+	{
+		if (const UCharacterDataAsset* LoadedCharacterDataAsset = CharacterDataAsset.LoadSynchronous())
+		{
+			InventoryComponent->Init(LoadedCharacterDataAsset->InventoryParams);
+		}
+
+		for (uint8 WeaponIndex = 0; WeaponIndex < InventoryComponent->GetWeaponArray().Num(); ++WeaponIndex)
+		{
+			InventoryComponent->LoadAmmoInWeaponMag(WeaponIndex);
+		}
+
+		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
+		{
+			FName WeaponHolsterSocketName = GetCharacterWeaponHolsterSocketName(Weapon);
+			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponHolsterSocketName);
+			Weapon->bIsHolster = true;
+		}
+	}
+
 }
 
 bool AShooterCharacter::CanProne() const
@@ -324,36 +348,9 @@ FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) co
 	return WeaponHolsterSocketName;
 }
 
-ECombatAction AShooterCharacter::GetCombatAction() const
-{
-	if (CombatComponent == nullptr)
-	{
-		return ECombatAction::CA_None;
-	}
-	return CombatComponent->GetCombatAction();
-}
-
 FVector AShooterCharacter::GetCurrentAcceleration() const
 {
 	return GetCharacterMovement() ? GetCharacterMovement()->GetCurrentAcceleration() : FVector::ZeroVector;
-}
-
-AWeapon* AShooterCharacter::GetEquippedWeapon() const
-{
-	if (CombatComponent == nullptr)
-	{
-		return nullptr;
-	}
-	return CombatComponent->GetEquippedWeapon();
-}
-
-USkeletalMeshComponent* AShooterCharacter::GetEquippedWeaponMesh() const
-{
-	if (CombatComponent == nullptr || CombatComponent->GetEquippedWeapon() == nullptr)
-	{
-		return nullptr;
-	}
-	return CombatComponent->GetEquippedWeapon()->GetMesh();
 }
 
 ETurnDirection AShooterCharacter::GetTurnDirection(float CurrentYaw)
@@ -379,11 +376,6 @@ ETurnDirection AShooterCharacter::GetTurnDirection(float CurrentYaw)
 	return TurnDirection;
 }
 
-bool AShooterCharacter::GetUseControllerDesiredRotation() const
-{
-	return GetCharacterMovement() && GetCharacterMovement()->bUseControllerDesiredRotation;
-}
-
 float AShooterCharacter::GetYawExceedingMaxLimit(float CurrentYaw) const
 {
 	if (CurrentYaw < -90.0f)
@@ -395,50 +387,6 @@ float AShooterCharacter::GetYawExceedingMaxLimit(float CurrentYaw) const
 		return CurrentYaw - 90.0f;
 	}
 	return 0.0f;
-}
-
-void AShooterCharacter::Init()
-{
-	if (InventoryComponent)
-	{
-		if (const UCharacterDataAsset* LoadedCharacterDataAsset = CharacterDataAsset.LoadSynchronous())
-		{
-			InventoryComponent->Init(LoadedCharacterDataAsset->InventoryParams);
-		}
-
-		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
-		{
-			InventoryComponent->Server_LoadAmmoInWeaponMag(Weapon, Weapon->GetMagAmmoSpace());
-		}
-
-		for (AWeapon* Weapon : InventoryComponent->GetWeaponArray())
-		{
-			FName WeaponHolsterSocketName = GetCharacterWeaponHolsterSocketName(Weapon);
-			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponHolsterSocketName);
-			Weapon->Server_SetIsHolster(true);
-		}
-	}
-
-}
-
-bool AShooterCharacter::IsEquippedWeaponPistol() const
-{
-	return CombatComponent && CombatComponent->GetEquippedWeapon() && CombatComponent->GetEquippedWeapon()->IsPistol();
-}
-
-bool AShooterCharacter::IsEquippedWeaponOneHanded() const
-{
-	return CombatComponent && CombatComponent->GetEquippedWeapon() && CombatComponent->GetEquippedWeapon()->GetIsOneHanded();
-}
-
-bool AShooterCharacter::IsThirdAction() const
-{
-	return bIsSprinting || bIsTransition || (bIsProned && GetVelocity().SizeSquared2D() > 0.0f);
-}
-
-bool AShooterCharacter::IsWeaponEquipped() const
-{
-	return CombatComponent && CombatComponent->GetEquippedWeapon() != nullptr;
 }
 
 void AShooterCharacter::OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
@@ -528,16 +476,6 @@ void AShooterCharacter::RecalculatePronedEyeHeight()
 	}
 }
 
-void AShooterCharacter::SetIsSprinting(bool bSprinting)
-{
-	bIsSprinting = bSprinting;
-
-	if (bIsSprinting && bIsAiming)
-	{
-		UnAim();
-	}
-}
-
 void AShooterCharacter::Slow()
 {
 	if (ShooterCharacterMovementComponent && CanSlow())
@@ -578,24 +516,29 @@ void AShooterCharacter::UnSprint()
 	}
 }
 
-void AShooterCharacter::SetIsTransition(bool bNewIsTransition)
-{
-	if (GetController() && GetController()->IsLocalController())
-	{
-		GetController()->SetIgnoreMoveInput(bNewIsTransition);
-	}
-	bIsTransition = bNewIsTransition;
-}
+//void AShooterCharacter::SetIsTransition(bool bNewIsTransition)
+//{
+//	if (GetController() && GetController()->IsLocalController())
+//	{
+//		GetController()->SetIgnoreMoveInput(bNewIsTransition);
+//	}
+//	bIsTransition = bNewIsTransition;
+//}
 
 bool AShooterCharacter::CanAim() const
 {
-	return !bIsAiming && !(bIsSprinting || IsCrawling());
+	return !bIsAiming && !IsCrawling();
 }
 
 void AShooterCharacter::Aim()
 {
 	if (CanAim())
 	{
+		if (bIsSprinting)
+		{
+			UnSprint();
+		}
+
 		bIsAiming = true;
 		UpdateADSCameraTargetLocation();
 		ADSTimeline->Play();
@@ -610,17 +553,7 @@ void AShooterCharacter::UnAim()
 
 bool AShooterCharacter::IsCrawling() const
 {
-	return bIsProned && HasVelocity() && HasAcceleration();
-}
-
-bool AShooterCharacter::HasVelocity() const
-{
-	return GetVelocity().SizeSquared2D() > 0.0f;
-}
-
-bool AShooterCharacter::HasAcceleration() const
-{
-	return GetCharacterMovement() && GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f;
+	return bIsProned && GetVelocity().SizeSquared2D() > 0.0f && GetCurrentAcceleration().SizeSquared2D() > 0.0f;
 }
 
 bool AShooterCharacter::CanPerformCrouchAction() const
@@ -798,7 +731,7 @@ void AShooterCharacter::Handle_OnCombatComponentIdleToOut(AWeapon* Weapon)
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->Server_Out();
+		CombatComponent->Out();
 	}
 }
 
@@ -806,9 +739,10 @@ void AShooterCharacter::Handle_OnCombatComponentOut(AWeapon* Weapon)
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		if (CombatComponent->GetEquippedWeapon())
+		if (AWeapon* EquippedWeapon = CombatComponent->GetEquippedWeapon())
 		{
-			CombatComponent->Server_UnequipWeapon(GetMesh(), GetCharacterWeaponHolsterSocketName(CombatComponent->GetEquippedWeapon()));
+			FName WeaponHolsterSocketName = GetCharacterWeaponHolsterSocketName(EquippedWeapon);
+			CombatComponent->UnequipWeapon(GetMesh(), WeaponHolsterSocketName);
 		}
 		if (NextWeaponToEquip)
 		{
@@ -825,7 +759,7 @@ void AShooterCharacter::Handle_OnCombatComponentOutToIdle(AWeapon* Weapon)
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->Server_Idle();
+		CombatComponent->Idle();
 	}
 }
 
@@ -833,7 +767,7 @@ void AShooterCharacter::Handle_OnCombatComponentOutToIdleArm(AWeapon* Weapon)
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->Server_Idle();
+		CombatComponent->Idle();
 	}
 }
 
@@ -854,7 +788,7 @@ void AShooterCharacter::Handle_OnCombatComponentWeaponFiremode(AWeapon* Weapon)
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->Server_Idle();
+		CombatComponent->Idle();
 	}
 }
 
@@ -862,7 +796,7 @@ void AShooterCharacter::Handle_OnCombatComponentWeaponFiremodeCheck(AWeapon* Wea
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->Server_Idle();
+		CombatComponent->Idle();
 	}
 }
 
@@ -874,13 +808,16 @@ void AShooterCharacter::Handle_OnCombatComponentWeaponMagIn(AWeapon* Weapon)
 {
 	if (HasAuthority() && Weapon && CombatComponent)
 	{
-		if (Weapon->DoesNeedCharge())
+		const AMag* WeaponMag = Weapon ? Weapon->GetMag() : nullptr;
+		const uint8 MagAmmoCount = WeaponMag ? WeaponMag->GetAmmoCount() : 0;
+		const bool bHasPatronInWeaponAmmo = Weapon && Weapon->GetPatronInWeaponAmmo() != nullptr;
+		if (WeaponMag && MagAmmoCount > 0 && !bHasPatronInWeaponAmmo)
 		{
-			CombatComponent->Server_WeaponReloadCharge();
+			CombatComponent->WeaponReloadCharge();
 		}
 		else
 		{
-			CombatComponent->Server_ActionEnd();
+			CombatComponent->ActionEnd();
 		}
 	}
 
@@ -890,11 +827,12 @@ void AShooterCharacter::Handle_OnCombatComponentWeaponMagOut(AWeapon* Weapon)
 {
 	if (HasAuthority() && Weapon && CombatComponent && InventoryComponent)
 	{
-		const uint8 WeaponMagSpace = Weapon->GetMagAmmoSpace();
-		const uint8 WeaponAmmoInInventory = InventoryComponent->GetAmmoAtIndex(InventoryComponent->FindWeapon(Weapon));
-		const uint8 WeaponMagAmmoCountToLoad = FMath::Min(WeaponMagSpace, WeaponAmmoInInventory);
-		InventoryComponent->Server_LoadAmmoInWeaponMag(Weapon, WeaponMagAmmoCountToLoad);
-		CombatComponent->Server_WeaponMagIn();
+		int8 WeaponIndex = InventoryComponent->FindWeapon(Weapon);
+		if (WeaponIndex != INDEX_NONE)
+		{
+			InventoryComponent->LoadAmmoInWeaponMag(WeaponIndex);
+		}
+		CombatComponent->WeaponMagIn();
 	}
 }
 
@@ -910,7 +848,7 @@ void AShooterCharacter::Handle_OnHandsAnimInstanceIdleToOut()
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->Server_Out();
+		CombatComponent->Out();
 	}
 }
 
@@ -926,7 +864,7 @@ void AShooterCharacter::Handle_OnHandsAnimInstanceOutToIdle()
 {
 	if (HasAuthority() && CombatComponent)
 	{
-		CombatComponent->Server_Idle();
+		CombatComponent->Idle();
 	}
 }
 
@@ -958,7 +896,7 @@ void AShooterCharacter::OnCharacterAimAction(const FInputActionValue& Value)
 void AShooterCharacter::OnCharacterAlterAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	Server_SetIsAlterAction(CurrentValue);
+	bIsAlterAction = CurrentValue;
 }
 
 void AShooterCharacter::OnCharacterCrouchAction(const FInputActionValue& Value)
@@ -1210,33 +1148,30 @@ void AShooterCharacter::OnCharacterSprintAction(const FInputActionValue& Value)
 void AShooterCharacter::OnWeaponChamberCheckAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && CombatComponent && bIsAlterAction)
+	if (CurrentValue && bIsAlterAction)
 	{
-		CombatComponent->Server_WeaponChamberCheck();
+		Server_CheckWeaponChamber();
 	}
 }
 
 void AShooterCharacter::OnWeaponFireAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CombatComponent)
-	{
-		CombatComponent->Server_WeaponFire(CurrentValue);
-	}
+	Server_FireWeapon(CurrentValue);
 }
 
 void AShooterCharacter::OnWeaponFiremodeAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && CombatComponent)
+	if (CurrentValue)
 	{
-		if (!bIsAlterAction)
+		if (bIsAlterAction)
 		{
-			CombatComponent->Server_WeaponFiremode();
+			Server_CheckWeaponFiremode();
 		}
 		else
 		{
-			CombatComponent->Server_WeaponFiremodeCheck();
+			Server_ChangeWeaponFiremode();
 		}
 	}
 }
@@ -1244,24 +1179,15 @@ void AShooterCharacter::OnWeaponFiremodeAction(const FInputActionValue& Value)
 void AShooterCharacter::OnWeaponReloadAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && CombatComponent)
+	if (CurrentValue)
 	{
-		if (!bIsAlterAction)
+		if (bIsAlterAction)
 		{
-			AWeapon* EquippedWeapon = CombatComponent->GetEquippedWeapon();
-			if (EquippedWeapon && InventoryComponent)
-			{
-				const uint8 WeaponMagSpace = EquippedWeapon->GetMagAmmoSpace();
-				const uint8 WeaponAmmoInInventory = InventoryComponent->GetAmmoAtIndex(InventoryComponent->FindWeapon(EquippedWeapon));
-				if (WeaponMagSpace > 0 && WeaponAmmoInInventory > 0)
-				{
-					CombatComponent->Server_WeaponMagOut();
-				}
-			}
+			Server_CheckWeaponMag();
 		}
 		else
 		{
-			CombatComponent->Server_WeaponMagCheck();
+			Server_WeaponMagOut();
 		}
 	}
 }
@@ -1272,16 +1198,16 @@ void AShooterCharacter::Server_EquipWeaponProgressive_Implementation(AWeapon* We
 	{
 		return;
 	}
-	const ECombatAction CombatAction = GetCombatAction();
+	const ECombatAction CombatAction = CombatComponent->GetCombatAction();
 	if (NextWeaponToEquip == nullptr && CombatAction == ECombatAction::CA_Idle)
 	{
 		NextWeaponToEquip = WeaponToEquip;
-		CombatComponent->Server_IdleToOut();
+		CombatComponent->IdleToOut();
 	}
 	else if (NextWeaponToEquip && CombatAction == ECombatAction::CA_Out)
 	{
-		CombatComponent->Server_EquipWeapon(NextWeaponToEquip, HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME);
-		CombatComponent->Server_OutToIdle();
+		CombatComponent->EquipWeapon(NextWeaponToEquip, HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME);
+		CombatComponent->OutToIdle();
 		NextWeaponToEquip = nullptr;
 	}
 }
@@ -1292,21 +1218,78 @@ void AShooterCharacter::Server_HolsterWeaponProgressive_Implementation()
 	{
 		return;
 	}
-	const ECombatAction CombatAction = GetCombatAction();
+	const ECombatAction CombatAction = CombatComponent->GetCombatAction();
 	if (CombatAction == ECombatAction::CA_Idle)
 	{
 		NextWeaponToEquip = nullptr;
-		CombatComponent->Server_IdleToOut();
+		CombatComponent->IdleToOut();
 	}
 	else if (NextWeaponToEquip == nullptr && CombatAction == ECombatAction::CA_Out)
 	{
-		CombatComponent->Server_OutToIdle();
+		CombatComponent->OutToIdle();
 	}
 }
 
-void AShooterCharacter::Server_SetIsAlterAction_Implementation(bool bAlterAction)
+void AShooterCharacter::Server_CheckWeaponChamber_Implementation()
 {
-	bIsAlterAction = bAlterAction;
+	if (CombatComponent)
+	{
+		CombatComponent->WeaponChamberCheck();
+	}
+}
+
+void AShooterCharacter::Server_FireWeapon_Implementation(bool bFire)
+{
+	if (CombatComponent)
+	{
+		CombatComponent->WeaponFire(bFire);
+	}
+}
+
+void AShooterCharacter::Server_ChangeWeaponFiremode_Implementation()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->WeaponFiremode();
+	}
+}
+
+void AShooterCharacter::Server_CheckWeaponFiremode_Implementation()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->WeaponFiremodeCheck();
+	}
+}
+
+void AShooterCharacter::Server_CheckWeaponMag_Implementation()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->WeaponMagCheck();
+	}
+}
+
+void AShooterCharacter::Server_WeaponMagOut_Implementation()
+{
+	if (CombatComponent && InventoryComponent)
+	{
+		if (AWeapon* EquippedWeapon = CombatComponent->GetEquippedWeapon())
+		{
+			const int8 WeaponIndex = InventoryComponent->FindWeapon(EquippedWeapon);
+			if (WeaponIndex != INDEX_NONE)
+			{
+				const AMag* WeaponMag = EquippedWeapon->GetMag();
+				const uint8 MagAmmoCount = WeaponMag ? WeaponMag->GetAmmoCount() : 0;
+				const uint8 MagAmmoCapacity = WeaponMag ? WeaponMag->GetAmmoCapacity() : 0;
+				const uint8 WeaponAmmoInInventory = InventoryComponent->GetWeaponAmmoAtIndex(WeaponIndex);
+				if (WeaponAmmoInInventory > 0 && (MagAmmoCapacity - MagAmmoCount) > 0)
+				{
+					CombatComponent->WeaponMagOut();
+				}
+			}
+		}
+	}
 }
 
 void AShooterCharacter::Server_SetLeanDirection_Implementation(ELeanDirection NewLeanDirection)
@@ -1332,7 +1315,7 @@ void AShooterCharacter::SetRemoteViewYaw(float NewRemoteYaw)
 void AShooterCharacter::UpdateADSCameraTargetLocation()
 {
 	FTransform AimCameraTransform;
-	if (AWeapon* EquippedWeapon = GetEquippedWeapon())
+	if (AWeapon* EquippedWeapon = CombatComponent ? CombatComponent->GetEquippedWeapon() : nullptr)
 	{
 		if (USkeletalMeshComponent* WeaponScopeSightMesh = EquippedWeapon->GetScopeSightMesh())
 		{

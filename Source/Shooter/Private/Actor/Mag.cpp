@@ -12,21 +12,6 @@ AMag::AMag()
 	
 }
 
-uint8 AMag::GetAmmoCapacity()
-{
-	return MagDataAsset == nullptr ? 0 : MagDataAsset->AmmoCapacity;
-}
-
-uint8 AMag::GetAmmoSpace()
-{
-	return GetAmmoCapacity() - AmmoCount;
-}
-
-FName AMag::GetDefaultAttachParentSocketName() const
-{
-	return MOD_MAGAZINE_SOCKET_NAME;
-}
-
 void AMag::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -36,9 +21,20 @@ void AMag::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProp
 
 }
 
-void AMag::Server_AddAmmo_Implementation(const uint8 Count)
+FName AMag::GetDefaultAttachParentSocketName() const
 {
-	if (GetAmmoSpace() >= Count)
+	return MOD_MAGAZINE_SOCKET_NAME;
+}
+
+uint8 AMag::GetAmmoCapacity() const
+{
+	const UMagDataAsset* LoadedMagDataAsset = MagDataAsset.LoadSynchronous();
+	return LoadedMagDataAsset ? LoadedMagDataAsset->AmmoCapacity : 0;
+}
+
+void AMag::AddAmmo(const uint8 Count)
+{
+	if (Count > 0 && Count <= (GetAmmoCapacity() - AmmoCount))
 	{
 		if (UWorld* World = GetWorld())
 		{
@@ -60,7 +56,7 @@ void AMag::Server_AddAmmo_Implementation(const uint8 Count)
 	}
 }
 
-void AMag::Server_PopAmmo_Implementation()
+void AMag::PopAmmo()
 {
 	if (AmmoCount > 0)
 	{
