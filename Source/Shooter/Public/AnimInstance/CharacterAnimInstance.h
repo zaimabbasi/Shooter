@@ -8,8 +8,10 @@
 
 class AShooterCharacter;
 enum class ELeanDirection: uint8;
+enum class ETurningDirection: uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterAnimInstanceAnimNotifySignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterAnimInstanceTurningInPlaceSignature, ETurningDirection, TurningDirection);
 
 UCLASS()
 class SHOOTER_API UCharacterAnimInstance : public UAnimInstance
@@ -51,6 +53,8 @@ public:
 	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleAimStarted;
 	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleLowAimStarted;
 	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted;
+
+	FOnCharacterAnimInstanceTurningInPlaceSignature OnCharacterAnimInstanceTurningInPlace;
 
 protected:
 	// Callbacks - From Standing To Transitions
@@ -134,9 +138,6 @@ private:
 
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	bool bIsTurningInPlace;
-
 	float CharacterMovementRotationRateYaw;
 	float TurnInPlaceRotationRateYaw;
 
@@ -145,6 +146,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	ELeanDirection LeanDirection;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	ETurningDirection TurningDirection;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	FTransform BendGoalLeftTransform;

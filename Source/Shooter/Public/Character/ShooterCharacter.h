@@ -18,7 +18,7 @@ class UInventoryComponent;
 class UShooterCharacterMovementComponent;
 enum class ECombatAction : uint8;
 enum class ELeanDirection : uint8;
-enum class ETurnDirection : uint8;
+enum class ETurningDirection : uint8;
 struct FInputActionValue;
 
 UCLASS()
@@ -112,6 +112,9 @@ private:
 
 	/*UFUNCTION()
 	void Handle_ADSTimelineFinished();*/
+
+	UFUNCTION()
+	void Handle_OnCharacterAnimInstanceTurningInPlace(ETurningDirection NewTurningDirection);
 
 	UFUNCTION()
 	void Handle_OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted();
@@ -429,6 +432,9 @@ private:
 	ELeanDirection LeanDirection;
 
 	UPROPERTY(Replicated)
+	ETurningDirection TurningDirection;
+
+	UPROPERTY(Replicated)
 	float LeaningRate;
 
 	UPROPERTY(Replicated)
@@ -449,6 +455,7 @@ public:
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE bool GetIsTransition() const { return bIsTransition; }
 	FORCEINLINE ELeanDirection GetLeanDirection() const { return LeanDirection; }
+	FORCEINLINE ETurningDirection GetTurningDirection() const { return TurningDirection; }
 	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
 	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }
 	FORCEINLINE float GetMaxLean() const { return MaxLean; }

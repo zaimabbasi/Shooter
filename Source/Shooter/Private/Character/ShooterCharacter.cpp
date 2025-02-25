@@ -52,7 +52,7 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	RecalculatePronedEyeHeight();
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
-	GetCharacterMovement()->RotationRate.Yaw = 1440.0f;
+	GetCharacterMovement()->RotationRate.Yaw = 720.0f;
 
 	ADSTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("ADSTimeline"));
 	OnADSTimelineUpdate.BindUFunction(this, TEXT("Handle_ADSTimelineUpdate"));
@@ -69,6 +69,7 @@ void AShooterCharacter::PostInitializeComponents()
 		CharacterMesh->SetSkeletalMeshAsset(USkeletalMergingLibrary::MergeMeshes(CharacterMeshMergeParams));
 		if (UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(CharacterMesh->GetAnimInstance()))
 		{
+			CharacterAnimInstance->OnCharacterAnimInstanceTurningInPlace.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceTurningInPlace);
 			CharacterAnimInstance->OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted);
 			CharacterAnimInstance->OnCharacterAnimInstanceCrouchAimSlowToTransitionIdleLowAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceCrouchAimSlowToTransitionIdleLowAimToProneIdleAimStarted);
 			CharacterAnimInstance->OnCharacterAnimInstanceIdleAimToTransitionIdleAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToProneIdleAimStarted);
@@ -231,6 +232,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AShooterCharacter, LeanDirection);
+	DOREPLIFETIME_CONDITION(AShooterCharacter, TurningDirection, COND_SkipOwner);
 	DOREPLIFETIME(AShooterCharacter, LeaningRate);
 	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsProned, COND_SimulatedOnly);
@@ -238,7 +240,6 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsSprinting, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsTransition, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, RemoteViewYaw, COND_SkipOwner);
-	//DOREPLIFETIME_CONDITION(AShooterCharacter, TurnDirection, COND_SkipOwner);
 
 }
 
@@ -546,6 +547,11 @@ void AShooterCharacter::Handle_ADSTimelineUpdate(float Value)
 //{
 //
 //}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTurningInPlace(ETurningDirection NewTurningDirection)
+{
+	TurningDirection = NewTurningDirection;
+}
 
 void AShooterCharacter::Handle_OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted()
 {

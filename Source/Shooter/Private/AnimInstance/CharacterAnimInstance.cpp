@@ -7,6 +7,7 @@
 #include "Actor/Weapon.h"
 #include "ActorComponent/CombatComponent.h"
 #include "Character/ShooterCharacter.h"
+#include "Enum/TurningDirection.h"
 #include "Struct/ShooterUtility.h"
 #include "Type/ShooterNameType.h"
 
@@ -44,6 +45,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	AO_Yaw = ShooterCharacter->GetAO_Yaw(AO_Yaw, DeltaSeconds);
 	AO_Pitch = ShooterCharacter->GetAO_Pitch(AO_Pitch, DeltaSeconds);
 	LeanDirection = ShooterCharacter->GetLeanDirection();
+	TurningDirection = ShooterCharacter->GetTurningDirection();
 	bIsCrouched = ShooterCharacter->bIsCrouched;
 	bIsProned = ShooterCharacter->bIsProned;
 	bIsSlowing = ShooterCharacter->bIsSlowing;
@@ -60,7 +62,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsEquippedWeaponPistol = EquippedWeapon && EquippedWeapon->IsPistol();
 	bIsEquippedWeaponOneHanded = EquippedWeapon && EquippedWeapon->GetIsOneHanded();
 
-	if (bIsTurningInPlace)
+	if (TurningDirection != ETurningDirection::TD_None)
 	{
 		float AllowedYaw = AllowedAO_Yaw();
 		float ExceedingYaw = AO_Yaw < -AllowedYaw ? AO_Yaw + AllowedYaw : AO_Yaw > AllowedYaw ? AO_Yaw - AllowedYaw : 0.0f;
@@ -69,6 +71,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			ShooterCharacter->SetActorRotation(FRotator(0.0f, ShooterCharacter->GetActorRotation().Yaw + ExceedingYaw, 0.0f));
 		}
 	}
+	
 }
 
 void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
@@ -98,9 +101,9 @@ void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 	UCharacterMovementComponent* MovementComponent = ShooterCharacter->GetCharacterMovement();
 	if (bHasVelocity)
 	{
-		if (bIsTurningInPlace)
+		if (TurningDirection != ETurningDirection::TD_None)
 		{
-			bIsTurningInPlace = false;
+			OnCharacterAnimInstanceTurningInPlace.Broadcast(ETurningDirection::TD_None);
 		}
 
 		if (FMath::Abs(AO_Yaw) < ShooterCharacter->AllowedYawError)
@@ -129,20 +132,22 @@ void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 
 		if (FMath::Abs(AO_Yaw) > AllowedAO_Yaw())
 		{
-			bIsTurningInPlace = true;
 			if (MovementComponent)
 			{
 				MovementComponent->bUseControllerDesiredRotation = true;
 				MovementComponent->RotationRate.Yaw = TurnInPlaceRotationRateYaw;
 			}
+
+			OnCharacterAnimInstanceTurningInPlace.Broadcast(AO_Yaw > 0 ? ETurningDirection::TD_Right : ETurningDirection::TD_Left);
 		}
 		else if (FMath::Abs(AO_Yaw) < ShooterCharacter->AllowedYawError)
 		{
-			bIsTurningInPlace = false;
 			if (MovementComponent)
 			{
 				MovementComponent->bUseControllerDesiredRotation = false;
 			}
+
+			OnCharacterAnimInstanceTurningInPlace.Broadcast(ETurningDirection::TD_None);
 		}
 	}
 
