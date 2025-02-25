@@ -71,8 +71,6 @@ public:
 	float GetAO_Pitch(float CurrentPitch, float DeltaTime) const;
 	float GetAO_Yaw(float CurrentYaw, float DeltaTime) const;
 	FVector GetCurrentAcceleration() const;
-	ETurnDirection GetTurnDirection(float CurrentYaw);
-	float GetYawExceedingMaxLimit(float CurrentYaw) const;
 	
 	virtual void OnStartProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
 	virtual void OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
@@ -114,9 +112,6 @@ private:
 
 	/*UFUNCTION()
 	void Handle_ADSTimelineFinished();*/
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceControllerDesiredRotationNeeded(bool bControllerDesiredRotationNeeded);
 
 	UFUNCTION()
 	void Handle_OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted();
@@ -180,9 +175,6 @@ private:
 
 	UFUNCTION()
 	void Handle_OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceTurnInPlace();
 
 	UFUNCTION()
 	void Handle_OnCharacterAnimInstanceWalkAimToTransitionIdleAimToProneIdleAimStarted();
@@ -448,9 +440,6 @@ private:
 
 	UPROPERTY(Replicated)
 	uint8 RemoteViewYaw;
-
-	UPROPERTY(Replicated)
-	ETurnDirection TurnDirection;
 
 public:
 	FORCEINLINE float GetDefaultAnimationTransitionDuration() const { return DefaultAnimationTransitionDuration; }

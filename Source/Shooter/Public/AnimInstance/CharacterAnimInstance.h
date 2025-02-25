@@ -8,10 +8,8 @@
 
 class AShooterCharacter;
 enum class ELeanDirection: uint8;
-enum class ETurnDirection: uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterAnimInstanceAnimNotifySignature);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterAnimInstanceControllerDesiredRotationNeededSignature, bool, bControllerDesiredRotationNeeded);
 
 UCLASS()
 class SHOOTER_API UCharacterAnimInstance : public UAnimInstance
@@ -21,6 +19,7 @@ class SHOOTER_API UCharacterAnimInstance : public UAnimInstance
 public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 
 	// Delegates - From Standing To Transitions
 	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceIdleAimToTransitionIdleAimToSprintSlowStarted;
@@ -52,10 +51,6 @@ public:
 	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleAimStarted;
 	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleLowAimStarted;
 	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted;
-
-	// Delegates - Other
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTurnInPlace;
-	FOnCharacterAnimInstanceControllerDesiredRotationNeededSignature OnCharacterAnimInstanceControllerDesiredRotationNeeded;
 
 protected:
 	// Callbacks - From Standing To Transitions
@@ -131,18 +126,22 @@ protected:
 	UFUNCTION()
 	void AnimNotify_TransitionSprintSlowToProneIdleAimToProneIdleAimStarted() const;
 
-	// Callbacks - Other
-	UFUNCTION()
-	void AnimNotify_TurnInPlace() const;
-
 private:
+	float AllowedAO_Yaw() const;
+	bool IsAccelerating() const;
+	bool IsThirdAction() const;
+	bool HasVelocity() const;
+
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USkeletalMeshComponent> HandsMesh;
+	bool bIsTurningInPlace;
+
+	float CharacterMovementRotationRateYaw;
+	float TurnInPlaceRotationRateYaw;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	ETurnDirection TurnDirection;
+	TObjectPtr<USkeletalMeshComponent> HandsMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	ELeanDirection LeanDirection;

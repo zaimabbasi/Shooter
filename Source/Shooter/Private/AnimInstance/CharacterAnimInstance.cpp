@@ -7,7 +7,6 @@
 #include "Actor/Weapon.h"
 #include "ActorComponent/CombatComponent.h"
 #include "Character/ShooterCharacter.h"
-#include "Enum/TurnDirection.h"
 #include "Struct/ShooterUtility.h"
 #include "Type/ShooterNameType.h"
 
@@ -16,6 +15,12 @@ void UCharacterAnimInstance::NativeInitializeAnimation()
 	Super::NativeInitializeAnimation();
 
 	ShooterCharacter = Cast<AShooterCharacter>(TryGetPawnOwner());
+	if (ShooterCharacter && ShooterCharacter->GetCharacterMovement())
+	{
+		CharacterMovementRotationRateYaw = ShooterCharacter->GetCharacterMovement()->RotationRate.Yaw;
+	}
+	TurnInPlaceRotationRateYaw = 180.0f;
+
 }
 
 void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -25,6 +30,10 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	if (ShooterCharacter == nullptr)
 	{
 		ShooterCharacter = Cast<AShooterCharacter>(TryGetPawnOwner());
+		if (ShooterCharacter && ShooterCharacter->GetCharacterMovement())
+		{
+			CharacterMovementRotationRateYaw = ShooterCharacter->GetCharacterMovement()->RotationRate.Yaw;
+		}
 	}
 	if (ShooterCharacter == nullptr)
 	{
@@ -34,8 +43,6 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	HandsMesh = ShooterCharacter->GetHandsMesh();
 	AO_Yaw = ShooterCharacter->GetAO_Yaw(AO_Yaw, DeltaSeconds);
 	AO_Pitch = ShooterCharacter->GetAO_Pitch(AO_Pitch, DeltaSeconds);
-	bIsAccelerating = ShooterCharacter->GetCurrentAcceleration().SizeSquared2D() > 0.0f;
-	TurnDirection = ShooterCharacter->GetTurnDirection(AO_Yaw);
 	LeanDirection = ShooterCharacter->GetLeanDirection();
 	bIsCrouched = ShooterCharacter->bIsCrouched;
 	bIsProned = ShooterCharacter->bIsProned;
@@ -43,19 +50,9 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsSprinting = ShooterCharacter->bIsSprinting;
 	LeanTransitionDuration = ShooterCharacter->GetLeanTransitionDuration();
 	AnimationTransitionDuration = ShooterCharacter->GetDefaultAnimationTransitionDuration();
-
-	FVector Velocity = ShooterCharacter->GetVelocity();
-	bHasVelocity = Velocity.SizeSquared2D() > 0.0f;
-
-	if (bHasVelocity)
-	{
-		float VelocityYaw = UKismetMathLibrary::MakeRotFromX(Velocity).Yaw;
-		float ActorRotationYaw = ShooterCharacter->GetActorRotation().Yaw;
-		VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, ActorRotationYaw, 0.0)).Yaw;
-	}
-
-	bool bIsTransition = ShooterCharacter->GetIsTransition();
-	bIsThirdAction = bIsSprinting || bIsTransition || (bIsProned && bHasVelocity);
+	bIsAccelerating = IsAccelerating();
+	bHasVelocity = HasVelocity();
+	bIsThirdAction = IsThirdAction();
 
 	UCombatComponent* CombatComponent = ShooterCharacter->GetCombatComponent();
 	AWeapon* EquippedWeapon = CombatComponent ? CombatComponent->GetEquippedWeapon() : nullptr;
@@ -63,23 +60,30 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsEquippedWeaponPistol = EquippedWeapon && EquippedWeapon->IsPistol();
 	bIsEquippedWeaponOneHanded = EquippedWeapon && EquippedWeapon->GetIsOneHanded();
 
-	UCharacterMovementComponent* MovementComponent = ShooterCharacter->GetCharacterMovement();
-	float bUseControllerDesiredRotation = MovementComponent && MovementComponent->bUseControllerDesiredRotation;
-
-	if (!bUseControllerDesiredRotation && (bHasVelocity || TurnDirection != ETurnDirection::TD_None))
+	if (bIsTurningInPlace)
 	{
-		OnCharacterAnimInstanceControllerDesiredRotationNeeded.Broadcast(true);
+		float AllowedYaw = AllowedAO_Yaw();
+		float ExceedingYaw = AO_Yaw < -AllowedYaw ? AO_Yaw + AllowedYaw : AO_Yaw > AllowedYaw ? AO_Yaw - AllowedYaw : 0.0f;
+		if (!FMath::IsNearlyZero(ExceedingYaw))
+		{
+			ShooterCharacter->SetActorRotation(FRotator(0.0f, ShooterCharacter->GetActorRotation().Yaw + ExceedingYaw, 0.0f));
+		}
 	}
-	else if (bUseControllerDesiredRotation && !bHasVelocity && TurnDirection == ETurnDirection::TD_None)
+}
+
+void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
+
+	if (ShooterCharacter == nullptr)
 	{
-		OnCharacterAnimInstanceControllerDesiredRotationNeeded.Broadcast(false);
+		return;
 	}
 
-	float YawExceedingMaxLimit = ShooterCharacter->GetYawExceedingMaxLimit(AO_Yaw);
-	if (!FMath::IsNearlyZero(YawExceedingMaxLimit))
+	if (bHasVelocity)
 	{
-		ShooterCharacter->AddActorLocalRotation(FRotator(0.0, YawExceedingMaxLimit, 0.0));
-		AO_Yaw -= YawExceedingMaxLimit;
+		float VelocityYaw = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetVelocity()).Yaw;
+		VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, ShooterCharacter->GetActorRotation().Yaw, 0.0)).Yaw;
 	}
 
 	if (HandsMesh && !bIsThirdAction)
@@ -90,6 +94,58 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		LPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		RPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 	}
+
+	UCharacterMovementComponent* MovementComponent = ShooterCharacter->GetCharacterMovement();
+	if (bHasVelocity)
+	{
+		if (bIsTurningInPlace)
+		{
+			bIsTurningInPlace = false;
+		}
+
+		if (FMath::Abs(AO_Yaw) < ShooterCharacter->AllowedYawError)
+		{
+			ShooterCharacter->bUseControllerRotationYaw = true;
+			if (MovementComponent)
+			{
+				MovementComponent->bUseControllerDesiredRotation = false;
+			}
+		}
+		else if (MovementComponent)
+		{
+			if (!MovementComponent->bUseControllerDesiredRotation || MovementComponent->RotationRate.Yaw != CharacterMovementRotationRateYaw)
+			{
+				MovementComponent->bUseControllerDesiredRotation = true;
+				MovementComponent->RotationRate.Yaw = CharacterMovementRotationRateYaw;
+			}
+		}
+	}
+	else
+	{
+		if (ShooterCharacter->bUseControllerRotationYaw)
+		{
+			ShooterCharacter->bUseControllerRotationYaw = false;
+		}
+
+		if (FMath::Abs(AO_Yaw) > AllowedAO_Yaw())
+		{
+			bIsTurningInPlace = true;
+			if (MovementComponent)
+			{
+				MovementComponent->bUseControllerDesiredRotation = true;
+				MovementComponent->RotationRate.Yaw = TurnInPlaceRotationRateYaw;
+			}
+		}
+		else if (FMath::Abs(AO_Yaw) < ShooterCharacter->AllowedYawError)
+		{
+			bIsTurningInPlace = false;
+			if (MovementComponent)
+			{
+				MovementComponent->bUseControllerDesiredRotation = false;
+			}
+		}
+	}
+
 }
 
 void UCharacterAnimInstance::AnimNotify_IdleAimToTransitionIdleAimToSprintSlowStarted() const
@@ -207,7 +263,26 @@ void UCharacterAnimInstance::AnimNotify_TransitionSprintSlowToProneIdleAimToPron
 	OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted.Broadcast();
 }
 
-void UCharacterAnimInstance::AnimNotify_TurnInPlace() const
+float UCharacterAnimInstance::AllowedAO_Yaw() const
 {
-	OnCharacterAnimInstanceTurnInPlace.Broadcast();
+	if (ShooterCharacter == nullptr)
+	{
+		return 0.0f;
+	}
+	return (!ShooterCharacter->bIsCrouched && !ShooterCharacter->bIsProned) || ShooterCharacter->bIsCrouched ? 90.0f : 45.0f;
+}
+
+bool UCharacterAnimInstance::IsAccelerating() const
+{
+	return ShooterCharacter && ShooterCharacter->GetCurrentAcceleration().SizeSquared2D() > 0.0f;
+}
+
+bool UCharacterAnimInstance::IsThirdAction() const
+{
+	return ShooterCharacter && (ShooterCharacter->bIsSprinting || ShooterCharacter->GetIsTransition() || (ShooterCharacter->bIsProned && HasVelocity()));
+}
+
+bool UCharacterAnimInstance::HasVelocity() const
+{
+	return ShooterCharacter && ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
 }
