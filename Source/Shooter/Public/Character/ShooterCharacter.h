@@ -11,11 +11,11 @@
 class AWeapon;
 class UCameraComponent;
 class UCharacterDataAsset;
-class UCombatComponent;
+class UCharacterCombatComponent;
+class UCharacterInventoryComponent;
+class UShooterCharacterMovementComponent;
 class UInputAction;
 class UInputMappingContext;
-class UInventoryComponent;
-class UShooterCharacterMovementComponent;
 struct FInputActionValue;
 
 UENUM(BlueprintType)
@@ -330,10 +330,10 @@ private:
 	TObjectPtr<USkeletalMeshComponent> LegsMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCombatComponent> CombatComponent;
+	TObjectPtr<UCharacterCombatComponent> CharacterCombatComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInventoryComponent> InventoryComponent;
+	TObjectPtr<UCharacterInventoryComponent> CharacterInventoryComponent;
 
 	UPROPERTY()
 	TObjectPtr<UShooterCharacterMovementComponent> ShooterCharacterMovementComponent;
@@ -465,7 +465,7 @@ private:
 public:
 	FORCEINLINE float GetDefaultAnimationTransitionDuration() const { return DefaultAnimationTransitionDuration; }
 	FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
-	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
+	FORCEINLINE UCharacterCombatComponent* GetCharacterCombatComponent() const { return CharacterCombatComponent; }
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE bool GetIsTransition() const { return bIsTransition; }
