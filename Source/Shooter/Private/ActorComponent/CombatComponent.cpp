@@ -6,7 +6,6 @@
 #include "Actor/Mag.h"
 #include "Actor/Weapon.h"
 #include "Character/ShooterCharacter.h"
-#include "Enum/WeaponFiremode.h"
 
 UCombatComponent::UCombatComponent() :
 	bIsFiring(false),

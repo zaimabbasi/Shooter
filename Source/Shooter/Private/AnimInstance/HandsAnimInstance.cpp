@@ -5,7 +5,6 @@
 #include "Actor/Weapon.h"
 #include "ActorComponent/CombatComponent.h"
 #include "Character/ShooterCharacter.h"
-#include "Enum/LeanDirection.h"
 #include "Struct/ShooterUtility.h"
 #include "Type/ShooterNameType.h"
 
@@ -54,13 +53,13 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		RibcageTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, CharacterMesh->GetBoneName(0), RibcageTransform);
 	}
 
-	ELeanDirection LeanDirection = ShooterCharacter->GetLeanDirection();
+	ELeaningDirection LeaningDirection = ShooterCharacter->GetLeaningDirection();
 	float TargetLean = 0.0f;
-	if (LeanDirection == ELeanDirection::LD_Left)
+	if (LeaningDirection == ELeaningDirection::LD_Left)
 	{
 		TargetLean = -ShooterCharacter->GetMaxLean();
 	}
-	else if (LeanDirection == ELeanDirection::LD_Right)
+	else if (LeaningDirection == ELeaningDirection::LD_Right)
 	{
 		TargetLean = ShooterCharacter->GetMaxLean();
 	}

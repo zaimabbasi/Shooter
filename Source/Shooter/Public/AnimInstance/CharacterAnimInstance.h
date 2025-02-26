@@ -7,8 +7,8 @@
 #include "CharacterAnimInstance.generated.h"
 
 class AShooterCharacter;
-enum class ELeanDirection: uint8;
-enum class ETurningDirection: uint8;
+enum class ELeaningDirection : uint8;
+enum class ETurningDirection : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterAnimInstanceAnimNotifySignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterAnimInstanceTurningInPlaceSignature, ETurningDirection, TurningDirection);
@@ -145,7 +145,7 @@ private:
 	TObjectPtr<USkeletalMeshComponent> HandsMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	ELeanDirection LeanDirection;
+	ELeaningDirection LeaningDirection;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	ETurningDirection TurningDirection;

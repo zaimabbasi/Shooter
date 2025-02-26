@@ -7,7 +7,6 @@
 #include "Actor/Weapon.h"
 #include "ActorComponent/CombatComponent.h"
 #include "Character/ShooterCharacter.h"
-#include "Enum/TurningDirection.h"
 #include "Struct/ShooterUtility.h"
 #include "Type/ShooterNameType.h"
 
@@ -44,7 +43,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	HandsMesh = ShooterCharacter->GetHandsMesh();
 	AO_Yaw = ShooterCharacter->GetAO_Yaw(AO_Yaw, DeltaSeconds);
 	AO_Pitch = ShooterCharacter->GetAO_Pitch(AO_Pitch, DeltaSeconds);
-	LeanDirection = ShooterCharacter->GetLeanDirection();
+	LeaningDirection = ShooterCharacter->GetLeaningDirection();
 	TurningDirection = ShooterCharacter->GetTurningDirection();
 	bIsCrouched = ShooterCharacter->bIsCrouched;
 	bIsProned = ShooterCharacter->bIsProned;

@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Enum/CombatAction.h"
 #include "Weapon.generated.h"
 
 class AAmmo;
@@ -18,7 +17,17 @@ class UModComponent;
 class UModDataAsset;
 class UWeaponAnimationDataAsset;
 class UWeaponDataAsset;
-enum class EWeaponFiremode : uint8;
+
+UENUM(BlueprintType)
+enum class EWeaponFiremode : uint8
+{
+	WF_None UMETA(DisplayName = "None"),
+	WF_SingleShot UMETA(DisplayName = "SingleShot"),
+	WF_2RoundsBurst UMETA(DisplayName = "2RoundsBurst"),
+	WF_3RoundsBurst UMETA(DisplayName = "3RoundsBurst"),
+	WF_FullAuto UMETA(DisplayName = "FullAuto"),
+	Default_MAX UMETA(Hidden)
+};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAnimNotifySignature, AWeapon*, Weapon);
 

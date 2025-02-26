@@ -16,10 +16,25 @@ class UInputAction;
 class UInputMappingContext;
 class UInventoryComponent;
 class UShooterCharacterMovementComponent;
-enum class ECombatAction : uint8;
-enum class ELeanDirection : uint8;
-enum class ETurningDirection : uint8;
 struct FInputActionValue;
+
+UENUM(BlueprintType)
+enum class ELeaningDirection : uint8
+{
+	LD_None UMETA(DisplayName = "None"),
+	LD_Left UMETA(DisplayName = "Left"),
+	LD_Right UMETA(DisplayName = "Right"),
+	Default_MAX UMETA(Hidden)
+};
+
+UENUM(BlueprintType)
+enum class ETurningDirection : uint8
+{
+	TD_None UMETA(DisplayName = "None"),
+	TD_Left UMETA(DisplayName = "Left"),
+	TD_Right UMETA(DisplayName = "Right"),
+	Default_MAX UMETA(Hidden)
+};
 
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
@@ -294,7 +309,7 @@ private:
 	void Server_WeaponMagOut();
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetLeanDirection(ELeanDirection NewLeanDirection);
+	void Server_SetLeaningDirection(ELeaningDirection NewLeaningDirection);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetLeanTransitionDuration(float NewLeanTransitionDuration);
@@ -429,7 +444,7 @@ private:
 	const float DefaultAnimationTransitionDuration = 0.25f;
 
 	UPROPERTY(Replicated)
-	ELeanDirection LeanDirection;
+	ELeaningDirection LeaningDirection;
 
 	UPROPERTY(Replicated)
 	ETurningDirection TurningDirection;
@@ -454,7 +469,7 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE bool GetIsTransition() const { return bIsTransition; }
-	FORCEINLINE ELeanDirection GetLeanDirection() const { return LeanDirection; }
+	FORCEINLINE ELeaningDirection GetLeaningDirection() const { return LeaningDirection; }
 	FORCEINLINE ETurningDirection GetTurningDirection() const { return TurningDirection; }
 	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
 	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }

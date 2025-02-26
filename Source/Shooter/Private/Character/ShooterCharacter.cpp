@@ -19,7 +19,6 @@
 #include "AnimInstance/HandsAnimInstance.h"
 #include "CharacterMovementComponent/ShooterCharacterMovementComponent.h"
 #include "DataAsset/CharacterDataAsset.h"
-#include "Enum/LeanDirection.h"
 #include "Struct/ShooterUtility.h"
 #include "Type/ShooterNameType.h"
 
@@ -231,7 +230,7 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AShooterCharacter, LeanDirection);
+	DOREPLIFETIME_CONDITION(AShooterCharacter, LeaningDirection, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, TurningDirection, COND_SkipOwner);
 	DOREPLIFETIME(AShooterCharacter, LeaningRate);
 	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
@@ -910,19 +909,19 @@ void AShooterCharacter::OnCharacterLeanLeftAction(const FInputActionValue& Value
 	bool bIsToggleSprint = false;	// temp
 	if (CurrentValue && !(bIsToggleSprint && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward))
 	{
-		ELeanDirection NewLeanDirection = ELeanDirection::LD_Left;
+		ELeaningDirection NewLeaningDirection = ELeaningDirection::LD_Left;
 		float TransitionDuration = DefaultAnimationTransitionDuration;
 		float MaxLeanRotation = MaxLean;
-		if (LeanDirection == ELeanDirection::LD_Left)
+		if (LeaningDirection == ELeaningDirection::LD_Left)
 		{
-			NewLeanDirection = ELeanDirection::LD_None;
+			NewLeaningDirection = ELeaningDirection::LD_None;
 		}
-		else if (LeanDirection == ELeanDirection::LD_Right)
+		else if (LeaningDirection == ELeaningDirection::LD_Right)
 		{
 			TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
 			MaxLeanRotation = MaxLean * 2.0f;
 		}
-		Server_SetLeanDirection(NewLeanDirection);
+		Server_SetLeaningDirection(LeaningDirection);
 		Server_SetLeanTransitionDuration(TransitionDuration);
 		Server_SetLeaningRate(MaxLeanRotation / TransitionDuration);
 	}
@@ -934,19 +933,19 @@ void AShooterCharacter::OnCharacterLeanRightAction(const FInputActionValue& Valu
 	bool bIsToggleSprint = false;	// temp
 	if (CurrentValue && !(bIsToggleSprint && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward))
 	{
-		ELeanDirection NewLeanDirection = ELeanDirection::LD_Right;
+		ELeaningDirection NewLeaningDirection = ELeaningDirection::LD_Right;
 		float TransitionDuration = DefaultAnimationTransitionDuration;
 		float MaxLeanRotation = MaxLean;
-		if (LeanDirection == ELeanDirection::LD_Right)
+		if (LeaningDirection == ELeaningDirection::LD_Right)
 		{
-			NewLeanDirection = ELeanDirection::LD_None;
+			NewLeaningDirection = ELeaningDirection::LD_None;
 		}
-		else if (LeanDirection == ELeanDirection::LD_Left)
+		else if (LeaningDirection == ELeaningDirection::LD_Left)
 		{
 			TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
 			MaxLeanRotation = MaxLean * 2.0f;
 		}
-		Server_SetLeanDirection(NewLeanDirection);
+		Server_SetLeaningDirection(NewLeaningDirection);
 		Server_SetLeanTransitionDuration(TransitionDuration);
 		Server_SetLeaningRate(MaxLeanRotation / TransitionDuration);
 	}
@@ -1246,9 +1245,9 @@ void AShooterCharacter::Server_WeaponMagOut_Implementation()
 	}
 }
 
-void AShooterCharacter::Server_SetLeanDirection_Implementation(ELeanDirection NewLeanDirection)
+void AShooterCharacter::Server_SetLeaningDirection_Implementation(ELeaningDirection NewLeaningDirection)
 {
-	LeanDirection = NewLeanDirection;
+	LeaningDirection = NewLeaningDirection;
 }
 
 void AShooterCharacter::Server_SetLeanTransitionDuration_Implementation(float NewTransitionDuration)
