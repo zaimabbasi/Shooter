@@ -58,6 +58,7 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	//OnADSTimelineFinished.BindUFunction(this, TEXT("Handle_ADSTimelineFinished"));
 
 	MaxLeaningAngle = 15.0f;
+	DefaultLeaningTransitionDuration = 0.25f;
 
 }
 
@@ -232,10 +233,8 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(AShooterCharacter, LeaningDirection, COND_OwnerOnly);
+	DOREPLIFETIME(AShooterCharacter, LeaningDirection);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, TurningDirection, COND_SkipOwner);
-	//DOREPLIFETIME(AShooterCharacter, LeaningRate);
-	//DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsProned, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsSlowing, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsSprinting, COND_SimulatedOnly);
@@ -488,7 +487,7 @@ void AShooterCharacter::UnSprint()
 
 bool AShooterCharacter::CanAim() const
 {
-	return !bIsAiming && !IsCrawling();
+	return !bIsAiming && !(bIsProned && GetVelocity().SizeSquared2D() > 0.0f && GetCurrentAcceleration().SizeSquared2D() > 0.0f);
 }
 
 void AShooterCharacter::Aim()
@@ -514,19 +513,16 @@ void AShooterCharacter::UnAim()
 
 bool AShooterCharacter::CanLean() const
 {
-	return !bIsSprinting && !IsCrawling();
+	return !bIsSprinting && !(bIsProned && GetVelocity().SizeSquared2D() > 0.0f && GetCurrentAcceleration().SizeSquared2D() > 0.0f);
 }
 
 void AShooterCharacter::Server_Lean_Implementation(ELeaningDirection NewLeaningDirection)
 {
+	ELeaningDirection OldLeaningDirection = LeaningDirection;
 	LeaningDirection = NewLeaningDirection;
 	
-	UpdateTargetLeaningAngle();
-}
-
-bool AShooterCharacter::IsCrawling() const
-{
-	return bIsProned && GetVelocity().SizeSquared2D() > 0.0f && GetCurrentAcceleration().SizeSquared2D() > 0.0f;
+	CalculateTargetLeaningAngle();
+	CalculateLeaningTransitionDuration(OldLeaningDirection);
 }
 
 bool AShooterCharacter::CanPerformCrouchAction() const
@@ -845,9 +841,10 @@ void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 	}
 }
 
-void AShooterCharacter::OnRep_LeaningDirection()
+void AShooterCharacter::OnRep_LeaningDirection(ELeaningDirection OldLeaningDirection)
 {
-	UpdateTargetLeaningAngle();
+	CalculateTargetLeaningAngle();
+	CalculateLeaningTransitionDuration(OldLeaningDirection);
 }
 
 void AShooterCharacter::OnCharacterAimAction(const FInputActionValue& Value)
@@ -923,25 +920,6 @@ void AShooterCharacter::OnCharacterHolsterWeaponAction(const FInputActionValue& 
 void AShooterCharacter::OnCharacterLeanLeftAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	//bool bIsToggleSprint = false;	// temp
-	//if (CurrentValue && !(bIsToggleSprint && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward))
-	//{
-	//	ELeaningDirection NewLeaningDirection = ELeaningDirection::LD_Left;
-	//	float TransitionDuration = DefaultAnimationTransitionDuration;
-	//	float MaxLeanRotation = MaxLean;
-	//	if (LeaningDirection == ELeaningDirection::LD_Left)
-	//	{
-	//		NewLeaningDirection = ELeaningDirection::LD_None;
-	//	}
-	//	else if (LeaningDirection == ELeaningDirection::LD_Right)
-	//	{
-	//		TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
-	//		MaxLeanRotation = MaxLean * 2.0f;
-	//	}
-	//	Server_SetLeaningDirection(NewLeaningDirection);
-	//	Server_SetLeanTransitionDuration(TransitionDuration);
-	//	Server_SetLeaningRate(MaxLeanRotation / TransitionDuration);
-	//}
 	if (CurrentValue && CanLean())
 	{
 		ELeaningDirection NewLeaningDirection = LeaningDirection == ELeaningDirection::LD_Left ? ELeaningDirection::LD_None : ELeaningDirection::LD_Left;
@@ -952,25 +930,6 @@ void AShooterCharacter::OnCharacterLeanLeftAction(const FInputActionValue& Value
 void AShooterCharacter::OnCharacterLeanRightAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	//bool bIsToggleSprint = false;	// temp
-	//if (CurrentValue && !(bIsToggleSprint && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward))
-	//{
-	//	ELeaningDirection NewLeaningDirection = ELeaningDirection::LD_Right;
-	//	float TransitionDuration = DefaultAnimationTransitionDuration;
-	//	float MaxLeanRotation = MaxLean;
-	//	if (LeaningDirection == ELeaningDirection::LD_Right)
-	//	{
-	//		NewLeaningDirection = ELeaningDirection::LD_None;
-	//	}
-	//	else if (LeaningDirection == ELeaningDirection::LD_Left)
-	//	{
-	//		TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
-	//		MaxLeanRotation = MaxLean * 2.0f;
-	//	}
-	//	Server_SetLeaningDirection(NewLeaningDirection);
-	//	Server_SetLeanTransitionDuration(TransitionDuration);
-	//	Server_SetLeaningRate(MaxLeanRotation / TransitionDuration);
-	//}
 	if (CurrentValue && CanLean())
 	{
 		ELeaningDirection NewLeaningDirection = LeaningDirection == ELeaningDirection::LD_Right ? ELeaningDirection::LD_None : ELeaningDirection::LD_Right;
@@ -1272,21 +1231,6 @@ void AShooterCharacter::Server_WeaponMagOut_Implementation()
 	}
 }
 
-//void AShooterCharacter::Server_SetLeaningDirection_Implementation(ELeaningDirection NewLeaningDirection)
-//{
-//	LeaningDirection = NewLeaningDirection;
-//}
-
-//void AShooterCharacter::Server_SetLeanTransitionDuration_Implementation(float NewTransitionDuration)
-//{
-//	LeanTransitionDuration = NewTransitionDuration;
-//}
-
-//void AShooterCharacter::Server_SetLeaningRate_Implementation(float NewLeaningRate)
-//{
-//	LeaningRate = NewLeaningRate;
-//}
-
 void AShooterCharacter::SetRemoteViewYaw(float NewRemoteYaw)
 {
 	RemoteViewYaw = FRotator::CompressAxisToByte(NewRemoteYaw);
@@ -1317,7 +1261,7 @@ void AShooterCharacter::UpdateADSCameraTargetLocation()
 	}
 }
 
-void AShooterCharacter::UpdateTargetLeaningAngle()
+void AShooterCharacter::CalculateTargetLeaningAngle()
 {
 	switch (LeaningDirection)
 	{
@@ -1334,5 +1278,18 @@ void AShooterCharacter::UpdateTargetLeaningAngle()
 		break;
 	default:
 		break;
+	}
+}
+
+void AShooterCharacter::CalculateLeaningTransitionDuration(ELeaningDirection OldLeaningDirection)
+{
+	if ((LeaningDirection == ELeaningDirection::LD_Left && OldLeaningDirection == ELeaningDirection::LD_Right) ||
+		(LeaningDirection == ELeaningDirection::LD_Right && OldLeaningDirection == ELeaningDirection::LD_Left))
+	{
+		LeaningTransitionDuration = DefaultLeaningTransitionDuration * 2.0f;
+	}
+	else
+	{
+		LeaningTransitionDuration = DefaultLeaningTransitionDuration;
 	}
 }

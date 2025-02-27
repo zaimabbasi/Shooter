@@ -44,51 +44,6 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	AWeapon* EquippedWeapon = CharacterCombatComponent ? CharacterCombatComponent->GetEquippedWeapon() : nullptr;
 	WeaponMesh = EquippedWeapon ? EquippedWeapon->GetMesh() : nullptr;
 	bIsWeaponEquipped = EquippedWeapon != nullptr;
-
-	/*if (CharacterMesh)
-	{
-		RibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RibcageTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, CharacterMesh->GetBoneName(0), RibcageTransform);
-	}*/
-
-	/*ELeaningDirection LeaningDirection = ShooterCharacter->GetLeaningDirection();
-	float TargetLean = 0.0f;
-	if (LeaningDirection == ELeaningDirection::LD_Left)
-	{
-		TargetLean = -ShooterCharacter->GetMaxLean();
-	}
-	else if (LeaningDirection == ELeaningDirection::LD_Right)
-	{
-		TargetLean = ShooterCharacter->GetMaxLean();
-	}
-	float DeltaLean = TargetLean - Lean;
-	float LeanStep = ShooterCharacter->GetLeaningRate() * DeltaSeconds;
-	if (FMath::Abs(DeltaLean) < LeanStep)
-	{
-		Lean = TargetLean;
-	}
-	else
-	{
-		if (DeltaLean < 0.0f)
-		{
-			LeanStep = -LeanStep;
-		}
-		Lean += LeanStep;
-	}*/
-
-	/*if (CharacterMesh && bIsThirdAction && !bIsWeaponEquipped)
-	{
-		BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-
-		LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-
-		LPalmTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-
-		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-	}*/
 	
 }
 

@@ -101,8 +101,6 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_Lean(ELeaningDirection NewLeaningDirection);
 
-	bool IsCrawling() const;
-
 	bool CanPerformCrouchAction() const;
 	bool CanPerformMoveAction() const;
 	bool CanPerformProneAction() const;
@@ -251,7 +249,7 @@ private:
 	void Handle_OnInventoryComponentWeaponArrayReplicated();
 
 	UFUNCTION()
-	void OnRep_LeaningDirection();
+	void OnRep_LeaningDirection(ELeaningDirection OldLeaningDirection);
 
 	void OnCharacterAimAction(const FInputActionValue& Value);
 	void OnCharacterAlterAction(const FInputActionValue& Value);
@@ -298,18 +296,10 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_WeaponMagOut();
 
-	/*UFUNCTION(Server, Reliable)
-	void Server_SetLeaningDirection(ELeaningDirection NewLeaningDirection);*/
-
-	/*UFUNCTION(Server, Reliable)
-	void Server_SetLeanTransitionDuration(float NewLeanTransitionDuration);*/
-
-	/*UFUNCTION(Server, Reliable)
-	void Server_SetLeaningRate(float Rate);*/
-
 	void SetRemoteViewYaw(float NewRemoteYaw);
 	void UpdateADSCameraTargetLocation();
-	void UpdateTargetLeaningAngle();
+	void CalculateTargetLeaningAngle();
+	void CalculateLeaningTransitionDuration(ELeaningDirection OldLeaningDirection);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
@@ -413,8 +403,15 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCurveFloat> ADSTimelineCurve;
 
-	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Character", meta = (AllowPrivateAccess = "true", ClampMin = "0", UIMin = "0", ClampMax = "45", UIMax = "45", ForceUnits = "deg"))
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Character", meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "45", ForceUnits = "deg"))
 	float MaxLeaningAngle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Character", meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "1.0", ForceUnits = "sec"))
+	float DefaultLeaningTransitionDuration;
+
+	float LeaningTransitionDuration;
+
+	float TargetLeaningAngle;
 
 	float DefaultCameraFOV;
 
@@ -435,21 +432,11 @@ private:
 	UPROPERTY(Replicated)
 	bool bIsTransition;
 
-	//const float DefaultAnimationTransitionDuration = 0.25f;
-
 	UPROPERTY(ReplicatedUsing = OnRep_LeaningDirection)
 	ELeaningDirection LeaningDirection;
 
-	float TargetLeaningAngle;
-
 	UPROPERTY(Replicated)
 	ETurningDirection TurningDirection;
-
-	/*UPROPERTY(Replicated)
-	float LeaningRate;*/
-
-	/*UPROPERTY(Replicated)
-	float LeanTransitionDuration;*/
 
 	TObjectPtr<AWeapon> NextWeaponToEquip;
 
@@ -457,7 +444,6 @@ private:
 	uint8 RemoteViewYaw;
 
 public:
-	//FORCEINLINE float GetDefaultAnimationTransitionDuration() const { return DefaultAnimationTransitionDuration; }
 	FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	FORCEINLINE UCharacterCombatComponent* GetCharacterCombatComponent() const { return CharacterCombatComponent; }
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
@@ -465,9 +451,7 @@ public:
 	FORCEINLINE bool GetIsTransition() const { return bIsTransition; }
 	FORCEINLINE ELeaningDirection GetLeaningDirection() const { return LeaningDirection; }
 	FORCEINLINE ETurningDirection GetTurningDirection() const { return TurningDirection; }
-	//FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
-	//FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }
-	//FORCEINLINE float GetMaxLean() const { return MaxLean; }
+	FORCEINLINE float GetLeaningTransitionDuration() const { return LeaningTransitionDuration; }
 	FORCEINLINE float GetTargetLeaningAngle() const { return TargetLeaningAngle; }
 
 };

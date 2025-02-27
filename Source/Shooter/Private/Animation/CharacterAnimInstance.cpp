@@ -50,8 +50,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsProned = ShooterCharacter->bIsProned;
 	bIsSlowing = ShooterCharacter->bIsSlowing;
 	bIsSprinting = ShooterCharacter->bIsSprinting;
-	//LeanTransitionDuration = ShooterCharacter->GetLeanTransitionDuration();
-	//AnimationTransitionDuration = ShooterCharacter->GetDefaultAnimationTransitionDuration();
+	LeaningTransitionDuration = ShooterCharacter->GetLeaningTransitionDuration();
 	bIsAccelerating = IsAccelerating();
 	bHasVelocity = HasVelocity();
 	bIsThirdAction = IsThirdAction();
