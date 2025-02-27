@@ -2,7 +2,7 @@
 
 
 #include "Mod/Muzzle.h"
-#include "Type/ShooterNameType.h"
+#include "Types/ShooterNames.h"
 
 AMuzzle::AMuzzle()
 {

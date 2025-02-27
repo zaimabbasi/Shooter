@@ -19,6 +19,7 @@ class SHOOTER_API UHandsAnimInstance : public UAnimInstance
 public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 
 	FOnHandsAnimInstanceAnimNotifySignature OnHandsAnimInstanceIdle;
 	FOnHandsAnimInstanceAnimNotifySignature OnHandsAnimInstanceIdleToOut;
@@ -39,6 +40,9 @@ protected:
 	void AnimNotify_OutToIdle() const;
 
 private:
+	bool IsThirdAction() const;
+	bool HasVelocity() const;
+
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
@@ -81,7 +85,7 @@ private:
 	float AO_Pitch;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	float Lean;
+	float LeaningAngle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	bool bIsAiming;

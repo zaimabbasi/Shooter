@@ -2,7 +2,7 @@
 
 
 #include "Mod/Stock.h"
-#include "Type/ShooterNameType.h"
+#include "Types/ShooterNames.h"
 
 AStock::AStock()
 {

@@ -2,7 +2,7 @@
 
 
 #include "Mod/SightRear.h"
-#include "Type/ShooterNameType.h"
+#include "Types/ShooterNames.h"
 
 ASightRear::ASightRear()
 {

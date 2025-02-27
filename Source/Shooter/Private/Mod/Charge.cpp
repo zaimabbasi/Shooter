@@ -2,7 +2,7 @@
 
 
 #include "Mod/Charge.h"
-#include "Type/ShooterNameType.h"
+#include "Types/ShooterNames.h"
 
 ACharge::ACharge()
 {

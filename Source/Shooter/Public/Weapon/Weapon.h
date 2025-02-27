@@ -18,16 +18,7 @@ class UModDataAsset;
 class UWeaponAnimationDataAsset;
 class UWeaponDataAsset;
 
-UENUM(BlueprintType)
-enum class EWeaponFiremode : uint8
-{
-	WF_None UMETA(DisplayName = "None"),
-	WF_SingleShot UMETA(DisplayName = "SingleShot"),
-	WF_2RoundsBurst UMETA(DisplayName = "2RoundsBurst"),
-	WF_3RoundsBurst UMETA(DisplayName = "3RoundsBurst"),
-	WF_FullAuto UMETA(DisplayName = "FullAuto"),
-	Default_MAX UMETA(Hidden)
-};
+enum class EWeaponFiremode : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAnimNotifySignature, AWeapon*, Weapon);
 

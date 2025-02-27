@@ -3,7 +3,7 @@
 
 #include "Ammo/Ammo.h"
 #include "Net/UnrealNetwork.h"
-#include "Ammo/AmmoDataAsset.h"
+#include "Data/AmmoDataAsset.h"
 
 AAmmo::AAmmo() :
 	bIsEmpty(false)

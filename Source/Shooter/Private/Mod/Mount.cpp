@@ -2,7 +2,7 @@
 
 
 #include "Mod/Mount.h"
-#include "Type/ShooterNameType.h"
+#include "Types/ShooterNames.h"
 
 AMount::AMount()
 {

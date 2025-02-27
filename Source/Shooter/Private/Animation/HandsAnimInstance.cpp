@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/HandsAnimInstance.h"
-#include "Weapon/Weapon.h"
-#include "Character/CharacterCombatComponent.h"
+#include "Animation/HandsAnimInstance.h"
 #include "Character/ShooterCharacter.h"
+#include "Components/CharacterCombatComponent.h"
+#include "Types/ShooterNames.h"
 #include "Utility/ShooterUtility.h"
-#include "Type/ShooterNameType.h"
+#include "Weapon/Weapon.h"
 
 void UHandsAnimInstance::NativeInitializeAnimation()
 {
@@ -35,10 +35,8 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bHasVelocity = ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
 	bIsProned = ShooterCharacter->bIsProned;
 	bIsSprinting = ShooterCharacter->bIsSprinting;
+	bIsThirdAction = IsThirdAction();
 	IKAlpha = bIsThirdAction ? 1.0f : 0.0f;
-
-	bool bIsTransition = ShooterCharacter->GetIsTransition();
-	bIsThirdAction = bIsSprinting || bIsTransition || (bIsProned && bHasVelocity);
 
 	UCharacterCombatComponent* CharacterCombatComponent = ShooterCharacter->GetCharacterCombatComponent();
 	CombatAction = CharacterCombatComponent ? CharacterCombatComponent->GetCombatAction() : ECombatAction::CA_None;
@@ -47,13 +45,13 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	WeaponMesh = EquippedWeapon ? EquippedWeapon->GetMesh() : nullptr;
 	bIsWeaponEquipped = EquippedWeapon != nullptr;
 
-	if (CharacterMesh)
+	/*if (CharacterMesh)
 	{
 		RibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		RibcageTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, CharacterMesh->GetBoneName(0), RibcageTransform);
-	}
+	}*/
 
-	ELeaningDirection LeaningDirection = ShooterCharacter->GetLeaningDirection();
+	/*ELeaningDirection LeaningDirection = ShooterCharacter->GetLeaningDirection();
 	float TargetLean = 0.0f;
 	if (LeaningDirection == ELeaningDirection::LD_Left)
 	{
@@ -76,9 +74,9 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			LeanStep = -LeanStep;
 		}
 		Lean += LeanStep;
-	}
+	}*/
 
-	if (CharacterMesh && bIsThirdAction && !bIsWeaponEquipped)
+	/*if (CharacterMesh && bIsThirdAction && !bIsWeaponEquipped)
 	{
 		BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
@@ -90,8 +88,41 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 
 		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-	}
+	}*/
 	
+}
+
+void UHandsAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
+
+	if (ShooterCharacter == nullptr)
+	{
+		return;
+	}
+
+	if (CharacterMesh)
+	{
+		RibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		RibcageTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, CharacterMesh->GetBoneName(0), RibcageTransform);
+
+		if (bIsThirdAction && !bIsWeaponEquipped)
+		{
+			BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+
+			LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+
+			LPalmTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+
+			WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		}
+	}
+
+	LeaningAngle = FMath::FInterpTo(LeaningAngle, ShooterCharacter->GetTargetLeaningAngle(), DeltaSeconds, 5.0f);
+
 }
 
 void UHandsAnimInstance::AnimNotify_Idle() const
@@ -112,4 +143,14 @@ void UHandsAnimInstance::AnimNotify_Out() const
 void UHandsAnimInstance::AnimNotify_OutToIdle() const
 {
 	OnHandsAnimInstanceOutToIdle.Broadcast();
+}
+
+bool UHandsAnimInstance::IsThirdAction() const
+{
+	return ShooterCharacter && (ShooterCharacter->bIsSprinting || ShooterCharacter->GetIsTransition() || (ShooterCharacter->bIsProned && HasVelocity()));
+}
+
+bool UHandsAnimInstance::HasVelocity() const
+{
+	return ShooterCharacter && ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
 }

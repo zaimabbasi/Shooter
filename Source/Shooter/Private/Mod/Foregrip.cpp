@@ -2,7 +2,7 @@
 
 
 #include "Mod/Foregrip.h"
-#include "Type/ShooterNameType.h"
+#include "Types/ShooterNames.h"
 
 AForegrip::AForegrip()
 {

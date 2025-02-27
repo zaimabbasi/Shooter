@@ -5,22 +5,22 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Animation/CharacterAnimInstance.h"
+#include "Animation/HandsAnimInstance.h"
+#include "Components/CharacterCombatComponent.h"
+#include "Components/CharacterInventoryComponent.h"
+#include "Data/CharacterDataAsset.h"
+#include "GameFramework/ShooterCharacterMovementComponent.h"
 #include "Mod/Mag.h"
-#include "Weapon/Weapon.h"
-#include "Character/CharacterCombatComponent.h"
-#include "Character/CharacterInventoryComponent.h"
-#include "Character/CharacterAnimInstance.h"
-#include "Character/HandsAnimInstance.h"
-#include "Character/ShooterCharacterMovementComponent.h"
-#include "Character/CharacterDataAsset.h"
+#include "Types/CharacterTypes.h"
+#include "Types/ShooterNames.h"
 #include "Utility/ShooterUtility.h"
-#include "Type/ShooterNameType.h"
+#include "Weapon/Weapon.h"
 
 AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer.SetDefaultSubobjectClass<UShooterCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -56,6 +56,8 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	ADSTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("ADSTimeline"));
 	OnADSTimelineUpdate.BindUFunction(this, TEXT("Handle_ADSTimelineUpdate"));
 	//OnADSTimelineFinished.BindUFunction(this, TEXT("Handle_ADSTimelineFinished"));
+
+	MaxLeaningAngle = 15.0f;
 
 }
 
@@ -232,8 +234,8 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(AShooterCharacter, LeaningDirection, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, TurningDirection, COND_SkipOwner);
-	DOREPLIFETIME(AShooterCharacter, LeaningRate);
-	DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
+	//DOREPLIFETIME(AShooterCharacter, LeaningRate);
+	//DOREPLIFETIME(AShooterCharacter, LeanTransitionDuration);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsProned, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsSlowing, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsSprinting, COND_SimulatedOnly);
@@ -510,6 +512,18 @@ void AShooterCharacter::UnAim()
 	ADSTimeline->Reverse();
 }
 
+bool AShooterCharacter::CanLean() const
+{
+	return !bIsSprinting && !IsCrawling();
+}
+
+void AShooterCharacter::Server_Lean_Implementation(ELeaningDirection NewLeaningDirection)
+{
+	LeaningDirection = NewLeaningDirection;
+	
+	UpdateTargetLeaningAngle();
+}
+
 bool AShooterCharacter::IsCrawling() const
 {
 	return bIsProned && GetVelocity().SizeSquared2D() > 0.0f && GetCurrentAcceleration().SizeSquared2D() > 0.0f;
@@ -517,7 +531,6 @@ bool AShooterCharacter::IsCrawling() const
 
 bool AShooterCharacter::CanPerformCrouchAction() const
 {
-	//return TurnDirection == ETurnDirection::TD_None && bIsTransition == false;
 	return bIsTransition == false;
 }
 
@@ -528,7 +541,6 @@ bool AShooterCharacter::CanPerformMoveAction() const
 
 bool AShooterCharacter::CanPerformProneAction() const
 {
-	//return TurnDirection == ETurnDirection::TD_None && bIsTransition == false;
 	return bIsTransition == false;
 }
 
@@ -833,6 +845,11 @@ void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 	}
 }
 
+void AShooterCharacter::OnRep_LeaningDirection()
+{
+	UpdateTargetLeaningAngle();
+}
+
 void AShooterCharacter::OnCharacterAimAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
@@ -906,48 +923,58 @@ void AShooterCharacter::OnCharacterHolsterWeaponAction(const FInputActionValue& 
 void AShooterCharacter::OnCharacterLeanLeftAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	bool bIsToggleSprint = false;	// temp
-	if (CurrentValue && !(bIsToggleSprint && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward))
+	//bool bIsToggleSprint = false;	// temp
+	//if (CurrentValue && !(bIsToggleSprint && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward))
+	//{
+	//	ELeaningDirection NewLeaningDirection = ELeaningDirection::LD_Left;
+	//	float TransitionDuration = DefaultAnimationTransitionDuration;
+	//	float MaxLeanRotation = MaxLean;
+	//	if (LeaningDirection == ELeaningDirection::LD_Left)
+	//	{
+	//		NewLeaningDirection = ELeaningDirection::LD_None;
+	//	}
+	//	else if (LeaningDirection == ELeaningDirection::LD_Right)
+	//	{
+	//		TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
+	//		MaxLeanRotation = MaxLean * 2.0f;
+	//	}
+	//	Server_SetLeaningDirection(NewLeaningDirection);
+	//	Server_SetLeanTransitionDuration(TransitionDuration);
+	//	Server_SetLeaningRate(MaxLeanRotation / TransitionDuration);
+	//}
+	if (CurrentValue && CanLean())
 	{
-		ELeaningDirection NewLeaningDirection = ELeaningDirection::LD_Left;
-		float TransitionDuration = DefaultAnimationTransitionDuration;
-		float MaxLeanRotation = MaxLean;
-		if (LeaningDirection == ELeaningDirection::LD_Left)
-		{
-			NewLeaningDirection = ELeaningDirection::LD_None;
-		}
-		else if (LeaningDirection == ELeaningDirection::LD_Right)
-		{
-			TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
-			MaxLeanRotation = MaxLean * 2.0f;
-		}
-		Server_SetLeaningDirection(NewLeaningDirection);
-		Server_SetLeanTransitionDuration(TransitionDuration);
-		Server_SetLeaningRate(MaxLeanRotation / TransitionDuration);
+		ELeaningDirection NewLeaningDirection = LeaningDirection == ELeaningDirection::LD_Left ? ELeaningDirection::LD_None : ELeaningDirection::LD_Left;
+		Server_Lean(NewLeaningDirection);
 	}
 }
 
 void AShooterCharacter::OnCharacterLeanRightAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
-	bool bIsToggleSprint = false;	// temp
-	if (CurrentValue && !(bIsToggleSprint && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward))
+	//bool bIsToggleSprint = false;	// temp
+	//if (CurrentValue && !(bIsToggleSprint && GetVelocity().SizeSquared2D() > 0.0f && bIsMoveInputForward))
+	//{
+	//	ELeaningDirection NewLeaningDirection = ELeaningDirection::LD_Right;
+	//	float TransitionDuration = DefaultAnimationTransitionDuration;
+	//	float MaxLeanRotation = MaxLean;
+	//	if (LeaningDirection == ELeaningDirection::LD_Right)
+	//	{
+	//		NewLeaningDirection = ELeaningDirection::LD_None;
+	//	}
+	//	else if (LeaningDirection == ELeaningDirection::LD_Left)
+	//	{
+	//		TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
+	//		MaxLeanRotation = MaxLean * 2.0f;
+	//	}
+	//	Server_SetLeaningDirection(NewLeaningDirection);
+	//	Server_SetLeanTransitionDuration(TransitionDuration);
+	//	Server_SetLeaningRate(MaxLeanRotation / TransitionDuration);
+	//}
+	if (CurrentValue && CanLean())
 	{
-		ELeaningDirection NewLeaningDirection = ELeaningDirection::LD_Right;
-		float TransitionDuration = DefaultAnimationTransitionDuration;
-		float MaxLeanRotation = MaxLean;
-		if (LeaningDirection == ELeaningDirection::LD_Right)
-		{
-			NewLeaningDirection = ELeaningDirection::LD_None;
-		}
-		else if (LeaningDirection == ELeaningDirection::LD_Left)
-		{
-			TransitionDuration = DefaultAnimationTransitionDuration * 2.0f;
-			MaxLeanRotation = MaxLean * 2.0f;
-		}
-		Server_SetLeaningDirection(NewLeaningDirection);
-		Server_SetLeanTransitionDuration(TransitionDuration);
-		Server_SetLeaningRate(MaxLeanRotation / TransitionDuration);
+		ELeaningDirection NewLeaningDirection = LeaningDirection == ELeaningDirection::LD_Right ? ELeaningDirection::LD_None : ELeaningDirection::LD_Right;
+		Server_Lean(NewLeaningDirection);
 	}
 }
 
@@ -1245,20 +1272,20 @@ void AShooterCharacter::Server_WeaponMagOut_Implementation()
 	}
 }
 
-void AShooterCharacter::Server_SetLeaningDirection_Implementation(ELeaningDirection NewLeaningDirection)
-{
-	LeaningDirection = NewLeaningDirection;
-}
+//void AShooterCharacter::Server_SetLeaningDirection_Implementation(ELeaningDirection NewLeaningDirection)
+//{
+//	LeaningDirection = NewLeaningDirection;
+//}
 
-void AShooterCharacter::Server_SetLeanTransitionDuration_Implementation(float NewTransitionDuration)
-{
-	LeanTransitionDuration = NewTransitionDuration;
-}
+//void AShooterCharacter::Server_SetLeanTransitionDuration_Implementation(float NewTransitionDuration)
+//{
+//	LeanTransitionDuration = NewTransitionDuration;
+//}
 
-void AShooterCharacter::Server_SetLeaningRate_Implementation(float NewLeaningRate)
-{
-	LeaningRate = NewLeaningRate;
-}
+//void AShooterCharacter::Server_SetLeaningRate_Implementation(float NewLeaningRate)
+//{
+//	LeaningRate = NewLeaningRate;
+//}
 
 void AShooterCharacter::SetRemoteViewYaw(float NewRemoteYaw)
 {
@@ -1287,5 +1314,25 @@ void AShooterCharacter::UpdateADSCameraTargetLocation()
 	if (HandsMesh)
 	{
 		ADSCameraTargetLocation = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, AimCameraTransform).GetLocation();
+	}
+}
+
+void AShooterCharacter::UpdateTargetLeaningAngle()
+{
+	switch (LeaningDirection)
+	{
+	case ELeaningDirection::LD_None:
+		TargetLeaningAngle = 0.0f;
+		break;
+	case ELeaningDirection::LD_Left:
+		TargetLeaningAngle = -MaxLeaningAngle;
+		break;
+	case ELeaningDirection::LD_Right:
+		TargetLeaningAngle = MaxLeaningAngle;
+		break;
+	case ELeaningDirection::Default_MAX:
+		break;
+	default:
+		break;
 	}
 }

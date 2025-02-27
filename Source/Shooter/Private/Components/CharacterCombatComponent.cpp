@@ -1,11 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/CharacterCombatComponent.h"
+#include "Components/CharacterCombatComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "Mod/Mag.h"
-#include "Weapon/Weapon.h"
 #include "Character/ShooterCharacter.h"
+#include "Mod/Mag.h"
+#include "Types/WeaponTypes.h"
+#include "Weapon/Weapon.h"
 
 UCharacterCombatComponent::UCharacterCombatComponent() :
 	//bIsFiring(false),

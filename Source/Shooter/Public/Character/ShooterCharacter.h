@@ -18,24 +18,6 @@ class UInputAction;
 class UInputMappingContext;
 struct FInputActionValue;
 
-UENUM(BlueprintType)
-enum class ELeaningDirection : uint8
-{
-	LD_None UMETA(DisplayName = "None"),
-	LD_Left UMETA(DisplayName = "Left"),
-	LD_Right UMETA(DisplayName = "Right"),
-	Default_MAX UMETA(Hidden)
-};
-
-UENUM(BlueprintType)
-enum class ETurningDirection : uint8
-{
-	TD_None UMETA(DisplayName = "None"),
-	TD_Left UMETA(DisplayName = "Left"),
-	TD_Right UMETA(DisplayName = "Right"),
-	Default_MAX UMETA(Hidden)
-};
-
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
 {
@@ -113,6 +95,11 @@ private:
 	bool CanAim() const;
 	void Aim();
 	void UnAim();
+
+	bool CanLean() const;
+
+	UFUNCTION(Server, Reliable)
+	void Server_Lean(ELeaningDirection NewLeaningDirection);
 
 	bool IsCrawling() const;
 
@@ -263,6 +250,9 @@ private:
 	UFUNCTION()
 	void Handle_OnInventoryComponentWeaponArrayReplicated();
 
+	UFUNCTION()
+	void OnRep_LeaningDirection();
+
 	void OnCharacterAimAction(const FInputActionValue& Value);
 	void OnCharacterAlterAction(const FInputActionValue& Value);
 	void OnCharacterCrouchAction(const FInputActionValue& Value);
@@ -308,17 +298,18 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_WeaponMagOut();
 
-	UFUNCTION(Server, Reliable)
-	void Server_SetLeaningDirection(ELeaningDirection NewLeaningDirection);
+	/*UFUNCTION(Server, Reliable)
+	void Server_SetLeaningDirection(ELeaningDirection NewLeaningDirection);*/
 
-	UFUNCTION(Server, Reliable)
-	void Server_SetLeanTransitionDuration(float NewLeanTransitionDuration);
+	/*UFUNCTION(Server, Reliable)
+	void Server_SetLeanTransitionDuration(float NewLeanTransitionDuration);*/
 
-	UFUNCTION(Server, Reliable)
-	void Server_SetLeaningRate(float Rate);
+	/*UFUNCTION(Server, Reliable)
+	void Server_SetLeaningRate(float Rate);*/
 
 	void SetRemoteViewYaw(float NewRemoteYaw);
 	void UpdateADSCameraTargetLocation();
+	void UpdateTargetLeaningAngle();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
@@ -422,6 +413,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCurveFloat> ADSTimelineCurve;
 
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Character", meta = (AllowPrivateAccess = "true", ClampMin = "0", UIMin = "0", ClampMax = "45", UIMax = "45", ForceUnits = "deg"))
+	float MaxLeaningAngle;
+
 	float DefaultCameraFOV;
 
 	FVector ADSCameraTargetLocation;
@@ -441,21 +435,21 @@ private:
 	UPROPERTY(Replicated)
 	bool bIsTransition;
 
-	const float DefaultAnimationTransitionDuration = 0.25f;
+	//const float DefaultAnimationTransitionDuration = 0.25f;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_LeaningDirection)
 	ELeaningDirection LeaningDirection;
+
+	float TargetLeaningAngle;
 
 	UPROPERTY(Replicated)
 	ETurningDirection TurningDirection;
 
-	UPROPERTY(Replicated)
-	float LeaningRate;
+	/*UPROPERTY(Replicated)
+	float LeaningRate;*/
 
-	UPROPERTY(Replicated)
-	float LeanTransitionDuration;
-
-	const float MaxLean = 15.0f;
+	/*UPROPERTY(Replicated)
+	float LeanTransitionDuration;*/
 
 	TObjectPtr<AWeapon> NextWeaponToEquip;
 
@@ -463,7 +457,7 @@ private:
 	uint8 RemoteViewYaw;
 
 public:
-	FORCEINLINE float GetDefaultAnimationTransitionDuration() const { return DefaultAnimationTransitionDuration; }
+	//FORCEINLINE float GetDefaultAnimationTransitionDuration() const { return DefaultAnimationTransitionDuration; }
 	FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	FORCEINLINE UCharacterCombatComponent* GetCharacterCombatComponent() const { return CharacterCombatComponent; }
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
@@ -471,8 +465,9 @@ public:
 	FORCEINLINE bool GetIsTransition() const { return bIsTransition; }
 	FORCEINLINE ELeaningDirection GetLeaningDirection() const { return LeaningDirection; }
 	FORCEINLINE ETurningDirection GetTurningDirection() const { return TurningDirection; }
-	FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
-	FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }
-	FORCEINLINE float GetMaxLean() const { return MaxLean; }
+	//FORCEINLINE float GetLeaningRate() const { return LeaningRate; }
+	//FORCEINLINE float GetLeanTransitionDuration() const { return LeanTransitionDuration; }
+	//FORCEINLINE float GetMaxLean() const { return MaxLean; }
+	FORCEINLINE float GetTargetLeaningAngle() const { return TargetLeaningAngle; }
 
 };

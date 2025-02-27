@@ -1,14 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/CharacterAnimInstance.h"
+#include "Animation/CharacterAnimInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Weapon/Weapon.h"
-#include "Character/CharacterCombatComponent.h"
 #include "Character/ShooterCharacter.h"
+#include "Components/CharacterCombatComponent.h"
+#include "Types/CharacterTypes.h"
+#include "Types/ShooterNames.h"
 #include "Utility/ShooterUtility.h"
-#include "Type/ShooterNameType.h"
+#include "Weapon/Weapon.h"
 
 void UCharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -49,8 +50,8 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsProned = ShooterCharacter->bIsProned;
 	bIsSlowing = ShooterCharacter->bIsSlowing;
 	bIsSprinting = ShooterCharacter->bIsSprinting;
-	LeanTransitionDuration = ShooterCharacter->GetLeanTransitionDuration();
-	AnimationTransitionDuration = ShooterCharacter->GetDefaultAnimationTransitionDuration();
+	//LeanTransitionDuration = ShooterCharacter->GetLeanTransitionDuration();
+	//AnimationTransitionDuration = ShooterCharacter->GetDefaultAnimationTransitionDuration();
 	bIsAccelerating = IsAccelerating();
 	bHasVelocity = HasVelocity();
 	bIsThirdAction = IsThirdAction();

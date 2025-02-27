@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Weapon/WeaponModComponent.h"
+#include "Components/WeaponModComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Data/ModDataAsset.h"
 #include "Mod/Mod.h"
-#include "Mod/ModDataAsset.h"
+#include "Types/ShooterNames.h"
 #include "Utility/ShooterUtility.h"
-#include "Type/ShooterNameType.h"
 
 UWeaponModComponent::UWeaponModComponent()
 {

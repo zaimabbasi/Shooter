@@ -2,7 +2,7 @@
 
 
 #include "Mod/Barrel.h"
-#include "Type/ShooterNameType.h"
+#include "Types/ShooterNames.h"
 
 ABarrel::ABarrel()
 {

@@ -2,7 +2,7 @@
 
 
 #include "Mod/Handguard.h"
-#include "Type/ShooterNameType.h"
+#include "Types/ShooterNames.h"
 
 AHandguard::AHandguard()
 {

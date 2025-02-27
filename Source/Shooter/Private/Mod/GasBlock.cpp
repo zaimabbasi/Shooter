@@ -2,7 +2,7 @@
 
 
 #include "Mod/GasBlock.h"
-#include "Type/ShooterNameType.h"
+#include "Types/ShooterNames.h"
 
 AGasBlock::AGasBlock()
 {

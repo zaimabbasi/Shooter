@@ -2,7 +2,7 @@
 
 
 #include "Mod/Receiver.h"
-#include "Type/ShooterNameType.h"
+#include "Types/ShooterNames.h"
 
 AReceiver::AReceiver()
 {

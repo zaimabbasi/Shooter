@@ -2,7 +2,7 @@
 
 
 #include "Mod/SightFront.h"
-#include "Type/ShooterNameType.h"
+#include "Types/ShooterNames.h"
 
 ASightFront::ASightFront()
 {

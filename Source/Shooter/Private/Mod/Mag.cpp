@@ -4,8 +4,8 @@
 #include "Mod/Mag.h"
 #include "Net/UnrealNetwork.h"
 #include "Ammo/Ammo.h"
-#include "Mod/MagDataAsset.h"
-#include "Type/ShooterNameType.h"
+#include "Data/MagDataAsset.h"
+#include "Types/ShooterNames.h"
 
 AMag::AMag()
 {

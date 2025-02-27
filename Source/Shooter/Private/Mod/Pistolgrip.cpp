@@ -2,7 +2,7 @@
 
 
 #include "Mod/Pistolgrip.h"
-#include "Type/ShooterNameType.h"
+#include "Types/ShooterNames.h"
 
 APistolgrip::APistolgrip()
 {

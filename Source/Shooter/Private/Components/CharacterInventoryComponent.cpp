@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/CharacterInventoryComponent.h"
+#include "Components/CharacterInventoryComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Data/CharacterDataAsset.h"
 #include "Mod/Mag.h"
 #include "Weapon/Weapon.h"
-#include "Character/CharacterDataAsset.h"
 #include "Character/ShooterCharacter.h"
 
 UCharacterInventoryComponent::UCharacterInventoryComponent()

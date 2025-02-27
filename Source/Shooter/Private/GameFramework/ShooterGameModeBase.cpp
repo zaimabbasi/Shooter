@@ -1,8 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 
-#include "Framework/ShooterGameModeBase.h"
-#include "Framework/ShooterPlayerController.h"
+#include "GameFramework/ShooterGameModeBase.h"
+#include "GameFramework/ShooterPlayerController.h"
 
 void AShooterGameModeBase::PostLogin(APlayerController* NewPlayer)
 {

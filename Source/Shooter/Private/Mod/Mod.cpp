@@ -2,9 +2,9 @@
 
 
 #include "Mod/Mod.h"
-#include "Weapon/WeaponModComponent.h"
-#include "Mod/ModDataAsset.h"
-#include "Type/ShooterNameType.h"
+#include "Components/WeaponModComponent.h"
+#include "Data/ModDataAsset.h"
+#include "Types/ShooterNames.h"
 
 AMod::AMod()
 {
