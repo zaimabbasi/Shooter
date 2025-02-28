@@ -35,6 +35,8 @@ public:
 
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMovementComponentSprintSignature);
+
 UCLASS()
 class SHOOTER_API UShooterCharacterMovementComponent : public UCharacterMovementComponent
 {
@@ -84,6 +86,8 @@ public:
 	virtual void UnSprint();
 	virtual void UpdateCharacterStateAfterMovement(float DeltaSeconds) override;
 	virtual void UpdateCharacterStateBeforeMovement(float DeltaSeconds) override;
+
+	FOnMovementComponentSprintSignature OnMovementComponentSprint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement: Walking")
 	uint8 bCanWalkOffLedgesWhenProning : 1;

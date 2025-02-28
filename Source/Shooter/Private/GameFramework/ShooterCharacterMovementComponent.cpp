@@ -419,6 +419,8 @@ void UShooterCharacterMovementComponent::Slow()
 void UShooterCharacterMovementComponent::Sprint()
 {
 	ShooterCharacterOwner->bIsSprinting = true;
+	
+	OnMovementComponentSprint.Broadcast();
 }
 
 void UShooterCharacterMovementComponent::UnProne(bool bClientSimulation)

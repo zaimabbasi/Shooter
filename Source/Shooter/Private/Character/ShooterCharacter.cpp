@@ -57,8 +57,9 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	OnADSTimelineUpdate.BindUFunction(this, TEXT("Handle_ADSTimelineUpdate"));
 	//OnADSTimelineFinished.BindUFunction(this, TEXT("Handle_ADSTimelineFinished"));
 
-	MaxLeaningAngle = 15.0f;
-	DefaultLeaningTransitionDuration = 0.25f;
+	LeaningMaxAngle = 15.0f;
+	LeaningInterpSpeed = 5.0f;
+	LeaningDefaultTransitionDuration = 0.25f;
 
 }
 
@@ -109,7 +110,7 @@ void AShooterCharacter::PostInitializeComponents()
 	}
 	if (FirstPersonCamera)
 	{
-		DefaultCameraFOV = FirstPersonCamera->FieldOfView;
+		CameraDefaultFOV = FirstPersonCamera->FieldOfView;
 	}
 
 	if (CharacterCombatComponent)
@@ -134,6 +135,10 @@ void AShooterCharacter::PostInitializeComponents()
 	if (CharacterInventoryComponent)
 	{
 		CharacterInventoryComponent->OnInventoryComponentWeaponArrayReplicated.AddDynamic(this, &AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated);
+	}
+	if (ShooterCharacterMovementComponent)
+	{
+		ShooterCharacterMovementComponent->OnMovementComponentSprint.AddDynamic(this, &AShooterCharacter::Handle_OnMovementComponentSprint);
 	}
 
 	if (ADSTimeline)
@@ -500,7 +505,7 @@ void AShooterCharacter::Aim()
 		}
 
 		bIsAiming = true;
-		UpdateADSCameraTargetLocation();
+		CalculateADSCameraTargetLocation();
 		ADSTimeline->Play();
 	}
 }
@@ -521,7 +526,7 @@ void AShooterCharacter::Server_Lean_Implementation(ELeaningDirection NewLeaningD
 	ELeaningDirection OldLeaningDirection = LeaningDirection;
 	LeaningDirection = NewLeaningDirection;
 	
-	CalculateTargetLeaningAngle();
+	CalculateLeaningTargetAngle();
 	CalculateLeaningTransitionDuration(OldLeaningDirection);
 }
 
@@ -544,9 +549,9 @@ void AShooterCharacter::Handle_ADSTimelineUpdate(float Value)
 {
 	if (FirstPersonCamera)
 	{
-		float DeltaFOV = (DefaultCameraFOV * 0.8f) - DefaultCameraFOV;
+		float DeltaFOV = (CameraDefaultFOV * 0.8f) - CameraDefaultFOV;
 		FirstPersonCamera->SetRelativeLocation(ADSCameraTargetLocation * Value);
-		FirstPersonCamera->SetFieldOfView(DefaultCameraFOV + (DeltaFOV * Value));
+		FirstPersonCamera->SetFieldOfView(CameraDefaultFOV + (DeltaFOV * Value));
 	}
 }
 
@@ -841,9 +846,19 @@ void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 	}
 }
 
+void AShooterCharacter::Handle_OnMovementComponentSprint()
+{
+	if (LeaningDirection != ELeaningDirection::LD_None)
+	{
+		LeaningDirection = ELeaningDirection::LD_None;
+		LeaningTargetAngle = 0.0f;
+		LeaningTransitionDuration = LeaningDefaultTransitionDuration;
+	}
+}
+
 void AShooterCharacter::OnRep_LeaningDirection(ELeaningDirection OldLeaningDirection)
 {
-	CalculateTargetLeaningAngle();
+	CalculateLeaningTargetAngle();
 	CalculateLeaningTransitionDuration(OldLeaningDirection);
 }
 
@@ -964,6 +979,10 @@ void AShooterCharacter::OnCharacterMoveBackwardAction(const FInputActionValue& V
 			{
 				UnAim();
 			}
+			if (bIsProned && LeaningDirection != ELeaningDirection::LD_None)
+			{
+				Server_Lean(ELeaningDirection::LD_None);
+			}
 		}
 	}
 }
@@ -985,6 +1004,10 @@ void AShooterCharacter::OnCharacterMoveForwardAction(const FInputActionValue& Va
 			if (bIsProned && bIsAiming)
 			{
 				UnAim();
+			}
+			if (bIsProned && LeaningDirection != ELeaningDirection::LD_None)
+			{
+				Server_Lean(ELeaningDirection::LD_None);
 			}
 		}
 	}
@@ -1012,6 +1035,10 @@ void AShooterCharacter::OnCharacterMoveLeftAction(const FInputActionValue& Value
 			{
 				UnAim();
 			}
+			if (bIsProned && LeaningDirection != ELeaningDirection::LD_None)
+			{
+				Server_Lean(ELeaningDirection::LD_None);
+			}
 		}
 	}
 }
@@ -1037,6 +1064,10 @@ void AShooterCharacter::OnCharacterMoveRightAction(const FInputActionValue& Valu
 			if (bIsProned && bIsAiming)
 			{
 				UnAim();
+			}
+			if (bIsProned && LeaningDirection != ELeaningDirection::LD_None)
+			{
+				Server_Lean(ELeaningDirection::LD_None);
 			}
 		}
 	}
@@ -1236,7 +1267,7 @@ void AShooterCharacter::SetRemoteViewYaw(float NewRemoteYaw)
 	RemoteViewYaw = FRotator::CompressAxisToByte(NewRemoteYaw);
 }
 
-void AShooterCharacter::UpdateADSCameraTargetLocation()
+void AShooterCharacter::CalculateADSCameraTargetLocation()
 {
 	FTransform AimCameraTransform;
 	if (AWeapon* EquippedWeapon = CharacterCombatComponent ? CharacterCombatComponent->GetEquippedWeapon() : nullptr)
@@ -1261,18 +1292,18 @@ void AShooterCharacter::UpdateADSCameraTargetLocation()
 	}
 }
 
-void AShooterCharacter::CalculateTargetLeaningAngle()
+void AShooterCharacter::CalculateLeaningTargetAngle()
 {
 	switch (LeaningDirection)
 	{
 	case ELeaningDirection::LD_None:
-		TargetLeaningAngle = 0.0f;
+		LeaningTargetAngle = 0.0f;
 		break;
 	case ELeaningDirection::LD_Left:
-		TargetLeaningAngle = -MaxLeaningAngle;
+		LeaningTargetAngle = -LeaningMaxAngle;
 		break;
 	case ELeaningDirection::LD_Right:
-		TargetLeaningAngle = MaxLeaningAngle;
+		LeaningTargetAngle = LeaningMaxAngle;
 		break;
 	case ELeaningDirection::Default_MAX:
 		break;
@@ -1286,10 +1317,10 @@ void AShooterCharacter::CalculateLeaningTransitionDuration(ELeaningDirection Old
 	if ((LeaningDirection == ELeaningDirection::LD_Left && OldLeaningDirection == ELeaningDirection::LD_Right) ||
 		(LeaningDirection == ELeaningDirection::LD_Right && OldLeaningDirection == ELeaningDirection::LD_Left))
 	{
-		LeaningTransitionDuration = DefaultLeaningTransitionDuration * 2.0f;
+		LeaningTransitionDuration = LeaningDefaultTransitionDuration * 2.0f;
 	}
 	else
 	{
-		LeaningTransitionDuration = DefaultLeaningTransitionDuration;
+		LeaningTransitionDuration = LeaningDefaultTransitionDuration;
 	}
 }

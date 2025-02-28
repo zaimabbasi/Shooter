@@ -76,7 +76,7 @@ void UHandsAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 		}
 	}
 
-	LeaningAngle = FMath::FInterpTo(LeaningAngle, ShooterCharacter->GetTargetLeaningAngle(), DeltaSeconds, 5.0f);
+	LeaningAngle = FMath::FInterpTo(LeaningAngle, ShooterCharacter->GetLeaningTargetAngle(), DeltaSeconds, ShooterCharacter->GetLeaningInterpSpeed());
 
 }
 
