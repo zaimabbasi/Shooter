@@ -30,14 +30,16 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 
 	LegsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LegsMesh"));
 	LegsMesh->SetupAttachment(GetMesh());
-	LegsMesh->SetCastShadow(false);
+	LegsMesh->bOnlyOwnerSee = true;
+	LegsMesh->CastShadow = false;
 
 	HandsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandsMesh"));
 	HandsMesh->SetupAttachment(GetMesh());
-	HandsMesh->SetCastShadow(false);
+	HandsMesh->bOnlyOwnerSee = true;
+	HandsMesh->CastShadow = false;
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCamera->SetupAttachment(HandsMesh, TEXT("Camera_animated"));
+	FirstPersonCamera->SetupAttachment(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME);
 	FirstPersonCamera->bConstrainAspectRatio = true;
 
 	CharacterInventoryComponent = CreateDefaultSubobject<UCharacterInventoryComponent>(TEXT("CharacterInventoryComponent"));
@@ -203,17 +205,6 @@ void AShooterCharacter::BeginPlay()
 		{
 			CharacterMesh->SetVisibility(false);
 			CharacterMesh->SetCastHiddenShadow(true);
-		}
-	}
-	else
-	{
-		if (LegsMesh)
-		{
-			LegsMesh->DestroyComponent();
-		}
-		if (HandsMesh)
-		{
-			//HandsMesh->SetVisibility(false);
 		}
 	}
 
