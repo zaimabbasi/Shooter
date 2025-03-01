@@ -1289,6 +1289,13 @@ void AShooterCharacter::CalculateADSCameraTargetLocation()
 	if (HandsMesh)
 	{
 		ADSCameraTargetLocation = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, AimCameraTransform).GetLocation();
+
+		FTransform HandsAimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		HandsAimCameraTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, HandsAimCameraTransform);
+		if (ADSCameraTargetLocation.Y > HandsAimCameraTransform.GetLocation().Y)
+		{
+			ADSCameraTargetLocation.Y = HandsAimCameraTransform.GetLocation().Y;
+		}
 	}
 }
 
