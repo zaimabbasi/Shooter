@@ -20,6 +20,7 @@ class SHOOTER_API UWeaponAnimInstance : public UAnimInstance
 public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceActionEnd;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceActionStart;
@@ -41,6 +42,10 @@ public:
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponSelector;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponHammer;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceShellPort;
+
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstancePlayProceduralIdle;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstancePlayProceduralWalk;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceStopProceduralAnim;
 
 protected:
 	UFUNCTION()
@@ -186,5 +191,81 @@ private:
 	float IKBlendDuration;
 
 	float IKBlendDurationCounter;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Idle", meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMaxHorizontalMovement;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Idle", meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMinHorizontalMovement;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Idle", meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMaxVerticalMovement;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Idle", meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMinVerticalMovement;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Idle", meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMaxRollRotation;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Idle", meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMinRollRotation;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Walk", meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMaxHorizontalMovement;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Walk", meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMinHorizontalMovement;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Walk", meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMaxVerticalMovement;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Walk", meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMinVerticalMovement;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Walk", meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMaxRollRotation;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Walk", meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMinRollRotation;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
+	float SwayHorizontalMovementLimit;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
+	float SwayVerticalMovementLimit;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
+	float SwayRollRotationLimit;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
+	float SwayHorizontalMovementSensitivity;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
+	float SwayVerticalMovementSensitivity;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
+	float SwayRollRotationSensitivity;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true", ClampMin = "1.0", ClampMax = "10.0"))
+	float SwayInterpSpeed;
+
+	bool bIsPlayingProceduralIdle;
+	bool bIsPlayingProceduralWalk;
+
+	float IdleAnimHorizontalMovementAlpha;
+	float IdleAnimVerticalMovementAlpha;
+	float IdleAnimRollRotationAlpha;
+
+	float WalkAnimHorizontalMovementAlpha;
+	float WalkAnimVerticalMovementAlpha;
+	float WalkAnimRollRotationAlpha;
+
+	FRotator CharacterViewRotation;
+	FRotator CharacterViewRotationLast;
+
+	float SwayHorizontalMovement;
+	float SwayVerticalMovement;
+	float SwayRollRotation;
+
 
 };
