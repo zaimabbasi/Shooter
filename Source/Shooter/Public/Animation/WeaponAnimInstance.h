@@ -115,6 +115,11 @@ protected:
 	void AnimNotify_WeaponLIKMarker();
 
 private:
+	float CalculateCharacterVelocityYawOffset();
+	float CalculateVelocityYawOffsetAlpha(float VelocityYawOffset);
+	void CalculateSway(FRotator FromRotation);
+	void InterpBackSway(float DeltaSeconds, float InterpSpeed);
+
 	TObjectPtr<AWeapon> Weapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
@@ -245,9 +250,6 @@ private:
 
 	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
 	float SwayRollRotationSensitivity;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true", ClampMin = "1.0", ClampMax = "10.0"))
-	float SwayInterpSpeed;
 
 	bool bIsPlayingProceduralIdle;
 	bool bIsPlayingProceduralWalk;

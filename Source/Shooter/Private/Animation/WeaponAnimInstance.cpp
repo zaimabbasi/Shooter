@@ -50,8 +50,6 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 	SwayVerticalMovementSensitivity = 0.025;
 	SwayRollRotationSensitivity = 0.075;
 
-	SwayInterpSpeed = 5.0f;
-
 }
 
 void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -68,10 +66,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	CharacterViewRotationLast = CharacterViewRotation;
-
-	SwayHorizontalMovement = FMath::FInterpTo(SwayHorizontalMovement, 0.0f, DeltaSeconds, SwayInterpSpeed);
-	SwayVerticalMovement = FMath::FInterpTo(SwayVerticalMovement, 0.0f, DeltaSeconds, SwayInterpSpeed);
-	SwayRollRotation = FMath::FInterpTo(SwayRollRotation, 0.0f, DeltaSeconds, SwayInterpSpeed);
+	InterpBackSway(DeltaSeconds, 5.0f);
 
 	ForegripHandguardMesh = Weapon->GetForegripHandguardMesh();
 	bHasForegripHandguardMesh = ForegripHandguardMesh != nullptr;
@@ -101,19 +96,10 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsCharacterThirdAction = bIsCharacterSprinting || bIsCharacterTransition || (bIsCharacterProned && bHasCharacterVelocity);
 
 	CharacterViewRotation = ShooterCharacter != nullptr ? ShooterCharacter->GetBaseAimRotation() : FRotator::ZeroRotator;
+	CalculateSway(UKismetMathLibrary::NormalizedDeltaRotator(CharacterViewRotation, CharacterViewRotationLast));
 
-	FRotator ViewRotationDelta = UKismetMathLibrary::NormalizedDeltaRotator(CharacterViewRotation, CharacterViewRotationLast);
-	SwayHorizontalMovement += ViewRotationDelta.Yaw * SwayHorizontalMovementSensitivity;
-	SwayHorizontalMovement = FMath::Clamp(SwayHorizontalMovement, -SwayHorizontalMovementLimit, SwayHorizontalMovementLimit);
-
-	SwayVerticalMovement += ViewRotationDelta.Pitch * SwayVerticalMovementSensitivity;
-	SwayVerticalMovement = FMath::Clamp(SwayVerticalMovement, -SwayVerticalMovementLimit, SwayVerticalMovementLimit);
-
-	SwayRollRotation += ViewRotationDelta.Yaw * SwayRollRotationSensitivity;
-	SwayRollRotation = FMath::Clamp(SwayRollRotation, -SwayRollRotationLimit, SwayRollRotationLimit);
-
-	UCharacterCombatComponent* CharacterCombatComponent = ShooterCharacter ? ShooterCharacter->GetCharacterCombatComponent() : nullptr;
-	AWeapon* CharacterEquippedWeapon = CharacterCombatComponent ? CharacterCombatComponent->GetEquippedWeapon() : nullptr;
+	UCharacterCombatComponent* CharacterCombatComponent = ShooterCharacter != nullptr ? ShooterCharacter->GetCharacterCombatComponent() : nullptr;
+	AWeapon* CharacterEquippedWeapon = CharacterCombatComponent != nullptr ? CharacterCombatComponent->GetEquippedWeapon() : nullptr;
 	CombatAction = CharacterCombatComponent && Weapon == CharacterEquippedWeapon ? CharacterCombatComponent->GetCombatAction() : ECombatAction::CA_Out;
 
 	if (bIsCharacterThirdAction)
@@ -155,25 +141,10 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 	}
 
-	/*FRotator CharacterRotation = ShooterCharacter != nullptr ? ShooterCharacter->GetActorRotation() : FRotator::ZeroRotator;
-	if (bHasCharacterVelocity)
+	/*if (bHasCharacterVelocity)
 	{
-		float VelocityYaw = UKismetMathLibrary::MakeRotFromX(CharacterVelocity).Yaw;
-		float VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0f, VelocityYaw, 0.0f), FRotator(0.0f, CharacterRotation.Yaw, 0.0f)).Yaw;
-
-		float CharacterVelocityYawOffsetAlpha = UKismetMathLibrary::NormalizeToRange(VelocityYawOffset, 0.0f, 90.0f);
-		if (FMath::Abs(CharacterVelocityYawOffsetAlpha) > 1.0f)
-		{
-			FVector2D InRange = FVector2D(1.0f, 2.0f);
-			FVector2D OutRange = FVector2D(1.0, 0.0);
-			if (CharacterVelocityYawOffsetAlpha < 0.0f)
-			{
-				InRange *= -1;
-				OutRange *= -1;
-			}
-			CharacterVelocityYawOffsetAlpha = FMath::GetMappedRangeValueClamped(InRange, OutRange, CharacterVelocityYawOffsetAlpha);
-		}
-
+		float CharacterVelocityYawOffset = CalculateCharacterVelocityYawOffset();
+		float CharacterVelocityYawOffsetAlpha = CalculateVelocityYawOffsetAlpha(CharacterVelocityYawOffset);
 		float WalkAnimMaxHorizontalMovementOffset;
 		float WalkAnimMinHorizontalMovementOffset;
 		if (CharacterVelocityYawOffsetAlpha > 0.0f)
@@ -354,4 +325,59 @@ void UWeaponAnimInstance::AnimNotify_WeaponLHandMarker()
 void UWeaponAnimInstance::AnimNotify_WeaponLIKMarker()
 {
 	IKBlendInOutFlag = -1;
+}
+
+float UWeaponAnimInstance::CalculateCharacterVelocityYawOffset()
+{
+	float CharacterVelocityYawOffset = 0.0f;
+	if (Weapon)
+	{
+		if (AShooterCharacter* ShooterCharacter = Weapon->GetShooterCharacterOwner())
+		{
+			FVector CharacterVelocity = ShooterCharacter->GetVelocity();
+			if (CharacterVelocity.SizeSquared2D() > 0.0f)
+			{
+				float VelocityYaw = UKismetMathLibrary::MakeRotFromX(CharacterVelocity).Yaw;
+				FRotator CharacterRotation = ShooterCharacter->GetActorRotation();
+				CharacterVelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0f, VelocityYaw, 0.0f), FRotator(0.0f, CharacterRotation.Yaw, 0.0f)).Yaw;
+			}
+		}
+	}
+	return CharacterVelocityYawOffset;
+}
+
+float UWeaponAnimInstance::CalculateVelocityYawOffsetAlpha(float VelocityYawOffset)
+{
+	float CharacterVelocityYawOffsetAlpha = UKismetMathLibrary::NormalizeToRange(VelocityYawOffset, 0.0f, 90.0f);
+	if (FMath::Abs(CharacterVelocityYawOffsetAlpha) > 1.0f)
+	{
+		FVector2D InRange = FVector2D(1.0f, 2.0f);
+		FVector2D OutRange = FVector2D(1.0, 0.0);
+		if (CharacterVelocityYawOffsetAlpha < 0.0f)
+		{
+			InRange *= -1;
+			OutRange *= -1;
+		}
+		CharacterVelocityYawOffsetAlpha = FMath::GetMappedRangeValueClamped(InRange, OutRange, CharacterVelocityYawOffsetAlpha);
+	}
+	return CharacterVelocityYawOffsetAlpha;
+}
+
+void UWeaponAnimInstance::CalculateSway(FRotator FromRotation)
+{
+	SwayHorizontalMovement += FromRotation.Yaw * SwayHorizontalMovementSensitivity;
+	SwayHorizontalMovement = FMath::Clamp(SwayHorizontalMovement, -SwayHorizontalMovementLimit, SwayHorizontalMovementLimit);
+
+	SwayVerticalMovement += FromRotation.Pitch * SwayVerticalMovementSensitivity;
+	SwayVerticalMovement = FMath::Clamp(SwayVerticalMovement, -SwayVerticalMovementLimit, SwayVerticalMovementLimit);
+
+	SwayRollRotation += FromRotation.Yaw * SwayRollRotationSensitivity;
+	SwayRollRotation = FMath::Clamp(SwayRollRotation, -SwayRollRotationLimit, SwayRollRotationLimit);
+}
+
+void UWeaponAnimInstance::InterpBackSway(float DeltaSeconds, float InterpSpeed)
+{
+	SwayHorizontalMovement = FMath::FInterpTo(SwayHorizontalMovement, 0.0f, DeltaSeconds, InterpSpeed);
+	SwayVerticalMovement = FMath::FInterpTo(SwayVerticalMovement, 0.0f, DeltaSeconds, InterpSpeed);
+	SwayRollRotation = FMath::FInterpTo(SwayRollRotation, 0.0f, DeltaSeconds, InterpSpeed);
 }
