@@ -119,6 +119,7 @@ private:
 	float CalculateVelocityYawOffsetAlpha(float VelocityYawOffset);
 	void CalculateSway(FRotator FromRotation);
 	void InterpBackSway(float DeltaSeconds, float InterpSpeed);
+	void CalculateIKAlpha(float DeltaSeconds);
 
 	TObjectPtr<AWeapon> Weapon;
 

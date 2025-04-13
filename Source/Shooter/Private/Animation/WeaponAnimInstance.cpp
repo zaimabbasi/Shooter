@@ -65,7 +65,6 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
-	CharacterViewRotationLast = CharacterViewRotation;
 	InterpBackSway(DeltaSeconds, 5.0f);
 
 	ForegripHandguardMesh = Weapon->GetForegripHandguardMesh();
@@ -95,6 +94,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bool bIsCharacterTransition = ShooterCharacter && ShooterCharacter->GetIsTransition();
 	bIsCharacterThirdAction = bIsCharacterSprinting || bIsCharacterTransition || (bIsCharacterProned && bHasCharacterVelocity);
 
+	CharacterViewRotationLast = CharacterViewRotation;
 	CharacterViewRotation = ShooterCharacter != nullptr ? ShooterCharacter->GetBaseAimRotation() : FRotator::ZeroRotator;
 	CalculateSway(UKismetMathLibrary::NormalizedDeltaRotator(CharacterViewRotation, CharacterViewRotationLast));
 
@@ -102,23 +102,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	AWeapon* CharacterEquippedWeapon = CharacterCombatComponent != nullptr ? CharacterCombatComponent->GetEquippedWeapon() : nullptr;
 	CombatAction = CharacterCombatComponent && Weapon == CharacterEquippedWeapon ? CharacterCombatComponent->GetCombatAction() : ECombatAction::CA_Out;
 
-	if (bIsCharacterThirdAction)
-	{
-		IKAlpha = 1.0f;
-	}
-	else
-	{
-		if (bHasForegripHandguardMesh)
-		{
-			IKBlendDurationCounter += IKBlendInOutFlag * DeltaSeconds;
-			IKBlendDurationCounter = FMath::Clamp(IKBlendDurationCounter, 0.0f, IKBlendDuration);
-			IKAlpha = IKBlendDurationCounter / IKBlendDuration;
-		}
-		else
-		{
-			IKAlpha = 0.0f;
-		}
-	}
+	CalculateIKAlpha(DeltaSeconds);
 
 	if (ForegripHandguardMesh)
 	{
@@ -168,7 +152,7 @@ void UWeaponAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 	if (Weapon == nullptr)
 	{
 		return;
-	}	
+	}
 
 	if (!bIsHolster)
 	{
@@ -380,4 +364,25 @@ void UWeaponAnimInstance::InterpBackSway(float DeltaSeconds, float InterpSpeed)
 	SwayHorizontalMovement = FMath::FInterpTo(SwayHorizontalMovement, 0.0f, DeltaSeconds, InterpSpeed);
 	SwayVerticalMovement = FMath::FInterpTo(SwayVerticalMovement, 0.0f, DeltaSeconds, InterpSpeed);
 	SwayRollRotation = FMath::FInterpTo(SwayRollRotation, 0.0f, DeltaSeconds, InterpSpeed);
+}
+
+void UWeaponAnimInstance::CalculateIKAlpha(float DeltaSeconds)
+{
+	if (bIsCharacterThirdAction)
+	{
+		IKAlpha = 1.0f;
+	}
+	else
+	{
+		if (bHasForegripHandguardMesh)
+		{
+			IKBlendDurationCounter += IKBlendInOutFlag * DeltaSeconds;
+			IKBlendDurationCounter = FMath::Clamp(IKBlendDurationCounter, 0.0f, IKBlendDuration);
+			IKAlpha = IKBlendDurationCounter / IKBlendDuration;
+		}
+		else
+		{
+			IKAlpha = CombatAction == ECombatAction::CA_Idle ? 1.0f : 0.0f;
+		}
+	}
 }
