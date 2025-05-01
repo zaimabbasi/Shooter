@@ -26,10 +26,11 @@ public:
 	void AddAmmo(const uint8 Count);
 	void PopAmmo();
 
+public:
 	FOnMagAmmoPoppedSignature OnMagAmmoPopped;
 
-private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UMagDataAsset> MagDataAsset;
 
 	UPROPERTY(Replicated)

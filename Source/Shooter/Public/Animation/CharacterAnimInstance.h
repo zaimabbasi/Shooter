@@ -7,11 +7,13 @@
 #include "CharacterAnimInstance.generated.h"
 
 class AShooterCharacter;
+class AWeapon;
+enum class ECombatAction : uint8;
 enum class ELeaningDirection : uint8;
 enum class ETurningDirection : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterAnimInstanceAnimNotifySignature);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterAnimInstanceTurningInPlaceSignature, ETurningDirection, TurningDirection);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterAnimInstanceTurningInPlaceSignature, ETurningDirection, TurningDirection);
 
 UCLASS()
 class SHOOTER_API UCharacterAnimInstance : public UAnimInstance
@@ -22,39 +24,6 @@ public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
-
-	// Delegates - From Standing To Transitions
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceIdleAimToTransitionIdleAimToSprintSlowStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceIdleAimToTransitionIdleAimToProneIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToCrouchIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToProneIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceWalkAimToTransitionIdleAimToProneIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted;
-
-	// Delegates - From Crouching To Transitions
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceCrouchAimSlowToTransitionIdleLowAimToProneIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceIdleLowAimToTransitionIdleLowAimToProneIdleAimStarted;
-
-	// Delegates - From Proning To Transitions
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleLowAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleLowAimStarted;
-
-	// Delegates - From Transitions
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionIdleAimToProneIdleAimToProneIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionIdleAimToSprintSlowToSprintSlowStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionIdleLowAimToProneIdleAimToProneIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionProneIdleAimToIdleAimToIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionProneIdleAimToIdleLowAimToIdleLowAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToCrouchIdleAimToIdleLowAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleLowAimStarted;
-	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted;
-
-	FOnCharacterAnimInstanceTurningInPlaceSignature OnCharacterAnimInstanceTurningInPlace;
 
 protected:
 	// Callbacks - From Standing To Transitions
@@ -130,78 +99,129 @@ protected:
 	UFUNCTION()
 	void AnimNotify_TransitionSprintSlowToProneIdleAimToProneIdleAimStarted() const;
 
+public:
+	// Delegates - From Standing To Transitions
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceIdleAimToTransitionIdleAimToSprintSlowStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceIdleAimToTransitionIdleAimToProneIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToCrouchIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToProneIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceWalkAimToTransitionIdleAimToProneIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted;
+
+	// Delegates - From Crouching To Transitions
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceCrouchAimSlowToTransitionIdleLowAimToProneIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceIdleLowAimToTransitionIdleLowAimToProneIdleAimStarted;
+
+	// Delegates - From Proning To Transitions
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleLowAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleLowAimStarted;
+
+	// Delegates - From Transitions
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionIdleAimToProneIdleAimToProneIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionIdleAimToSprintSlowToSprintSlowStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionIdleLowAimToProneIdleAimToProneIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionProneIdleAimToIdleAimToIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionProneIdleAimToIdleLowAimToIdleLowAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToCrouchIdleAimToIdleLowAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleLowAimStarted;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted;
+
+	/*FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceIdle;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceWalk;
+	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceThirdOrCombatAction;
+	FOnCharacterAnimInstanceTurningInPlaceSignature OnCharacterAnimInstanceTurningInPlace;*/
+
 private:
-	float AllowedAO_Yaw() const;
-	bool IsAccelerating() const;
-	bool IsThirdAction() const;
-	bool HasVelocity() const;
-
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
+	TObjectPtr<USkeletalMeshComponent> OwningComponent;
+	
+	/*FRotator ActorRotationTarget;
+	FRotator ActorRotationInterp;
+	float ActorRotationInterpSpeed;*/
 
-	float CharacterMovementRotationRateYaw;
-	float TurnInPlaceRotationRateYaw;
+	//TObjectPtr<AController> Controller;
+	//TObjectPtr<AWeapon> EquippedWeapon;
+	//bool bIsLocallyControlled;
+	//bool bIsTransition;
+	//uint8 RemoteViewYaw;
+	//FRotator BaseAimRotation;
+	//FRotator ControlRotation;
+	//FRotator ActorRotation;
+	//FVector Velocity;
+	//FVector CurrentAcceleration;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> HandsMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	ELeaningDirection LeaningDirection;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	ETurningDirection TurningDirection;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	FTransform BendGoalLeftTransform;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	FTransform BendGoalRightTransform;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	FTransform LPalmTransform;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	FTransform RPalmTransform;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	float AO_Yaw;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	float AO_Pitch;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	float VelocityYawOffset;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsAccelerating;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bHasVelocity;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsCrouched;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsProned;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsSlowing;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsSprinting;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsThirdAction;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsWeaponEquipped;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsEquippedWeaponPistol;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsEquippedWeaponOneHanded;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float LeaningTransitionDuration;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float AO_Pitch;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float AO_Yaw;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float RootJointYaw;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float VelocityYawOffset;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	ECombatAction CombatAction;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	ELeaningDirection LeaningDirection;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	ETurningDirection TurningDirection;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FTransform BendGoalLeftTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FTransform BendGoalRightTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FTransform LPalmTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FTransform RPalmTransform;
 
 };

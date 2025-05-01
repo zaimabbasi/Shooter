@@ -18,7 +18,7 @@ public:
 	virtual FName GetDefaultAttachParentSocketName() const override;
 
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USceneCaptureComponent2D> OpticCamera;
 
 };

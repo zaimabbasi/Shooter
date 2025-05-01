@@ -16,23 +16,25 @@ class SHOOTER_API AMod : public AActor
 	
 public:
 	AMod();
-	virtual FName GetDefaultAttachParentSocketName() const;
 	virtual void PostInitializeComponents() override;
 	virtual void Tick(float DeltaTime) override;
 	
 	virtual void Init();
+	virtual FName GetDefaultAttachParentSocketName() const;
 
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UModDataAsset> ModDataAsset;
+
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> Mesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWeaponModComponent> WeaponModComponent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
-	TSoftObjectPtr<UModDataAsset> ModDataAsset;
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }

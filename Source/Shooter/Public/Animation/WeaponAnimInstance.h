@@ -6,6 +6,9 @@
 #include "Animation/AnimInstance.h"
 #include "WeaponAnimInstance.generated.h"
 
+//class AAmmo;
+//class AMod;
+class AShooterCharacter;
 class AWeapon;
 enum class ECombatAction : uint8;
 enum class EWeaponFiremode : uint8;
@@ -21,31 +24,6 @@ public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
-
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceActionEnd;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceActionStart;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceChamberCheck;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFire;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFireDry;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFiremode;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFiremodeCheck;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdle;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdleToOut;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceMagCheck;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceMagIn;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceMagOut;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOut;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOutToIdle;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOutToIdleArm;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceReloadCharge;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstancePatronInWeapon;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponSelector;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponHammer;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceShellPort;
-
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstancePlayProceduralIdle;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstancePlayProceduralWalk;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceStopProceduralAnim;
 
 protected:
 	UFUNCTION()
@@ -115,81 +93,122 @@ protected:
 	void AnimNotify_WeaponLIKMarker();
 
 private:
-	float CalculateCharacterVelocityYawOffset();
-	float CalculateVelocityYawOffsetAlpha(float VelocityYawOffset);
-	void CalculateSway(FRotator FromRotation);
+	//float CalculateVelocityYawOffsetAlpha(float VelocityYawOffset);
+	//void CalculateSway(FRotator DeltaRotation);
 	void InterpBackSway(float DeltaSeconds, float InterpSpeed);
 	void CalculateIKAlpha(float DeltaSeconds);
 
-	TObjectPtr<AWeapon> Weapon;
+public:
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceActionEnd;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceActionStart;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceChamberCheck;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFire;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFireDry;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFiremode;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFiremodeCheck;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdle;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdleToOut;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceMagCheck;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceMagIn;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceMagOut;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOut;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOutToIdle;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOutToIdleArm;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceReloadCharge;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstancePatronInWeapon;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponSelector;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponHammer;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceShellPort;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+private:
+	TObjectPtr<AWeapon> Weapon;
+	TObjectPtr<AShooterCharacter> ShooterCharacter;
+	FRotator CharacterControlRotation;
+	FRotator CharacterControlRotationLast;
+	//TObjectPtr<AMod> AttachedForegrip;
+	//TObjectPtr<AMod> AttachedHandguard;
+	//TObjectPtr<AAmmo> PatronInWeaponAmmo;
+
+	//TObjectPtr<AWeapon> CharacterEquippedWeapon;
+	//FRotator CharacterBaseAimRotation;
+	//FRotator CharacterBaseAimRotationLast;
+	//FVector CharacterVelocity;
+	//ECombatAction CharacterCombatAction;
+	//bool bIsCharacterTransition;
+	//float CharacterSwayHorizontalMovementLimit;
+	//float CharacterSwayVerticalMovementLimit;
+	//float CharacterSwayRollRotationLimit;
+	//float CharacterSwayHorizontalMovementSensitivity;
+	//float CharacterSwayVerticalMovementSensitivity;
+	//float CharacterSwayRollRotationSensitivity;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> CharacterMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> ForegripHandguardMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	ECombatAction CombatAction;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	EWeaponFiremode Firemode;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsHolster;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bHasForegripHandguardMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bHasPatronInWeaponAmmo;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsPistol;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsOneHanded;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float FireAnimPlayRate;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bLoopFireAnim;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform BendGoalLeftTransform;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform BendGoalRightTransform;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform LCollarboneTransform;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform RCollarboneTransform;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform LPalmTransform;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform RPalmTransform;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform WeaponRootAnimTransform;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bHasCharacterVelocity;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsCharacterProned;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsCharacterSprinting;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsCharacterThirdAction;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float IKAlpha;
 
 	int8 IKBlendInOutFlag;
@@ -198,77 +217,15 @@ private:
 
 	float IKBlendDurationCounter;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Idle", meta = (AllowPrivateAccess = "true"))
-	float IdleAnimMaxHorizontalMovement;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Idle", meta = (AllowPrivateAccess = "true"))
-	float IdleAnimMinHorizontalMovement;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Idle", meta = (AllowPrivateAccess = "true"))
-	float IdleAnimMaxVerticalMovement;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Idle", meta = (AllowPrivateAccess = "true"))
-	float IdleAnimMinVerticalMovement;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Idle", meta = (AllowPrivateAccess = "true"))
-	float IdleAnimMaxRollRotation;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Idle", meta = (AllowPrivateAccess = "true"))
-	float IdleAnimMinRollRotation;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Walk", meta = (AllowPrivateAccess = "true"))
-	float WalkAnimMaxHorizontalMovement;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Walk", meta = (AllowPrivateAccess = "true"))
-	float WalkAnimMinHorizontalMovement;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Walk", meta = (AllowPrivateAccess = "true"))
-	float WalkAnimMaxVerticalMovement;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Walk", meta = (AllowPrivateAccess = "true"))
-	float WalkAnimMinVerticalMovement;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Walk", meta = (AllowPrivateAccess = "true"))
-	float WalkAnimMaxRollRotation;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Walk", meta = (AllowPrivateAccess = "true"))
-	float WalkAnimMinRollRotation;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
-	float SwayHorizontalMovementLimit;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
-	float SwayVerticalMovementLimit;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
-	float SwayRollRotationLimit;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
-	float SwayHorizontalMovementSensitivity;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
-	float SwayVerticalMovementSensitivity;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Sway", meta = (AllowPrivateAccess = "true"))
-	float SwayRollRotationSensitivity;
-
-	bool bIsPlayingProceduralIdle;
-	bool bIsPlayingProceduralWalk;
-
-	float IdleAnimHorizontalMovementAlpha;
-	float IdleAnimVerticalMovementAlpha;
-	float IdleAnimRollRotationAlpha;
-
-	float WalkAnimHorizontalMovementAlpha;
-	float WalkAnimVerticalMovementAlpha;
-	float WalkAnimRollRotationAlpha;
-
 	FRotator CharacterViewRotation;
 	FRotator CharacterViewRotationLast;
+
+	float ProceduralAnimHorizontalMovement;
+	float ProceduralAnimVerticalMovement;
+	float ProceduralAnimRollRotation;
 
 	float SwayHorizontalMovement;
 	float SwayVerticalMovement;
 	float SwayRollRotation;
-
 
 };

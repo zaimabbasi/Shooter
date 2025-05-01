@@ -42,26 +42,84 @@ public:
 	friend class AShooterCharacter;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void ActionEnd();
-	void ActionStart();
-	void Idle();
-	void IdleToOut();
-	void Out();
-	void OutToIdle();
-	void WeaponChamberCheck();
-	void WeaponFire(bool bFire);
-	void WeaponFiremode();
-	void WeaponFiremodeCheck();
-	void WeaponMagCheck();
-	void WeaponMagIn();
-	void WeaponMagOut();
-	void WeaponReloadCharge();
+	virtual void ActionEnd();
+	virtual void ActionStart();
+	virtual void Idle();
+	virtual void IdleToOut();
+	virtual void Out();
+	virtual void OutToIdle();
+	virtual void WeaponChamberCheck();
+	virtual void WeaponFire(bool bFire);
+	virtual void WeaponFiremode();
+	virtual void WeaponFiremodeCheck();
+	virtual void WeaponMagCheck();
+	virtual void WeaponMagIn();
+	virtual void WeaponMagOut();
+	virtual void WeaponReloadCharge();
 
-	void EquipWeapon(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName = NAME_None);
-	void UnequipWeapon(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName);
+	virtual void EquipWeapon(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName = NAME_None);
+	virtual void UnequipWeapon(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName);
 
+protected:
+	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponActionEnd(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponActionStart(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponChamberCheck(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponFire(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponFireDry(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponFiremode(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponFiremodeCheck(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponIdle(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponIdleToOut(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponMagCheck(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponMagIn(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponMagOut(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponOut(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponOutToIdle(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponOutToIdleArm(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponReloadCharge(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void OnRep_CombatAction();
+
+	UFUNCTION()
+	virtual void OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon);
+
+public:
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionEnd;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionStart;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponChamberCheck;
@@ -80,73 +138,19 @@ public:
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponReloadCharge;
 
 protected:
-	virtual void BeginPlay() override;
-
-private:
-	UFUNCTION()
-	void Handle_OnWeaponActionEnd(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponActionStart(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponChamberCheck(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponFire(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponFireDry(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponFiremode(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponFiremodeCheck(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponIdle(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponIdleToOut(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponMagCheck(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponMagIn(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponMagOut(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponOut(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponOutToIdle(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponOutToIdleArm(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnWeaponReloadCharge(AWeapon* Weapon);
-
-	UFUNCTION()
-	void OnRep_CombatAction();
-
-	UFUNCTION()
-	void OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon);
-
 	/*UPROPERTY(Replicated)
 	bool bIsFiring;*/
 
+	bool bWantsToFire;
+
+	TObjectPtr<AWeapon> NextWeapon;
+
+private:
 	UPROPERTY(ReplicatedUsing = OnRep_CombatAction)
 	ECombatAction CombatAction;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	TObjectPtr<AWeapon> EquippedWeapon;
-
-	bool bWantsToFire;
 
 public:
 	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }

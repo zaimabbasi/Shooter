@@ -41,12 +41,12 @@ void AMag::AddAmmo(const uint8 Count)
 			for (uint8 Index = AmmoCount + 1; Index <= AmmoCount + Count; ++Index)
 			{
 				const FName PatronSocketName = PATRON_SOCKET_NAME(Index);
-				if (Mesh && Mesh->DoesSocketExist(PatronSocketName))
+				if (GetMesh() && GetMesh()->DoesSocketExist(PatronSocketName))
 				{
 					if (AAmmo* SpawnedAmmo = World->SpawnActor<AAmmo>(MagDataAsset.LoadSynchronous()->AmmoClass))
 					{
 						SpawnedAmmo->SetOwner(this);
-						SpawnedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, PatronSocketName);
+						SpawnedAmmo->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, PatronSocketName);
 						AmmoArray.Add(SpawnedAmmo);
 					}
 				}
@@ -62,7 +62,7 @@ void AMag::PopAmmo()
 	{
 		AAmmo* PoppedAmmo = nullptr;
 		const FName PatronSocketName = PATRON_SOCKET_NAME(AmmoCount);
-		if (Mesh && Mesh->DoesSocketExist(PatronSocketName))
+		if (GetMesh() && GetMesh()->DoesSocketExist(PatronSocketName))
 		{
 			PoppedAmmo = AmmoArray.Pop(true);
 		}

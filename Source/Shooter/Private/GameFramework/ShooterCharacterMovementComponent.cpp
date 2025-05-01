@@ -257,6 +257,10 @@ bool UShooterCharacterMovementComponent::IsSprinting() const
 
 void UShooterCharacterMovementComponent::OnMovementUpdated(float DeltaSeconds, const FVector& OldLocation, const FVector& OldVelocity)
 {
+	if (ShooterCharacterOwner)
+	{
+		ShooterCharacterOwner->OnMovementUpdated(DeltaSeconds, OldLocation, OldVelocity);
+	}
 }
 
 void UShooterCharacterMovementComponent::PostLoad()

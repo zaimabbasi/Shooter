@@ -6,12 +6,22 @@
 #include "GameFramework/PlayerController.h"
 #include "ShooterPlayerController.generated.h"
 
+class AShooterCharacter;
+
 UCLASS()
 class SHOOTER_API AShooterPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
 public:
-	void Init();
+	virtual void Init();
+	virtual void UpdateRotation(float DeltaTime);
+	virtual void OnRep_Pawn();
+
+protected:
+	virtual void OnPossess(APawn* aPawn) override;
+
+private:
+	TObjectPtr<AShooterCharacter> ShooterCharacter;
 
 };

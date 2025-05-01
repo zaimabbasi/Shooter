@@ -5,6 +5,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Character/ShooterCharacter.h"
 #include "Components/CharacterCombatComponent.h"
+#include "Mod/Foregrip.h"
+#include "Mod/Handguard.h"
 #include "Types/ShooterNames.h"
 #include "Utility/ShooterUtility.h"
 #include "Weapon/Weapon.h"
@@ -21,34 +23,12 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 		//FireAnimPlayRate = 1.0f;
 	}
 
-	CombatAction = ECombatAction::CA_None;
+	CombatAction = ECombatAction::CA_Out;
 
 	IKAlpha = 0.0f;
 	IKBlendInOutFlag = 0;
 	IKBlendDuration = 0.3f;
 	IKBlendDurationCounter = 0.0f;
-
-	IdleAnimMaxHorizontalMovement = 0.2f;
-	IdleAnimMinHorizontalMovement = -0.2f;
-	IdleAnimMaxVerticalMovement = 0.25f;
-	IdleAnimMinVerticalMovement = -0.5f;
-	IdleAnimMaxRollRotation = 1.5f;
-	IdleAnimMinRollRotation = -1.5f;
-
-	WalkAnimMaxHorizontalMovement = 0.3f;
-	WalkAnimMinHorizontalMovement = -0.3f;
-	WalkAnimMaxVerticalMovement = 0.25f;
-	WalkAnimMinVerticalMovement = -0.5f;
-	WalkAnimMaxRollRotation = 2.5f;
-	WalkAnimMinRollRotation = -2.5f;
-
-	SwayHorizontalMovementLimit = 1.0f;
-	SwayVerticalMovementLimit = 1.0f;
-	SwayRollRotationLimit = 7.5f;
-
-	SwayHorizontalMovementSensitivity = 0.025;
-	SwayVerticalMovementSensitivity = 0.025;
-	SwayRollRotationSensitivity = 0.075;
 
 }
 
@@ -65,45 +45,189 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
-	InterpBackSway(DeltaSeconds, 5.0f);
+	ShooterCharacter = Weapon->GetShooterCharacterOwner();
+	if (ShooterCharacter == nullptr)
+	{
+		return;
+	}
 
-	ForegripHandguardMesh = Weapon->GetForegripHandguardMesh();
-	bHasForegripHandguardMesh = ForegripHandguardMesh != nullptr;
+	AMod* AttachedForegrip = Weapon->GetAttachedActor<AForegrip>();
+	AMod* AttachedHandguard = Weapon->GetAttachedActor<AHandguard>();
+	AAmmo* PatronInWeaponAmmo = Weapon->GetPatronInWeaponAmmo();
+	AWeapon* CharacterEquippedWeapon = ShooterCharacter->GetEquippedWeapon();
+	FVector CharacterVelocity = ShooterCharacter->GetVelocity();
+	ECombatAction CharacterCombatAction = ShooterCharacter->GetCombatAction();
+	bool bIsCharacterTransition = ShooterCharacter->GetIsTransition();
+	float CharacterSwayHorizontalMovementLimit = ShooterCharacter->GetSwayHorizontalMovementLimit();
+	float CharacterSwayVerticalMovementLimit = ShooterCharacter->GetSwayVerticalMovementLimit();
+	float CharacterSwayRollRotationLimit = ShooterCharacter->GetSwayRollRotationLimit();
+	float CharacterSwayHorizontalMovementSensitivity = ShooterCharacter->GetSwayHorizontalMovementSensitivity();
+	float CharacterSwayVerticalMovementSensitivity = ShooterCharacter->GetSwayVerticalMovementSensitivity();
+	float CharacterSwayRollRotationSensitivity = ShooterCharacter->GetSwayRollRotationSensitivity();
+
 	Firemode = Weapon->GetFiremode();
 	bIsHolster = Weapon->GetIsHolster();
-	bHasPatronInWeaponAmmo = Weapon->GetPatronInWeaponAmmo() != nullptr;
 	bIsPistol = Weapon->IsPistol();
 	bIsOneHanded = Weapon->GetIsOneHanded();
-	IdleAnimHorizontalMovementAlpha = Weapon->GetIdleAnimHorizontalMovementAlpha();
-	IdleAnimVerticalMovementAlpha = Weapon->GetIdleAnimVerticalMovementAlpha();
-	IdleAnimRollRotationAlpha = Weapon->GetIdleAnimRollRotationAlpha();
-	WalkAnimHorizontalMovementAlpha = Weapon->GetWalkAnimHorizontalMovementAlpha();
-	WalkAnimVerticalMovementAlpha = Weapon->GetWalkAnimVerticalMovementAlpha();
-	WalkAnimRollRotationAlpha = Weapon->GetWalkAnimRollRotationAlpha();
-	bIsPlayingProceduralIdle = Weapon->IsPlayingProceduralIdle();
-	bIsPlayingProceduralWalk = Weapon->IsPlayingProceduralWalk();
+	//ForegripHandguardMesh = Weapon->GetForegripHandguardMesh();
+	//bHasForegripHandguardMesh = ForegripHandguardMesh != nullptr;
+	//bHasPatronInWeaponAmmo = Weapon->GetPatronInWeaponAmmo() != nullptr;
 
-	AShooterCharacter* ShooterCharacter = Weapon->GetShooterCharacterOwner();
-	CharacterMesh = ShooterCharacter ? ShooterCharacter->GetMesh() : nullptr;
-	bIsCharacterProned = ShooterCharacter && ShooterCharacter->bIsProned;
-	bIsCharacterSprinting = ShooterCharacter && ShooterCharacter->bIsSprinting;
+	//CharacterBaseAimRotationLast = CharacterBaseAimRotation;
+	//CharacterBaseAimRotation = ShooterCharacter->GetBaseAimRotation();
 
-	FVector CharacterVelocity = ShooterCharacter != nullptr ? ShooterCharacter->GetVelocity() : FVector::ZeroVector;
+	CharacterControlRotationLast = CharacterControlRotation;
+	CharacterControlRotation = ShooterCharacter->GetControlRotation();
+	FRotator DeltaCharacterControlRotation = UKismetMathLibrary::NormalizedDeltaRotator(CharacterControlRotation, CharacterControlRotationLast);
+
+	CharacterMesh = ShooterCharacter->GetMesh();
+	bIsCharacterProned = ShooterCharacter->bIsProned;
+	bIsCharacterSprinting = ShooterCharacter->bIsSprinting;
+	ProceduralAnimHorizontalMovement = ShooterCharacter->GetProceduralAnimHorizontalMovement();
+	ProceduralAnimVerticalMovement = ShooterCharacter->GetProceduralAnimVerticalMovement();
+	ProceduralAnimRollRotation = ShooterCharacter->GetProceduralAnimRollRotation();
+
 	bHasCharacterVelocity = CharacterVelocity.SizeSquared2D() > 0.0f;
+	bIsCharacterThirdAction = bIsCharacterTransition || bIsCharacterSprinting || (bIsCharacterProned && bHasCharacterVelocity);
+	CombatAction = Weapon == CharacterEquippedWeapon ? CharacterCombatAction : ECombatAction::CA_Out;
 
-	bool bIsCharacterTransition = ShooterCharacter && ShooterCharacter->GetIsTransition();
-	bIsCharacterThirdAction = bIsCharacterSprinting || bIsCharacterTransition || (bIsCharacterProned && bHasCharacterVelocity);
+	ForegripHandguardMesh = AttachedForegrip ? AttachedForegrip->GetMesh() : AttachedHandguard ? AttachedHandguard->GetMesh() : nullptr;
+	bHasForegripHandguardMesh = ForegripHandguardMesh != nullptr;
 
-	CharacterViewRotationLast = CharacterViewRotation;
-	CharacterViewRotation = ShooterCharacter != nullptr ? ShooterCharacter->GetBaseAimRotation() : FRotator::ZeroRotator;
-	CalculateSway(UKismetMathLibrary::NormalizedDeltaRotator(CharacterViewRotation, CharacterViewRotationLast));
+	bHasPatronInWeaponAmmo = PatronInWeaponAmmo != nullptr;
 
-	UCharacterCombatComponent* CharacterCombatComponent = ShooterCharacter != nullptr ? ShooterCharacter->GetCharacterCombatComponent() : nullptr;
+	float InterpSpeed = 5.0f;
+	SwayHorizontalMovement = FMath::FInterpTo(SwayHorizontalMovement, 0.0f, DeltaSeconds, InterpSpeed);
+	SwayVerticalMovement = FMath::FInterpTo(SwayVerticalMovement, 0.0f, DeltaSeconds, InterpSpeed);
+	SwayRollRotation = FMath::FInterpTo(SwayRollRotation, 0.0f, DeltaSeconds, InterpSpeed);
+
+	SwayHorizontalMovement += DeltaCharacterControlRotation.Yaw * CharacterSwayHorizontalMovementSensitivity;
+	SwayHorizontalMovement = FMath::Clamp(SwayHorizontalMovement, -CharacterSwayHorizontalMovementLimit, CharacterSwayHorizontalMovementLimit);
+
+	SwayVerticalMovement += DeltaCharacterControlRotation.Pitch * CharacterSwayVerticalMovementSensitivity;
+	SwayVerticalMovement = FMath::Clamp(SwayVerticalMovement, -CharacterSwayVerticalMovementLimit, CharacterSwayVerticalMovementLimit);
+
+	SwayRollRotation += DeltaCharacterControlRotation.Yaw * CharacterSwayRollRotationSensitivity;
+	SwayRollRotation = FMath::Clamp(SwayRollRotation, -CharacterSwayRollRotationLimit, CharacterSwayRollRotationLimit);
+
+	//CharacterMesh = ShooterCharacter != nullptr ? ShooterCharacter->GetMesh() : nullptr;
+	//bIsCharacterProned = ShooterCharacter && ShooterCharacter->bIsProned;
+	//bIsCharacterSprinting = ShooterCharacter && ShooterCharacter->bIsSprinting;
+	//bHasCharacterVelocity = ShooterCharacter && ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
+	//bIsCharacterThirdAction = (ShooterCharacter && ShooterCharacter->GetIsTransition()) || bIsCharacterSprinting || (bIsCharacterProned && bHasCharacterVelocity);
+
+	//ProceduralAnimHorizontalMovement = ShooterCharacter != nullptr ? ShooterCharacter->GetProceduralAnimHorizontalMovement() : 0.0f;
+	//ProceduralAnimVerticalMovement = ShooterCharacter != nullptr ? ShooterCharacter->GetProceduralAnimVerticalMovement() : 0.0f;
+	//ProceduralAnimRollRotation = ShooterCharacter != nullptr ? ShooterCharacter->GetProceduralAnimRollRotation() : 0.0f;
+
+	//CharacterViewRotationLast = CharacterViewRotation;
+	//CharacterViewRotation = ShooterCharacter != nullptr ? ShooterCharacter->GetBaseAimRotation() : FRotator::ZeroRotator;
+	
+	/*UCharacterCombatComponent* CharacterCombatComponent = ShooterCharacter != nullptr ? ShooterCharacter->GetCharacterCombatComponent() : nullptr;
 	AWeapon* CharacterEquippedWeapon = CharacterCombatComponent != nullptr ? CharacterCombatComponent->GetEquippedWeapon() : nullptr;
-	CombatAction = CharacterCombatComponent && Weapon == CharacterEquippedWeapon ? CharacterCombatComponent->GetCombatAction() : ECombatAction::CA_Out;
+	CombatAction = CharacterCombatComponent && Weapon == CharacterEquippedWeapon ? CharacterCombatComponent->GetCombatAction() : ECombatAction::CA_Out;*/
+	/*AWeapon* EquippedWeapon = ShooterCharacter != nullptr ? ShooterCharacter->GetEquippedWeapon() : nullptr;
+	CombatAction = ShooterCharacter && ShooterCharacter->GetEquippedWeapon() == Weapon ? ShooterCharacter->GetCombatAction() : ECombatAction::CA_Out;*/
 
-	CalculateIKAlpha(DeltaSeconds);
+	// In ThreadSafe?
+	//CalculateIKAlpha(DeltaSeconds);
 
+	// In ThreadSafe?
+	/*InterpBackSway(DeltaSeconds, 5.0f);
+	CalculateSway(UKismetMathLibrary::NormalizedDeltaRotator(CharacterViewRotation, CharacterViewRotationLast));*/
+
+	// In ThreadSafe?
+	/*if (ForegripHandguardMesh)
+	{
+		LPalmTransform = ForegripHandguardMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+	}
+	if (CharacterMesh && bIsCharacterThirdAction)
+	{
+		BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+
+		LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+
+		if ((bIsCharacterProned && bHasCharacterVelocity) || (bIsCharacterSprinting && (bIsPistol || bIsOneHanded)))
+		{
+			LPalmTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		}
+
+		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+	}*/
+
+	// For later use
+	/*if (bHasCharacterVelocity)
+	{
+		float CharacterVelocityYawOffset = CalculateCharacterVelocityYawOffset();
+		float CharacterVelocityYawOffsetAlpha = CalculateVelocityYawOffsetAlpha(CharacterVelocityYawOffset);
+		float WalkAnimMaxHorizontalMovementOffset;
+		float WalkAnimMinHorizontalMovementOffset;
+		if (CharacterVelocityYawOffsetAlpha > 0.0f)
+		{
+			WalkAnimMaxHorizontalMovementOffset = FMath::FInterpTo(WalkAnimMaxHorizontalMovementOffset, WalkAnimMaxHorizontalMovement * CharacterVelocityYawOffsetAlpha, DeltaSeconds, 5.0f);
+			WalkAnimMinHorizontalMovementOffset = FMath::FInterpTo(WalkAnimMinHorizontalMovementOffset, 0, DeltaSeconds, 5.0f);
+		}
+		else if (CharacterVelocityYawOffsetAlpha < 0.0f)
+		{
+			WalkAnimMaxHorizontalMovementOffset = FMath::FInterpTo(WalkAnimMaxHorizontalMovementOffset, 0, DeltaSeconds, 5.0f);
+			WalkAnimMinHorizontalMovementOffset = FMath::FInterpTo(WalkAnimMinHorizontalMovementOffset, WalkAnimMinHorizontalMovement * CharacterVelocityYawOffsetAlpha, DeltaSeconds, 5.0f);
+		}
+	}*/
+
+	// In ThreadSafe?
+	/*if (!bIsHolster && CombatAction == ECombatAction::CA_Idle && !bIsCharacterThirdAction)
+	{
+		FVector ProceduralAnimLocation;
+		FRotator ProceduralAnimRotation;
+		ProceduralAnimLocation.X = ProceduralAnimHorizontalMovement + SwayHorizontalMovement;
+		ProceduralAnimLocation.Z = ProceduralAnimVerticalMovement - SwayVerticalMovement;
+		ProceduralAnimRotation.Pitch = ProceduralAnimRollRotation + SwayRollRotation;
+		WeaponRootAnimTransform.SetLocation(ProceduralAnimLocation);
+		WeaponRootAnimTransform.SetRotation(FQuat(ProceduralAnimRotation));
+	}*/
+	
+}
+
+void UWeaponAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
+
+	if (Weapon == nullptr || ShooterCharacter == nullptr)
+	{
+		return;
+	}
+
+	// Not In ThreadSafe?
+	/*CalculateIKAlpha(DeltaSeconds);*/
+
+	if (bIsCharacterThirdAction)
+	{
+		IKAlpha = 1.0f;
+	}
+	else
+	{
+		if (bHasForegripHandguardMesh)
+		{
+			IKBlendDurationCounter += IKBlendInOutFlag * DeltaSeconds;
+			IKBlendDurationCounter = FMath::Clamp(IKBlendDurationCounter, 0.0f, IKBlendDuration);
+			IKAlpha = IKBlendDurationCounter / IKBlendDuration;
+		}
+		else
+		{
+			IKAlpha = CombatAction == ECombatAction::CA_Idle ? 1.0f : 0.0f;
+		}
+	}
+
+	// Not In ThreadSafe?
+	/*InterpBackSway(DeltaSeconds, 5.0f);
+	CalculateSway(DeltaViewRotation);*/
+
+	
+
+	// Not In ThreadSafe?
 	if (ForegripHandguardMesh)
 	{
 		LPalmTransform = ForegripHandguardMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
@@ -125,78 +249,16 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 	}
 
-	/*if (bHasCharacterVelocity)
+	// Not In ThreadSafe?
+	if (!bIsHolster && CombatAction == ECombatAction::CA_Idle && !bIsCharacterThirdAction)
 	{
-		float CharacterVelocityYawOffset = CalculateCharacterVelocityYawOffset();
-		float CharacterVelocityYawOffsetAlpha = CalculateVelocityYawOffsetAlpha(CharacterVelocityYawOffset);
-		float WalkAnimMaxHorizontalMovementOffset;
-		float WalkAnimMinHorizontalMovementOffset;
-		if (CharacterVelocityYawOffsetAlpha > 0.0f)
-		{
-			WalkAnimMaxHorizontalMovementOffset = FMath::FInterpTo(WalkAnimMaxHorizontalMovementOffset, WalkAnimMaxHorizontalMovement * CharacterVelocityYawOffsetAlpha, DeltaSeconds, 5.0f);
-			WalkAnimMinHorizontalMovementOffset = FMath::FInterpTo(WalkAnimMinHorizontalMovementOffset, 0, DeltaSeconds, 5.0f);
-		}
-		else if (CharacterVelocityYawOffsetAlpha < 0.0f)
-		{
-			WalkAnimMaxHorizontalMovementOffset = FMath::FInterpTo(WalkAnimMaxHorizontalMovementOffset, 0, DeltaSeconds, 5.0f);
-			WalkAnimMinHorizontalMovementOffset = FMath::FInterpTo(WalkAnimMinHorizontalMovementOffset, WalkAnimMinHorizontalMovement * CharacterVelocityYawOffsetAlpha, DeltaSeconds, 5.0f);
-		}
-	}*/
-	
-}
-
-void UWeaponAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
-{
-	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
-
-	if (Weapon == nullptr)
-	{
-		return;
-	}
-
-	if (!bIsHolster)
-	{
-		if (CombatAction == ECombatAction::CA_Idle && !bIsCharacterThirdAction)
-		{
-			if (!bIsPlayingProceduralIdle && !bHasCharacterVelocity)
-			{
-				OnWeaponAnimInstancePlayProceduralIdle.Broadcast();
-			}
-			else if (!bIsPlayingProceduralWalk && bHasCharacterVelocity)
-			{
-				OnWeaponAnimInstancePlayProceduralWalk.Broadcast();
-			}
-			else if (bIsPlayingProceduralIdle || bIsPlayingProceduralWalk)
-			{
-				FVector ProceduralAnimLocation;
-				FRotator ProceduralAnimRotation;
-				if (bIsPlayingProceduralIdle)
-				{
-					ProceduralAnimLocation.X = UKismetMathLibrary::Lerp(IdleAnimMinHorizontalMovement, IdleAnimMaxHorizontalMovement, IdleAnimHorizontalMovementAlpha);
-					ProceduralAnimLocation.Z = UKismetMathLibrary::Lerp(IdleAnimMinVerticalMovement, IdleAnimMaxVerticalMovement, IdleAnimVerticalMovementAlpha);
-					ProceduralAnimRotation.Pitch = UKismetMathLibrary::Lerp(IdleAnimMinRollRotation, IdleAnimMaxRollRotation, IdleAnimRollRotationAlpha);
-					
-				}
-				else if (bIsPlayingProceduralWalk)
-				{
-					ProceduralAnimLocation.X = UKismetMathLibrary::Lerp(WalkAnimMinHorizontalMovement, WalkAnimMaxHorizontalMovement, WalkAnimHorizontalMovementAlpha);
-					ProceduralAnimLocation.Z = UKismetMathLibrary::Lerp(WalkAnimMinVerticalMovement, WalkAnimMaxVerticalMovement, WalkAnimVerticalMovementAlpha);
-					ProceduralAnimRotation.Pitch = UKismetMathLibrary::Lerp(WalkAnimMinRollRotation, WalkAnimMaxRollRotation, WalkAnimRollRotationAlpha);
-				}
-
-				ProceduralAnimLocation.X += SwayHorizontalMovement;
-				ProceduralAnimLocation.Z += -SwayVerticalMovement;
-				ProceduralAnimRotation.Pitch += SwayRollRotation;
-				
-				WeaponRootAnimTransform.SetLocation(ProceduralAnimLocation);
-				WeaponRootAnimTransform.SetRotation(FQuat(ProceduralAnimRotation));
-			}
-		}
-		else if (bIsPlayingProceduralIdle || bIsPlayingProceduralWalk)
-		{
-			OnWeaponAnimInstanceStopProceduralAnim.Broadcast();
-		}
-		
+		FVector ProceduralAnimLocation;
+		FRotator ProceduralAnimRotation;
+		ProceduralAnimLocation.X = ProceduralAnimHorizontalMovement + SwayHorizontalMovement;
+		ProceduralAnimLocation.Z = ProceduralAnimVerticalMovement - SwayVerticalMovement;
+		ProceduralAnimRotation.Pitch = ProceduralAnimRollRotation + SwayRollRotation;
+		WeaponRootAnimTransform.SetLocation(ProceduralAnimLocation);
+		WeaponRootAnimTransform.SetRotation(FQuat(ProceduralAnimRotation));
 	}
 
 }
@@ -311,53 +373,32 @@ void UWeaponAnimInstance::AnimNotify_WeaponLIKMarker()
 	IKBlendInOutFlag = -1;
 }
 
-float UWeaponAnimInstance::CalculateCharacterVelocityYawOffset()
-{
-	float CharacterVelocityYawOffset = 0.0f;
-	if (Weapon)
-	{
-		if (AShooterCharacter* ShooterCharacter = Weapon->GetShooterCharacterOwner())
-		{
-			FVector CharacterVelocity = ShooterCharacter->GetVelocity();
-			if (CharacterVelocity.SizeSquared2D() > 0.0f)
-			{
-				float VelocityYaw = UKismetMathLibrary::MakeRotFromX(CharacterVelocity).Yaw;
-				FRotator CharacterRotation = ShooterCharacter->GetActorRotation();
-				CharacterVelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0f, VelocityYaw, 0.0f), FRotator(0.0f, CharacterRotation.Yaw, 0.0f)).Yaw;
-			}
-		}
-	}
-	return CharacterVelocityYawOffset;
-}
+//float UWeaponAnimInstance::CalculateVelocityYawOffsetAlpha(float VelocityYawOffset)
+//{
+//	float CharacterVelocityYawOffsetAlpha = UKismetMathLibrary::NormalizeToRange(VelocityYawOffset, 0.0f, 90.0f);
+//	if (FMath::Abs(CharacterVelocityYawOffsetAlpha) > 1.0f)
+//	{
+//		FVector2D InRange = FVector2D(1.0f, 2.0f);
+//		FVector2D OutRange = FVector2D(1.0, 0.0);
+//		if (CharacterVelocityYawOffsetAlpha < 0.0f)
+//		{
+//			InRange *= -1;
+//			OutRange *= -1;
+//		}
+//		CharacterVelocityYawOffsetAlpha = FMath::GetMappedRangeValueClamped(InRange, OutRange, CharacterVelocityYawOffsetAlpha);
+//	}
+//	return CharacterVelocityYawOffsetAlpha;
+//}
 
-float UWeaponAnimInstance::CalculateVelocityYawOffsetAlpha(float VelocityYawOffset)
-{
-	float CharacterVelocityYawOffsetAlpha = UKismetMathLibrary::NormalizeToRange(VelocityYawOffset, 0.0f, 90.0f);
-	if (FMath::Abs(CharacterVelocityYawOffsetAlpha) > 1.0f)
-	{
-		FVector2D InRange = FVector2D(1.0f, 2.0f);
-		FVector2D OutRange = FVector2D(1.0, 0.0);
-		if (CharacterVelocityYawOffsetAlpha < 0.0f)
-		{
-			InRange *= -1;
-			OutRange *= -1;
-		}
-		CharacterVelocityYawOffsetAlpha = FMath::GetMappedRangeValueClamped(InRange, OutRange, CharacterVelocityYawOffsetAlpha);
-	}
-	return CharacterVelocityYawOffsetAlpha;
-}
-
-void UWeaponAnimInstance::CalculateSway(FRotator FromRotation)
-{
-	SwayHorizontalMovement += FromRotation.Yaw * SwayHorizontalMovementSensitivity;
-	SwayHorizontalMovement = FMath::Clamp(SwayHorizontalMovement, -SwayHorizontalMovementLimit, SwayHorizontalMovementLimit);
-
-	SwayVerticalMovement += FromRotation.Pitch * SwayVerticalMovementSensitivity;
-	SwayVerticalMovement = FMath::Clamp(SwayVerticalMovement, -SwayVerticalMovementLimit, SwayVerticalMovementLimit);
-
-	SwayRollRotation += FromRotation.Yaw * SwayRollRotationSensitivity;
-	SwayRollRotation = FMath::Clamp(SwayRollRotation, -SwayRollRotationLimit, SwayRollRotationLimit);
-}
+//void UWeaponAnimInstance::CalculateSway(FRotator DeltaRotation)
+//{
+//	if (ShooterCharacter)
+//	{
+//		ShooterCharacter->CalculateSwayHorizontalMovement(SwayHorizontalMovement, DeltaRotation.Yaw);
+//		ShooterCharacter->CalculateSwayVerticalMovement(SwayVerticalMovement, DeltaRotation.Pitch);
+//		ShooterCharacter->CalculateSwayRollRotation(SwayRollRotation, DeltaRotation.Yaw);
+//	}
+//}
 
 void UWeaponAnimInstance::InterpBackSway(float DeltaSeconds, float InterpSpeed)
 {

@@ -17,9 +17,9 @@ class SHOOTER_API UWeaponModComponent : public UActorComponent
 public:
 	UWeaponModComponent();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void Init(const UModDataAsset* ModDataAsset);
+	virtual void Init(const UModDataAsset* ModDataAsset);
 
 	template<class T>
 	T* GetMod() const

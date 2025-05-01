@@ -29,6 +29,7 @@ public:
 	virtual void PrepMoveFor(ACharacter* C) override;
 	virtual void SetMoveFor(ACharacter* C, float InDeltaTime, FVector const& NewAccel, class FNetworkPredictionData_Client_Character& ClientData) override;
 
+public:
 	uint8 bWantsToProne : 1;
 	uint8 bWantsToSlow : 1;
 	uint8 bWantsToSprint : 1;
@@ -87,6 +88,11 @@ public:
 	virtual void UpdateCharacterStateAfterMovement(float DeltaSeconds) override;
 	virtual void UpdateCharacterStateBeforeMovement(float DeltaSeconds) override;
 
+protected:
+	virtual bool ClientUpdatePositionAfterServerUpdate() override;
+	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
+
+public:
 	FOnMovementComponentSprintSignature OnMovementComponentSprint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter Character Movement: Walking")
@@ -144,9 +150,6 @@ public:
 	float ProneLockDuration;*/
 
 protected:
-	virtual bool ClientUpdatePositionAfterServerUpdate() override;
-	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
-
 	UPROPERTY(Transient, DuplicateTransient)
 	TObjectPtr<AShooterCharacter> ShooterCharacterOwner;
 

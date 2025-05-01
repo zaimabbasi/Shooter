@@ -4,7 +4,6 @@
 #include "Weapon/Weapon.h"
 #include "Components/BoxComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Ammo/Ammo.h"
 #include "Animation/WeaponAnimInstance.h"
@@ -37,17 +36,7 @@ AWeapon::AWeapon() :
 
 	WeaponModComponent = CreateDefaultSubobject<UWeaponModComponent>(TEXT("ModComponent"));
 	WeaponModComponent->SetIsReplicated(true);
-
-	IdleAnimTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("IdleAnimTimeline"));
-	OnIdleAnimHorizontalMovementUpdate.BindUFunction(this, TEXT("Handle_OnIdleAnimHorizontalMovementUpdate"));
-	OnIdleAnimVerticalMovementUpdate.BindUFunction(this, TEXT("Handle_OnIdleAnimVerticalMovementUpdate"));
-	OnIdleAnimRollRotationUpdate.BindUFunction(this, TEXT("Handle_OnIdleAnimRollRotationUpdate"));
-
-	WalkAnimTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("WalkAnimTimeline"));
-	OnWalkAnimHorizontalMovementUpdate.BindUFunction(this, TEXT("Handle_OnWalkAnimHorizontalMovementUpdate"));
-	OnWalkAnimVerticalMovementUpdate.BindUFunction(this, TEXT("Handle_OnWalkAnimVerticalMovementUpdate"));
-	OnWalkAnimRollRotationUpdate.BindUFunction(this, TEXT("Handle_OnWalkAnimRollRotationUpdate"));
-
+	
 }
 
 void AWeapon::PostInitializeComponents()
@@ -78,25 +67,7 @@ void AWeapon::PostInitializeComponents()
 			WeaponAnimInstance->OnWeaponAnimInstanceWeaponSelector.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector);
 			WeaponAnimInstance->OnWeaponAnimInstanceWeaponHammer.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer);
 			WeaponAnimInstance->OnWeaponAnimInstanceShellPort.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceShellPort);
-			WeaponAnimInstance->OnWeaponAnimInstancePlayProceduralIdle.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstancePlayProceduralIdle);
-			WeaponAnimInstance->OnWeaponAnimInstancePlayProceduralWalk.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstancePlayProceduralWalk);
-			WeaponAnimInstance->OnWeaponAnimInstanceStopProceduralAnim.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceStopProceduralAnim);
 		}
-	}
-
-	if (IdleAnimTimeline)
-	{
-		IdleAnimTimeline->AddInterpFloat(IdleAnimHorizontalMovementCurve.LoadSynchronous(), OnIdleAnimHorizontalMovementUpdate);
-		IdleAnimTimeline->AddInterpFloat(IdleAnimVerticalMovementCurve.LoadSynchronous(), OnIdleAnimVerticalMovementUpdate);
-		IdleAnimTimeline->AddInterpFloat(IdleAnimRollRotationCurve.LoadSynchronous(), OnIdleAnimRollRotationUpdate);
-		IdleAnimTimeline->SetLooping(true);
-	}
-	if (WalkAnimTimeline)
-	{
-		WalkAnimTimeline->AddInterpFloat(WalkAnimHorizontalMovementCurve.LoadSynchronous(), OnWalkAnimHorizontalMovementUpdate);
-		WalkAnimTimeline->AddInterpFloat(WalkAnimVerticalMovementCurve.LoadSynchronous(), OnWalkAnimVerticalMovementUpdate);
-		WalkAnimTimeline->AddInterpFloat(WalkAnimRollRotationCurve.LoadSynchronous(), OnWalkAnimRollRotationUpdate);
-		WalkAnimTimeline->SetLooping(true);
 	}
 
 }
@@ -107,11 +78,11 @@ void AWeapon::BeginPlay()
 
 }
 
-void AWeapon::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
+//void AWeapon::Tick(float DeltaTime)
+//{
+//	Super::Tick(DeltaTime);
+//
+//}
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -204,46 +175,6 @@ USkeletalMeshComponent* AWeapon::GetScopeSightMesh() const
 		ScopeSight = GetAttachedActor<ASightRear>();
 	}
 	return ScopeSight == nullptr ? nullptr : ScopeSight->GetMesh();
-}
-
-bool AWeapon::IsPlayingProceduralIdle() const
-{
-	return IdleAnimTimeline && IdleAnimTimeline->IsPlaying();
-}
-
-bool AWeapon::IsPlayingProceduralWalk() const
-{
-	return WalkAnimTimeline && WalkAnimTimeline->IsPlaying();
-}
-
-void AWeapon::Handle_OnIdleAnimHorizontalMovementUpdate(float Value)
-{
-	IdleAnimHorizontalMovementAlpha = Value;
-}
-
-void AWeapon::Handle_OnIdleAnimVerticalMovementUpdate(float Value)
-{
-	IdleAnimVerticalMovementAlpha = Value;
-}
-
-void AWeapon::Handle_OnIdleAnimRollRotationUpdate(float Value)
-{
-	IdleAnimRollRotationAlpha = Value;
-}
-
-void AWeapon::Handle_OnWalkAnimHorizontalMovementUpdate(float Value)
-{
-	WalkAnimHorizontalMovementAlpha = Value;
-}
-
-void AWeapon::Handle_OnWalkAnimVerticalMovementUpdate(float Value)
-{
-	WalkAnimVerticalMovementAlpha = Value;
-}
-
-void AWeapon::Handle_OnWalkAnimRollRotationUpdate(float Value)
-{
-	WalkAnimRollRotationAlpha = Value;
 }
 
 void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
@@ -393,41 +324,5 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector()
 	if (HasAuthority())
 	{
 		FiremodeIndex = FMath::Modulo<uint8>(FiremodeIndex + 1, GetNumFiremodes());
-	}
-}
-
-void AWeapon::Handle_OnWeaponAnimInstancePlayProceduralIdle()
-{
-	if (WalkAnimTimeline && WalkAnimTimeline->IsPlaying())
-	{
-		WalkAnimTimeline->Stop();
-	}
-	if (IdleAnimTimeline && !IdleAnimTimeline->IsPlaying())
-	{
-		IdleAnimTimeline->PlayFromStart();
-	}
-}
-
-void AWeapon::Handle_OnWeaponAnimInstancePlayProceduralWalk()
-{
-	if (IdleAnimTimeline && IdleAnimTimeline->IsPlaying())
-	{
-		IdleAnimTimeline->Stop();
-	}
-	if (WalkAnimTimeline && !WalkAnimTimeline->IsPlaying())
-	{
-		WalkAnimTimeline->PlayFromStart();
-	}
-}
-
-void AWeapon::Handle_OnWeaponAnimInstanceStopProceduralAnim()
-{
-	if (IdleAnimTimeline && IdleAnimTimeline->IsPlaying())
-	{
-		IdleAnimTimeline->Stop();
-	}
-	if (WalkAnimTimeline && WalkAnimTimeline->IsPlaying())
-	{
-		WalkAnimTimeline->Stop();
 	}
 }

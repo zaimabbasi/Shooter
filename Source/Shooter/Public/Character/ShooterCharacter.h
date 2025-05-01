@@ -16,6 +16,8 @@ class UCharacterInventoryComponent;
 class UShooterCharacterMovementComponent;
 class UInputAction;
 class UInputMappingContext;
+enum class ECombatAction : uint8;
+enum class ETurningDirection : uint8;
 struct FInputActionValue;
 
 UCLASS()
@@ -25,60 +27,302 @@ class SHOOTER_API AShooterCharacter : public ACharacter
 
 public:
 	AShooterCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
-	virtual void PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	virtual void Tick(float DeltaTime) override;
 	virtual void RecalculateBaseEyeHeight() override;
+	//virtual void PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker) override;
 
-protected:
-	virtual void BeginPlay() override;
+	//virtual void Tick(float DeltaTime) override;
 
-public:
-	void Init();
+	virtual void Init();
+	ECombatAction GetCombatAction() const;
+	AWeapon* GetEquippedWeapon() const;
 
-	UFUNCTION(BlueprintCallable, Category = Character)
-	virtual bool CanProne() const;
-
-	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
-	virtual void Prone(bool bClientSimulation = false);
-
-	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
-	virtual void UnProne(bool bClientSimulation = false);
-
-	UFUNCTION(BlueprintCallable, Category = Character)
-	virtual bool CanSlow() const;
-
-	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
-	virtual void Slow();
-
-	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
-	virtual void UnSlow();
-
-	UFUNCTION(BlueprintCallable, Category = Character)
-	virtual bool CanSprint() const;
-
-	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
-	virtual void Sprint();
-
-	UFUNCTION(BlueprintCallable, Category = Character, meta = (HidePin = "bClientSimulation"))
-	virtual void UnSprint();
-
-	float GetAO_Pitch(float CurrentPitch, float DeltaTime) const;
-	float GetAO_Yaw(float CurrentYaw, float DeltaTime) const;
-	FVector GetCurrentAcceleration() const;
-	
-	virtual void OnStartProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
-	virtual void OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
+	void OnControllerUpdated(float DeltaTime);
+	void OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity);
 
 	UFUNCTION()
 	virtual void OnRep_IsProned();
 
+	UFUNCTION(BlueprintCallable, Category = "Character", meta = (HidePin = "bClientSimulation"))
+	virtual void Prone(bool bClientSimulation = false);
+
+	UFUNCTION(BlueprintCallable, Category = "Character", meta = (HidePin = "bClientSimulation"))
+	virtual void UnProne(bool bClientSimulation = false);
+
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	virtual bool CanProne() const;
+
+	virtual void OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
+	virtual void OnStartProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
 	void RecalculatePronedEyeHeight();
 
-	//void SetIsTransition(bool bNewIsTransition);
-	
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	virtual void Slow();
+
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	virtual void UnSlow();
+
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	virtual bool CanSlow() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	virtual void Sprint();
+
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	virtual void UnSprint();
+
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	virtual bool CanSprint() const;
+
+protected:
+	virtual void BeginPlay() override;
+
+	virtual FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
+	virtual void Aim();
+	virtual void UnAim();
+	virtual bool CanAim() const;
+	virtual bool CanLean() const;
+
+	virtual void OnCharacterAimAction(const FInputActionValue& Value);
+	virtual void OnCharacterAlterAction(const FInputActionValue& Value);
+	virtual void OnCharacterCrouchAction(const FInputActionValue& Value);
+	virtual void OnCharacterEquipPrimaryWeaponAction(const FInputActionValue& Value);
+	virtual void OnCharacterEquipSecondaryWeaponAction(const FInputActionValue& Value);
+	virtual void OnCharacterHolsterWeaponAction(const FInputActionValue& Value);
+	virtual void OnCharacterLeanLeftAction(const FInputActionValue& Value);
+	virtual void OnCharacterLeanRightAction(const FInputActionValue& Value);
+	virtual void OnCharacterLookAction(const FInputActionValue& Value);
+	virtual void OnCharacterMoveBackwardAction(const FInputActionValue& Value);
+	virtual void OnCharacterMoveForwardAction(const FInputActionValue& Value);
+	virtual void OnCharacterMoveLeftAction(const FInputActionValue& Value);
+	virtual void OnCharacterMoveRightAction(const FInputActionValue& Value);
+	virtual void OnCharacterProneAction(const FInputActionValue& Value);
+	virtual void OnCharacterSlowAction(const FInputActionValue& Value);
+	virtual void OnCharacterSprintAction(const FInputActionValue& Value);
+	virtual void OnWeaponChamberCheckAction(const FInputActionValue& Value);
+	virtual void OnWeaponFireAction(const FInputActionValue& Value);
+	virtual void OnWeaponFiremodeAction(const FInputActionValue& Value);
+	virtual void OnWeaponReloadAction(const FInputActionValue& Value);
+
+	UFUNCTION(Server, Reliable)
+	virtual void Server_Lean(ELeaningDirection NewLeaningDirection);
+
+	UFUNCTION(Server, Reliable)
+	virtual void Server_EquipWeaponProgressive(AWeapon* WeaponToEquip);
+
+	UFUNCTION(Server, Reliable)
+	virtual void Server_HolsterWeaponProgressive();
+
+	UFUNCTION(Server, Reliable)
+	virtual void Server_CheckWeaponChamber();
+
+	UFUNCTION(Server, Reliable)
+	virtual void Server_FireWeapon(bool bFire);
+
+	UFUNCTION(Server, Reliable)
+	virtual void Server_ChangeWeaponFiremode();
+
+	UFUNCTION(Server, Reliable)
+	virtual void Server_CheckWeaponFiremode();
+
+	UFUNCTION(Server, Reliable)
+	virtual void Server_CheckWeaponMag();
+
+	UFUNCTION(Server, Reliable)
+	virtual void Server_WeaponMagOut();
+
+	UFUNCTION()
+	virtual void OnRep_LeaningDirection(ELeaningDirection OldLeaningDirection);
+
+	UFUNCTION()
+	virtual void Handle_OnADSTimelineUpdate(float Value);
+
+	/*UFUNCTION()
+	virtual void Handle_OnADSTimelineFinished();*/
+
+	UFUNCTION()
+	virtual void Handle_OnIdleAnimTimelineHorizontalMovementUpdate(float Value);
+
+	UFUNCTION()
+	virtual void Handle_OnIdleAnimTimelineVerticalMovementUpdate(float Value);
+
+	UFUNCTION()
+	virtual void Handle_OnIdleAnimTimelineRollRotationUpdate(float Value);
+
+	UFUNCTION()
+	virtual void Handle_OnWalkAnimTimelineHorizontalMovementUpdate(float Value);
+
+	UFUNCTION()
+	virtual void Handle_OnWalkAnimTimelineVerticalMovementUpdate(float Value);
+
+	UFUNCTION()
+	virtual void Handle_OnWalkAnimTimelineRollRotationUpdate(float Value);
+
+	UFUNCTION()
+	virtual void Handle_OnTurningAnimTimelineUpdate(float Value);
+
+	UFUNCTION()
+	virtual void Handle_OnTurningAnimTimelineFinished();
+
+	/*UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceIdle();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceWalk();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceThirdOrCombatAction();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceTurningInPlace(ETurningDirection NewTurningDirection);*/
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceCrouchAimSlowToTransitionIdleLowAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToSprintSlowStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceIdleLowAimToTransitionIdleLowAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleLowAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleLowAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToCrouchIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToProneIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceTransitionIdleAimToProneIdleAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceTransitionIdleAimToSprintSlowToSprintSlowStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceTransitionIdleLowAimToProneIdleAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleAimToIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleLowAimToIdleLowAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceTransitionSprintSlowToCrouchIdleAimToIdleLowAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleLowAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceWalkAimToTransitionIdleAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentActionEnd(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentActionStart(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentIdle(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentIdleToOut(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentOut(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentOutToIdle(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentOutToIdleArm(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponChamberCheck(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponFire(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponFireDry(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponFiremode(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponFiremodeCheck(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponMagCheck(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponMagIn(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponMagOut(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponReloadCharge(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnHandsAnimInstanceIdle();
+
+	UFUNCTION()
+	virtual void Handle_OnHandsAnimInstanceIdleToOut();
+
+	UFUNCTION()
+	virtual void Handle_OnHandsAnimInstanceOut();
+
+	UFUNCTION()
+	virtual void Handle_OnHandsAnimInstanceOutToIdle();
+
+	UFUNCTION()
+	virtual void Handle_OnInventoryComponentWeaponArrayReplicated();
+
+	UFUNCTION()
+	virtual void Handle_OnMovementComponentSprint();
+
+private:
+	void CalculateADSCameraTargetLocation();
+	void CalculateLeaningTargetAngle();
+	void CalculateLeaningTransitionDuration(ELeaningDirection OldLeaningDirection);
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+	float PronedEyeHeight;
+
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_IsProned, Category = Character)
 	uint32 bIsProned : 1;
 
@@ -88,333 +332,202 @@ public:
 	UPROPERTY(BlueprintReadOnly, Replicated, Category = Character)
 	uint32 bIsSprinting : 1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
-	float PronedEyeHeight;
-
-private:
-	bool CanAim() const;
-	void Aim();
-	void UnAim();
-
-	bool CanLean() const;
-
-	UFUNCTION(Server, Reliable)
-	void Server_Lean(ELeaningDirection NewLeaningDirection);
-
-	UFUNCTION()
-	void OnRep_LeaningDirection(ELeaningDirection OldLeaningDirection);
-
-	bool CanPerformCrouchAction() const;
-	bool CanPerformMoveAction() const;
-	bool CanPerformProneAction() const;
-
-	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
-
-	UFUNCTION()
-	void Handle_ADSTimelineUpdate(float Value);
-
-	/*UFUNCTION()
-	void Handle_ADSTimelineFinished();*/
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceTurningInPlace(ETurningDirection NewTurningDirection);
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceCrouchAimSlowToTransitionIdleLowAimToProneIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToProneIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToSprintSlowStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceIdleLowAimToTransitionIdleLowAimToProneIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleLowAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleLowAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToCrouchIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToProneIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceTransitionIdleAimToProneIdleAimToProneIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceTransitionIdleAimToSprintSlowToSprintSlowStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceTransitionIdleLowAimToProneIdleAimToProneIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleAimToIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleLowAimToIdleLowAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceTransitionSprintSlowToCrouchIdleAimToIdleLowAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleLowAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceWalkAimToTransitionIdleAimToProneIdleAimStarted();
-
-	UFUNCTION()
-	void Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted();
-	
-	UFUNCTION()
-	void Handle_OnCombatComponentActionEnd(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentActionStart(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentIdle(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentIdleToOut(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentOut(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentOutToIdle(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentOutToIdleArm(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentWeaponChamberCheck(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentWeaponFire(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentWeaponFireDry(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentWeaponFiremode(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentWeaponFiremodeCheck(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentWeaponMagCheck(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentWeaponMagIn(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentWeaponMagOut(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnCombatComponentWeaponReloadCharge(AWeapon* Weapon);
-
-	UFUNCTION()
-	void Handle_OnHandsAnimInstanceIdle();
-
-	UFUNCTION()
-	void Handle_OnHandsAnimInstanceIdleToOut();
-
-	UFUNCTION()
-	void Handle_OnHandsAnimInstanceOut();
-
-	UFUNCTION()
-	void Handle_OnHandsAnimInstanceOutToIdle();
-
-	UFUNCTION()
-	void Handle_OnInventoryComponentWeaponArrayReplicated();
-
-	UFUNCTION()
-	void Handle_OnMovementComponentSprint();
-
-	void OnCharacterAimAction(const FInputActionValue& Value);
-	void OnCharacterAlterAction(const FInputActionValue& Value);
-	void OnCharacterCrouchAction(const FInputActionValue& Value);
-	void OnCharacterEquipPrimaryWeaponAction(const FInputActionValue& Value);
-	void OnCharacterEquipSecondaryWeaponAction(const FInputActionValue& Value);
-	void OnCharacterHolsterWeaponAction(const FInputActionValue& Value);
-	void OnCharacterLeanLeftAction(const FInputActionValue& Value);
-	void OnCharacterLeanRightAction(const FInputActionValue& Value);
-	void OnCharacterLookAction(const FInputActionValue& Value);
-	void OnCharacterMoveBackwardAction(const FInputActionValue& Value);
-	void OnCharacterMoveForwardAction(const FInputActionValue& Value);
-	void OnCharacterMoveLeftAction(const FInputActionValue& Value);
-	void OnCharacterMoveRightAction(const FInputActionValue& Value);
-	void OnCharacterProneAction(const FInputActionValue& Value);
-	void OnCharacterSlowAction(const FInputActionValue& Value);
-	void OnCharacterSprintAction(const FInputActionValue& Value);
-	void OnWeaponChamberCheckAction(const FInputActionValue& Value);
-	void OnWeaponFireAction(const FInputActionValue& Value);
-	void OnWeaponFiremodeAction(const FInputActionValue& Value);
-	void OnWeaponReloadAction(const FInputActionValue& Value);
-
-	UFUNCTION(Server, Reliable)
-	void Server_EquipWeaponProgressive(AWeapon* WeaponToEquip);
-
-	UFUNCTION(Server, Reliable)
-	void Server_HolsterWeaponProgressive();
-
-	UFUNCTION(Server, Reliable)
-	void Server_CheckWeaponChamber();
-
-	UFUNCTION(Server, Reliable)
-	void Server_FireWeapon(bool bFire);
-
-	UFUNCTION(Server, Reliable)
-	void Server_ChangeWeaponFiremode();
-
-	UFUNCTION(Server, Reliable)
-	void Server_CheckWeaponFiremode();
-
-	UFUNCTION(Server, Reliable)
-	void Server_CheckWeaponMag();
-
-	UFUNCTION(Server, Reliable)
-	void Server_WeaponMagOut();
-
-	void SetRemoteViewYaw(float NewRemoteYaw);
-	void CalculateADSCameraTargetLocation();
-	void CalculateLeaningTargetAngle();
-	void CalculateLeaningTransitionDuration(ELeaningDirection OldLeaningDirection);
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USkeletalMeshComponent> HandsMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USkeletalMeshComponent> LegsMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCameraComponent> FirstPersonCamera;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCharacterCombatComponent> CharacterCombatComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorComponent", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCharacterInventoryComponent> CharacterInventoryComponent;
-
-	UPROPERTY()
-	TObjectPtr<UShooterCharacterMovementComponent> ShooterCharacterMovementComponent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCharacterDataAsset> CharacterDataAsset;
 
-	UPROPERTY(EditAnywhere, Category = "SkeletalMeshMergeParams")
+	UPROPERTY(EditAnywhere)
 	FSkeletalMeshMergeParams CharacterMeshMergeParams;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputMapping", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputMappingContext> CombatMappingContext;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputMapping", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputMappingContext> InventoryMappingContext;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputMapping", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputMappingContext> MovementMappingContext;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputMapping", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputMappingContext> OtherMappingContext;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterAimAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterAlterAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterCrouchAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterEquipPrimaryWeaponAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterEquipSecondaryWeaponAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterHolsterWeaponAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterLeanLeftAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterLeanRightAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterLookAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterMoveBackwardAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterMoveForwardAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterMoveLeftAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterMoveRightAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterProneAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterSlowAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> CharacterSprintAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> WeaponChamberCheckAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> WeaponFireAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> WeaponFiremodeAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InputAction", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputAction> WeaponReloadAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Aiming", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UTimelineComponent> ADSTimeline;
 
-	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Aiming", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTimelineComponent> IdleAnimTimeline;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTimelineComponent> WalkAnimTimeline;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTimelineComponent> TurningAnimTimeline;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCurveFloat> ADSTimelineCurve;
 
-	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Leaning", meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "45", ForceUnits = "deg"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UCurveFloat> IdleAnimTimelineHorizontalMovementCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UCurveFloat> IdleAnimTimelineVerticalMovementCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UCurveFloat> IdleAnimTimelineRollRotationCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UCurveFloat> WalkAnimTimelineHorizontalMovementCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UCurveFloat> WalkAnimTimelineVerticalMovementCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UCurveFloat> WalkAnimTimelineRollRotationCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UCurveFloat> TurningAnimTimelineCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMaxHorizontalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMinHorizontalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMaxVerticalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMinVerticalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMaxRollRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMinRollRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMaxHorizontalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMinHorizontalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMaxVerticalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMinVerticalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMaxRollRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMinRollRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float SwayHorizontalMovementLimit;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float SwayVerticalMovementLimit;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float SwayRollRotationLimit;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float SwayHorizontalMovementSensitivity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float SwayVerticalMovementSensitivity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float SwayRollRotationSensitivity;
+
+	FOnTimelineFloat OnADSTimelineUpdate;
+	//FOnTimelineEventStatic OnADSTimelineFinished;
+
+	FOnTimelineFloat OnIdleAnimTimelineHorizontalMovementUpdate;
+	FOnTimelineFloat OnIdleAnimTimelineVerticalMovementUpdate;
+	FOnTimelineFloat OnIdleAnimTimelineRollRotationUpdate;
+
+	FOnTimelineFloat OnWalkAnimTimelineHorizontalMovementUpdate;
+	FOnTimelineFloat OnWalkAnimTimelineVerticalMovementUpdate;
+	FOnTimelineFloat OnWalkAnimTimelineRollRotationUpdate;
+
+	FOnTimelineFloat OnTurningAnimTimelineUpdate;
+	FOnTimelineEventStatic OnTurningAnimTimelineFinished;
+
+	float ProceduralAnimHorizontalMovement;
+	float ProceduralAnimVerticalMovement;
+	float ProceduralAnimRollRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "45", ForceUnits = "deg"))
 	float LeaningMaxAngle;
 
-	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Leaning", meta = (AllowPrivateAccess = "true", ClampMin = "1", ClampMax = "10.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "1", ClampMax = "10.0"))
 	float LeaningInterpSpeed;
 
 	float LeaningTargetAngle;
 
-	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Leaning", meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "1.0", ForceUnits = "sec"))
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "1.0", ForceUnits = "sec"))
 	float LeaningDefaultTransitionDuration;
 
 	float LeaningTransitionDuration;
@@ -422,9 +535,6 @@ private:
 	float CameraDefaultFOV;
 
 	FVector ADSCameraTargetLocation;
-
-	FOnTimelineFloat OnADSTimelineUpdate;
-	//FOnTimelineEventStatic OnADSTimelineFinished;
 
 	bool bIsAiming;
 
@@ -441,24 +551,62 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_LeaningDirection)
 	ELeaningDirection LeaningDirection;
 
-	UPROPERTY(Replicated)
-	ETurningDirection TurningDirection;
-
 	TObjectPtr<AWeapon> NextWeaponToEquip;
 
 	UPROPERTY(Replicated)
-	uint8 RemoteViewYaw;
+	ETurningDirection TurningDirection;
+
+	UPROPERTY(Replicated)
+	float RootJointYaw;
+
+	UPROPERTY(Replicated)
+	float AO_Pitch;
+
+	UPROPERTY(Replicated)
+	float AO_Yaw;
+
+	float AO_YawReference;
+
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> HandsMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> LegsMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCameraComponent> FirstPersonCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCharacterCombatComponent> CharacterCombat;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCharacterInventoryComponent> CharacterInventory;
+
+	UPROPERTY()
+	TObjectPtr<UShooterCharacterMovementComponent> ShooterCharacterMovement;
 
 public:
 	FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
-	FORCEINLINE UCharacterCombatComponent* GetCharacterCombatComponent() const { return CharacterCombatComponent; }
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE bool GetIsTransition() const { return bIsTransition; }
 	FORCEINLINE ELeaningDirection GetLeaningDirection() const { return LeaningDirection; }
 	FORCEINLINE ETurningDirection GetTurningDirection() const { return TurningDirection; }
+	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
+	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
+	FORCEINLINE float GetRootJointYaw() const { return RootJointYaw; }
 	FORCEINLINE float GetLeaningInterpSpeed() const { return LeaningInterpSpeed; }
 	FORCEINLINE float GetLeaningTargetAngle() const { return LeaningTargetAngle; }
 	FORCEINLINE float GetLeaningTransitionDuration() const { return LeaningTransitionDuration; }
+	FORCEINLINE float GetSwayHorizontalMovementLimit() const { return SwayHorizontalMovementLimit; }
+	FORCEINLINE float GetSwayVerticalMovementLimit() const { return SwayVerticalMovementLimit; }
+	FORCEINLINE float GetSwayRollRotationLimit() const { return SwayRollRotationLimit; }
+	FORCEINLINE float GetSwayHorizontalMovementSensitivity() const { return SwayHorizontalMovementSensitivity; }
+	FORCEINLINE float GetSwayVerticalMovementSensitivity() const { return SwayVerticalMovementSensitivity; }
+	FORCEINLINE float GetSwayRollRotationSensitivity() const { return SwayRollRotationSensitivity; }
+	FORCEINLINE float GetProceduralAnimHorizontalMovement() const { return ProceduralAnimHorizontalMovement; }
+	FORCEINLINE float GetProceduralAnimVerticalMovement() const { return ProceduralAnimVerticalMovement; }
+	FORCEINLINE float GetProceduralAnimRollRotation() const { return ProceduralAnimRollRotation; }
 
 };

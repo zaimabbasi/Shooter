@@ -6,8 +6,32 @@
 
 void AShooterPlayerController::Init()
 {
-	if (AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetCharacter()))
+	if (ShooterCharacter)
 	{
 		ShooterCharacter->Init();
 	}
+}
+
+void AShooterPlayerController::UpdateRotation(float DeltaTime)
+{
+	Super::UpdateRotation(DeltaTime);
+
+	if (ShooterCharacter)
+	{
+		ShooterCharacter->OnControllerUpdated(DeltaTime);
+	}
+}
+
+void AShooterPlayerController::OnRep_Pawn()
+{
+	Super::OnRep_Pawn();
+
+	ShooterCharacter = Cast<AShooterCharacter>(GetCharacter());
+}
+
+void AShooterPlayerController::OnPossess(APawn* aPawn)
+{
+	Super::OnPossess(aPawn);
+
+	ShooterCharacter = Cast<AShooterCharacter>(GetCharacter());
 }

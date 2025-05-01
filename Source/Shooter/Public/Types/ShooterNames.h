@@ -15,6 +15,7 @@
 #define L_COLLARBONE_ANIM_SOCKET_NAME						(TEXT("LCollarbone_anim"))
 #define PISTOL_HOLSTER_SOCKET_NAME							(TEXT("pistol_holsterSocket"))
 #define R_COLLARBONE_ANIM_SOCKET_NAME						(TEXT("RCollarbone_anim"))
+#define ROOT_JOINT_SOCKET_NAME								(TEXT("Root_Joint"))
 #define WEAPON_HOLSTER_SOCKET_NAME							(TEXT("weapon_holsterSocket"))
 #define WEAPON_HOLSTER_N_SOCKET_NAME(Index)					(*FString::Printf(TEXT("weapon_holster%uSocket"), Index))
 #define WEAPON_ROOT_3RD_ANIM_SOCKET_NAME					(TEXT("Weapon_root_3rd_anim"))

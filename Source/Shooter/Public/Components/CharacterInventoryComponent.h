@@ -22,23 +22,24 @@ class SHOOTER_API UCharacterInventoryComponent : public UActorComponent
 public:
 	UCharacterInventoryComponent();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void Init(const FInventoryParams& InventoryParams);
-	int8 FindWeapon(AWeapon*& Weapon) const;
-	AWeapon* GetWeaponAtIndex(uint8 Index) const;
-	uint8 GetWeaponAmmoAtIndex(uint8 Index) const;
-	void LoadAmmoInWeaponMag(uint8 WeaponIndex);
-
-	FOnInventoryComponentWeaponArrayReplicatedSignature OnInventoryComponentWeaponArrayReplicated;
+	virtual void Init(const FInventoryParams& InventoryParams);
+	virtual int8 FindWeapon(AWeapon*& Weapon) const;
+	virtual AWeapon* GetWeaponAtIndex(uint8 Index) const;
+	virtual uint8 GetWeaponAmmoAtIndex(uint8 Index) const;
+	virtual void LoadAmmoInWeaponMag(uint8 WeaponIndex);
 
 protected:
 	virtual void BeginPlay() override;
 
-private:
 	UFUNCTION()
-	void OnRep_WeaponArray() const;
+	virtual void OnRep_WeaponArray() const;
 
+public:
+	FOnInventoryComponentWeaponArrayReplicatedSignature OnInventoryComponentWeaponArrayReplicated;
+
+private:
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponArray)
 	TArray<TObjectPtr<AWeapon>> WeaponArray;
 

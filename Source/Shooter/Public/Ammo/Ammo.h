@@ -16,27 +16,28 @@ class SHOOTER_API AAmmo : public AActor
 public:	
 	AAmmo();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	virtual void Tick(float DeltaTime) override;
+	//virtual void Tick(float DeltaTime) override;
 
-	void SetIsEmpty(bool bEmpty);
+	virtual void SetIsEmpty(bool bEmpty);
 	
 protected:
 	virtual void BeginPlay() override;
-
-private:
+	
+	virtual void UpdateMesh() const;
+	
 	UFUNCTION()
-	void OnRep_IsEmpty();
+	virtual void OnRep_IsEmpty();
 
-	void UpdateMesh() const;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USkeletalMeshComponent> Mesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataAsset", meta = (AllowPrivateAccess = "true"))
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UAmmoDataAsset> AmmoDataAsset;
 
 	UPROPERTY(ReplicatedUsing = OnRep_IsEmpty)
 	bool bIsEmpty;
+
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> Mesh;
 
 public:
 	FORCEINLINE bool GetIsEmpty() const { return bIsEmpty; }

@@ -22,11 +22,11 @@ void AAmmo::BeginPlay()
 
 }
 
-void AAmmo::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
+//void AAmmo::Tick(float DeltaTime)
+//{
+//	Super::Tick(DeltaTime);
+//
+//}
 
 void AAmmo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
