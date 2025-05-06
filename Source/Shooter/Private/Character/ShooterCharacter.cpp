@@ -357,10 +357,39 @@ AWeapon* AShooterCharacter::GetEquippedWeapon() const
 	return CharacterCombat != nullptr ? CharacterCombat->EquippedWeapon: nullptr;
 }
 
-//float AShooterCharacter::GetAllowedAO_Yaw() const
-//{
-//	return (!bIsCrouched && !bIsProned) || bIsCrouched ? 90.0f : 45.0f;
-//}
+float AShooterCharacter::GetAllowedAO_Yaw() const
+{
+	return (!bIsCrouched && !bIsProned) || bIsCrouched ? 90.0f : 45.0f;
+}
+
+void AShooterCharacter::UpdateAO_Pitch(float ControlRotationPitch, float DeltaTime)
+{
+	AO_Pitch = ControlRotationPitch;
+	if (AO_Pitch > 90.0f)
+	{
+		FVector2D InRange = FVector2D(270.0, 360.0);
+		FVector2D OutRange = FVector2D(-90.0, 0.0);
+		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
+	}
+}
+
+void AShooterCharacter::UpdateAO_Yaw(float ControlRotationYaw, float DeltaTime)
+{
+	AO_Yaw = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0f, ControlRotationYaw, 0.0f), FRotator(0.0f, ReferenceActorRotationYaw, 0.0f)).Yaw;
+
+	float AllowedAO_Yaw = GetAllowedAO_Yaw();
+	float ExceedingAO_Yaw = AO_Yaw > AllowedAO_Yaw ? AO_Yaw - AllowedAO_Yaw : AO_Yaw < -AllowedAO_Yaw ? AO_Yaw + AllowedAO_Yaw : 0.0f;
+	RootJointYaw = ExceedingAO_Yaw - AO_Yaw;
+
+	if (ExceedingAO_Yaw != 0.0f && TurningDirection == ETurningDirection::TD_None)
+	{
+		TurningDirection = ExceedingAO_Yaw > 0.0f ? ETurningDirection::TD_Right : ETurningDirection::TD_Left;
+		if (TurningAnimTimeline && !TurningAnimTimeline->IsPlaying())
+		{
+			TurningAnimTimeline->PlayFromStart();
+		}
+	}
+}
 
 //float AShooterCharacter::GetAO_Pitch(float CurrentPitch, float DeltaTime) const
 //{
@@ -545,36 +574,6 @@ void AShooterCharacter::RecalculatePronedEyeHeight()
 	}
 }
 
-void AShooterCharacter::OnControllerUpdated(float DeltaTime)
-{
-	const FRotator ControlRotation = GetControlRotation();
-	const float AllowedAO_Yaw = (!bIsCrouched && !bIsProned) || bIsCrouched ? 90.0f : 45.0f;
-
-	AO_Pitch = ControlRotation.Pitch;
-	if (AO_Pitch > 90.0f)
-	{
-		FVector2D InRange = FVector2D(270.0, 360.0);
-		FVector2D OutRange = FVector2D(-90.0, 0.0);
-		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
-	}
-
-	AO_Yaw = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0f, ControlRotation.Yaw, 0.0f), FRotator(0.0f, AO_YawReference, 0.0f)).Yaw;
-
-	float ExceedingAO_Yaw = AO_Yaw > AllowedAO_Yaw ? AO_Yaw - AllowedAO_Yaw : AO_Yaw < -AllowedAO_Yaw ? AO_Yaw + AllowedAO_Yaw : 0.0f;
-
-	RootJointYaw = ExceedingAO_Yaw - AO_Yaw;
-
-	if (ExceedingAO_Yaw != 0.0f && TurningDirection == ETurningDirection::TD_None)
-	{
-		TurningDirection = ExceedingAO_Yaw > 0.0f ? ETurningDirection::TD_Right : ETurningDirection::TD_Left;
-		if (TurningAnimTimeline && !TurningAnimTimeline->IsPlaying())
-		{
-			TurningAnimTimeline->PlayFromStart();
-		}
-	}
-
-}
-
 void AShooterCharacter::OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity)
 {
 	const FVector Velocity = GetVelocity();
@@ -584,7 +583,10 @@ void AShooterCharacter::OnMovementUpdated(float DeltaTime, const FVector& OldLoc
 	
 	if (bHasVelocity)
 	{
-		AO_YawReference = FMath::RInterpTo(FRotator(0.0f, AO_YawReference, 0.0f), FRotator(0.0f, ActorRotation.Yaw, 0.0f), DeltaTime, 15.0f).Yaw;
+		ReferenceActorRotationYaw = FMath::RInterpTo(FRotator(0.0f, ReferenceActorRotationYaw, 0.0f), FRotator(0.0f, ActorRotation.Yaw, 0.0f), DeltaTime, 15.0f).Yaw;
+
+		float VelocityYaw = UKismetMathLibrary::MakeRotFromX(Velocity).Yaw;
+		VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, ActorRotation.Yaw, 0.0)).Yaw;
 	}
 
 	if (GetCombatAction() == ECombatAction::CA_Idle && !bIsThirdAction)
@@ -779,8 +781,8 @@ void AShooterCharacter::Handle_OnWalkAnimTimelineRollRotationUpdate(float Value)
 
 void AShooterCharacter::Handle_OnTurningAnimTimelineUpdate(float Value)
 {
-	float DeltaReference = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0f, GetActorRotation().Yaw, 0.0f), FRotator(0.0f, AO_YawReference, 0.0f)).Yaw;
-	AO_YawReference += DeltaReference * Value;
+	float DeltaReference = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0f, GetActorRotation().Yaw, 0.0f), FRotator(0.0f, ReferenceActorRotationYaw, 0.0f)).Yaw;
+	ReferenceActorRotationYaw += DeltaReference * Value;
 }
 
 void AShooterCharacter::Handle_OnTurningAnimTimelineFinished()

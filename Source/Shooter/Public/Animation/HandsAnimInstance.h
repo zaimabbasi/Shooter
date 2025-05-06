@@ -43,20 +43,7 @@ public:
 
 private:
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
-	TObjectPtr<USkeletalMeshComponent> OwningComponent;
-
-	//TObjectPtr<AController> Controller;
-	//TObjectPtr<AWeapon> EquippedWeapon;
-	//bool bIsLocallyControlled;
-	//bool bIsTransition;
-	//float ActorRotationYawLast;
-	//uint8 RemoteViewYaw;
-	//FRotator BaseAimRotation;
-	//FRotator ControlRotation;
-	//FRotator ActorRotation;
-	//FVector Velocity;
-	//float LeaningTargetAngle;
-	//float LeaningInterpSpeed;
+	TObjectPtr<USkeletalMeshComponent> HandsMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> CharacterMesh;
@@ -65,7 +52,7 @@ private:
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	bool bHasVelocity;
+	bool bIsAiming;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsProned;
@@ -74,7 +61,7 @@ private:
 	bool bIsSprinting;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	bool bIsAiming;
+	bool bHasVelocity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsThirdAction;

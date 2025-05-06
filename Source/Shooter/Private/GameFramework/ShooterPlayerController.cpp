@@ -18,7 +18,8 @@ void AShooterPlayerController::UpdateRotation(float DeltaTime)
 
 	if (ShooterCharacter)
 	{
-		ShooterCharacter->OnControllerUpdated(DeltaTime);
+		ShooterCharacter->UpdateAO_Pitch(ControlRotation.Pitch, DeltaTime);
+		ShooterCharacter->UpdateAO_Yaw(ControlRotation.Yaw, DeltaTime);
 	}
 }
 

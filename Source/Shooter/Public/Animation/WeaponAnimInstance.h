@@ -95,8 +95,8 @@ protected:
 private:
 	//float CalculateVelocityYawOffsetAlpha(float VelocityYawOffset);
 	//void CalculateSway(FRotator DeltaRotation);
-	void InterpBackSway(float DeltaSeconds, float InterpSpeed);
-	void CalculateIKAlpha(float DeltaSeconds);
+	//void InterpBackSway(float DeltaSeconds, float InterpSpeed);
+	//void CalculateIKAlpha(float DeltaSeconds);
 
 public:
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceActionEnd;
@@ -123,8 +123,20 @@ public:
 private:
 	TObjectPtr<AWeapon> Weapon;
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
+	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
 	FRotator CharacterControlRotation;
 	FRotator CharacterControlRotationLast;
+	int8 IKBlendInOutFlag;
+	float IKBlendDuration;
+	float IKBlendDurationCounter;
+	/*FRotator CharacterViewRotation;
+	FRotator CharacterViewRotationLast;*/
+	float ProceduralAnimHorizontalMovement;
+	float ProceduralAnimVerticalMovement;
+	float ProceduralAnimRollRotation;
+	float SwayHorizontalMovement;
+	float SwayVerticalMovement;
+	float SwayRollRotation;
 	//TObjectPtr<AMod> AttachedForegrip;
 	//TObjectPtr<AMod> AttachedHandguard;
 	//TObjectPtr<AAmmo> PatronInWeaponAmmo;
@@ -188,6 +200,9 @@ private:
 	FTransform RCollarboneTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FTransform LHandMakerTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform LPalmTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -210,22 +225,5 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float IKAlpha;
-
-	int8 IKBlendInOutFlag;
-
-	float IKBlendDuration;
-
-	float IKBlendDurationCounter;
-
-	FRotator CharacterViewRotation;
-	FRotator CharacterViewRotationLast;
-
-	float ProceduralAnimHorizontalMovement;
-	float ProceduralAnimVerticalMovement;
-	float ProceduralAnimRollRotation;
-
-	float SwayHorizontalMovement;
-	float SwayVerticalMovement;
-	float SwayRollRotation;
 
 };

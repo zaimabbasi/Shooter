@@ -14,9 +14,9 @@ class SHOOTER_API AShooterPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
-	virtual void Init();
 	virtual void UpdateRotation(float DeltaTime);
 	virtual void OnRep_Pawn();
+	virtual void Init();
 
 protected:
 	virtual void OnPossess(APawn* aPawn) override;

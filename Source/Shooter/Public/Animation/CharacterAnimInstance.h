@@ -138,31 +138,10 @@ public:
 
 private:
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
-	TObjectPtr<USkeletalMeshComponent> OwningComponent;
-	
-	/*FRotator ActorRotationTarget;
-	FRotator ActorRotationInterp;
-	float ActorRotationInterpSpeed;*/
-
-	//TObjectPtr<AController> Controller;
-	//TObjectPtr<AWeapon> EquippedWeapon;
-	//bool bIsLocallyControlled;
-	//bool bIsTransition;
-	//uint8 RemoteViewYaw;
-	//FRotator BaseAimRotation;
-	//FRotator ControlRotation;
-	//FRotator ActorRotation;
-	//FVector Velocity;
-	//FVector CurrentAcceleration;
+	TObjectPtr<USkeletalMeshComponent> CharacterMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> HandsMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	bool bIsAccelerating;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	bool bHasVelocity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsCrouched;
@@ -177,6 +156,12 @@ private:
 	bool bIsSprinting;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	bool bIsAccelerating;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	bool bHasVelocity;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsThirdAction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -189,9 +174,6 @@ private:
 	bool bIsEquippedWeaponOneHanded;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float LeaningTransitionDuration;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float AO_Pitch;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -202,6 +184,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float VelocityYawOffset;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float LeaningTransitionDuration;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	ECombatAction CombatAction;

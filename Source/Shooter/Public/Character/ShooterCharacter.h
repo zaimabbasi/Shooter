@@ -39,9 +39,10 @@ public:
 	virtual void Init();
 	ECombatAction GetCombatAction() const;
 	AWeapon* GetEquippedWeapon() const;
-
-	void OnControllerUpdated(float DeltaTime);
-	void OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity);
+	virtual float GetAllowedAO_Yaw() const;
+	virtual void UpdateAO_Pitch(float ControlRotationPitch, float DeltaTime);
+	virtual void UpdateAO_Yaw(float ControlRotationYaw, float DeltaTime);
+	virtual void OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity);
 
 	UFUNCTION()
 	virtual void OnRep_IsProned();
@@ -557,15 +558,16 @@ protected:
 	ETurningDirection TurningDirection;
 
 	UPROPERTY(Replicated)
-	float RootJointYaw;
-
-	UPROPERTY(Replicated)
 	float AO_Pitch;
 
 	UPROPERTY(Replicated)
 	float AO_Yaw;
 
-	float AO_YawReference;
+	UPROPERTY(Replicated)
+	float RootJointYaw;
+
+	float ReferenceActorRotationYaw;
+	float VelocityYawOffset;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -596,6 +598,7 @@ public:
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetRootJointYaw() const { return RootJointYaw; }
+	FORCEINLINE float GetVelocityYawOffset() const { return VelocityYawOffset; }
 	FORCEINLINE float GetLeaningInterpSpeed() const { return LeaningInterpSpeed; }
 	FORCEINLINE float GetLeaningTargetAngle() const { return LeaningTargetAngle; }
 	FORCEINLINE float GetLeaningTransitionDuration() const { return LeaningTransitionDuration; }
