@@ -81,11 +81,12 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	virtual FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
 	virtual void Aim();
 	virtual void UnAim();
 	virtual bool CanAim() const;
 	virtual bool CanLean() const;
+
+	virtual FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
 
 	virtual void OnCharacterAimAction(const FInputActionValue& Value);
 	virtual void OnCharacterAlterAction(const FInputActionValue& Value);
@@ -111,11 +112,11 @@ protected:
 	UFUNCTION(Server, Reliable)
 	virtual void Server_Lean(ELeaningDirection NewLeaningDirection);
 
-	UFUNCTION(Server, Reliable)
-	virtual void Server_EquipWeaponProgressive(AWeapon* WeaponToEquip);
+	/*UFUNCTION(Server, Reliable)
+	virtual void Server_EquipWeaponProgressive(AWeapon* WeaponToEquip);*/
 
-	UFUNCTION(Server, Reliable)
-	virtual void Server_HolsterWeaponProgressive();
+	/*UFUNCTION(Server, Reliable)
+	virtual void Server_HolsterWeaponProgressive();*/
 
 	UFUNCTION(Server, Reliable)
 	virtual void Server_CheckWeaponChamber();
@@ -250,64 +251,67 @@ protected:
 	virtual void Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted();
 
 	UFUNCTION()
-	virtual void Handle_OnCombatComponentActionEnd(AWeapon* Weapon);
+	virtual void Handle_OnCombatComponentEquippedWeaponChanged(AWeapon* Weapon);
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentActionStart(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentActionEnd(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentIdle(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentActionStart(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentIdleToOut(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentIdle(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentOut(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentIdleToOut(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentOutToIdle(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentOut(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentOutToIdleArm(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentOutToIdle(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponChamberCheck(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentOutToIdleArm(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponFire(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponChamberCheck(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponFireDry(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponFire(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponFiremode(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponFireDry(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponFiremodeCheck(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponFiremode(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponMagCheck(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponFiremodeCheck(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponMagIn(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponMagCheck(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponMagOut(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponMagIn(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponReloadCharge(AWeapon* Weapon);
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponMagOut(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnHandsAnimInstanceIdle();
+	/*UFUNCTION()
+	virtual void Handle_OnCombatComponentWeaponReloadCharge(AWeapon* Weapon);*/
 
-	UFUNCTION()
-	virtual void Handle_OnHandsAnimInstanceIdleToOut();
+	/*UFUNCTION()
+	virtual void Handle_OnHandsAnimInstanceIdle();*/
 
-	UFUNCTION()
-	virtual void Handle_OnHandsAnimInstanceOut();
+	/*UFUNCTION()
+	virtual void Handle_OnHandsAnimInstanceIdleToOut();*/
 
-	UFUNCTION()
-	virtual void Handle_OnHandsAnimInstanceOutToIdle();
+	/*UFUNCTION()
+	virtual void Handle_OnHandsAnimInstanceOut();*/
+
+	/*UFUNCTION()
+	virtual void Handle_OnHandsAnimInstanceOutToIdle();*/
 
 	UFUNCTION()
 	virtual void Handle_OnInventoryComponentWeaponArrayReplicated();
@@ -552,7 +556,7 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_LeaningDirection)
 	ELeaningDirection LeaningDirection;
 
-	TObjectPtr<AWeapon> NextWeaponToEquip;
+	//TObjectPtr<AWeapon> NextWeaponToEquip;
 
 	UPROPERTY(Replicated)
 	ETurningDirection TurningDirection;
@@ -564,7 +568,7 @@ protected:
 	float AO_Yaw;
 
 	UPROPERTY(Replicated)
-	float RootJointYaw;
+	float RootBoneYaw;
 
 	float ReferenceActorRotationYaw;
 	float VelocityYawOffset;
@@ -597,7 +601,7 @@ public:
 	FORCEINLINE ETurningDirection GetTurningDirection() const { return TurningDirection; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
-	FORCEINLINE float GetRootJointYaw() const { return RootJointYaw; }
+	FORCEINLINE float GetRootBoneYaw() const { return RootBoneYaw; }
 	FORCEINLINE float GetVelocityYawOffset() const { return VelocityYawOffset; }
 	FORCEINLINE float GetLeaningInterpSpeed() const { return LeaningInterpSpeed; }
 	FORCEINLINE float GetLeaningTargetAngle() const { return LeaningTargetAngle; }

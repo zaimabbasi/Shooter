@@ -8,6 +8,7 @@
 #define BASE_HUMAN_R_COLLARBONE_SOCKET_NAME					(TEXT("Base-HumanRCollarbone"))
 #define BASE_HUMAN_R_PALM_SOCKET_NAME						(TEXT("Base-HumanRPalm"))
 #define BASE_HUMAN_RIBCAGE_SOCKET_NAME						(TEXT("Base-HumanRibcage"))
+#define BASE_HUMAN_SPINE3_SOCKET_NAME						(TEXT("Base-HumanSpine3"))
 #define CAMERA_ANIMATED_SOCKET_NAME							(TEXT("Camera_animated"))
 #define CAMERA_ANIMATED_3RD_SOCKET_NAME						(TEXT("Camera_animated_3rd"))
 #define IK_S_L_PALM_SOCKET_NAME								(TEXT("IK_S_LPalm"))
@@ -45,6 +46,7 @@
 
 // Weapon Types
 #define AIM_CAMERA_SOCKET_NAME								(TEXT("aim_camera"))
+#define WEAPON_SOCKET_NAME									(TEXT("weapon"))
 #define WEAPON_L_COLLARBONE_MARKER_SOCKET_NAME				(TEXT("weapon_LCollarbone_marker"))
 #define WEAPON_L_HAND_MARKER_SOCKET_NAME					(TEXT("weapon_L_hand_marker"))	// Sticks (sometimes not) with the palm in animations
 #define WEAPON_L_IK_MARKER_SOCKET_NAME						(TEXT("weapon_L_IK_marker"))	// Sticks with the palm in animations

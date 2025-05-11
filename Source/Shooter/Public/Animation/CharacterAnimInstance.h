@@ -180,7 +180,7 @@ private:
 	float AO_Yaw;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float RootJointYaw;
+	float RootBoneYaw;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float VelocityYawOffset;

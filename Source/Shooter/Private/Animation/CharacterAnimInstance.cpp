@@ -40,7 +40,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsSprinting = ShooterCharacter->bIsSprinting;
 	AO_Pitch = ShooterCharacter->GetAO_Pitch();
 	AO_Yaw = ShooterCharacter->GetAO_Yaw();
-	RootJointYaw = ShooterCharacter->GetRootJointYaw();
+	RootBoneYaw = ShooterCharacter->GetRootBoneYaw();
 	VelocityYawOffset = ShooterCharacter->GetVelocityYawOffset();
 	LeaningTransitionDuration = ShooterCharacter->GetLeaningTransitionDuration();
 	CombatAction = ShooterCharacter->GetCombatAction();
@@ -71,16 +71,16 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	if (CharacterMesh && HandsMesh && !bIsThirdAction)
 	{
 		BendGoalLeftTransform = HandsMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		BendGoalLeftTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, ROOT_JOINT_SOCKET_NAME, BendGoalLeftTransform);
+		BendGoalLeftTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, BASE_HUMAN_SPINE3_SOCKET_NAME, BendGoalLeftTransform);
 
 		BendGoalRightTransform = HandsMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		BendGoalRightTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, ROOT_JOINT_SOCKET_NAME, BendGoalRightTransform);
+		BendGoalRightTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, BASE_HUMAN_SPINE3_SOCKET_NAME, BendGoalRightTransform);
 
 		LPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		LPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, ROOT_JOINT_SOCKET_NAME, LPalmTransform);
+		LPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, BASE_HUMAN_SPINE3_SOCKET_NAME, LPalmTransform);
 
 		RPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, ROOT_JOINT_SOCKET_NAME, RPalmTransform);
+		RPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, BASE_HUMAN_SPINE3_SOCKET_NAME, RPalmTransform);
 	}
 
 }

@@ -51,6 +51,17 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		return;
 	}
+
+	/*if (!bIsHolster)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Iterating %s"), *Weapon->GetFName().ToString());
+		TArray<AActor*> AttachedActors;
+		Weapon->GetAttachedActors(AttachedActors, false, false);
+		for (AActor* AttachedActor : AttachedActors)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *AttachedActor->GetFName().ToString());
+		}
+	}*/
 	
 	//float CharacterSwayHorizontalMovementLimit = ShooterCharacter->GetSwayHorizontalMovementLimit();
 	//float CharacterSwayVerticalMovementLimit = ShooterCharacter->GetSwayVerticalMovementLimit();
@@ -128,6 +139,9 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	SwayRollRotation += DeltaCharacterControlRotation.Yaw * ShooterCharacter->GetSwayRollRotationSensitivity();
 	SwayRollRotation = FMath::Clamp(SwayRollRotation, -CharacterSwayRollRotationLimit, CharacterSwayRollRotationLimit);
 
+	AO_Pitch = ShooterCharacter->GetAO_Pitch();
+	AO_Yaw = ShooterCharacter->GetAO_Yaw();
+
 	// Old
 	/*if (ForegripHandguardMesh)
 	{
@@ -150,53 +164,61 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 	}*/
 	// New
+	if (CharacterMesh)
+	{
+		FTransform CharacterRibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		RootBoneLocation = FShooterUtility::TransformToBoneSpace(CharacterMesh, ROOT_JOINT_SOCKET_NAME, CharacterRibcageTransform).GetLocation();
+	}
 	if (WeaponMesh)
 	{
-		FName RootBoneName = WeaponMesh->GetBoneName(0);
 		if (ForegripHandguardMesh)
 		{
 			LPalmTransform = ForegripHandguardMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			LPalmTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, RootBoneName, LPalmTransform);
+			LPalmTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, LPalmTransform);
 		}
 		if (CharacterMesh && bIsCharacterThirdAction)
 		{
+			/*LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			LCollarboneTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WeaponMesh->GetParentBone(BASE_HUMAN_L_COLLARBONE_SOCKET_NAME), LCollarboneTransform);*/
+
+			/*RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			RCollarboneTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WeaponMesh->GetParentBone(BASE_HUMAN_R_COLLARBONE_SOCKET_NAME), RCollarboneTransform);*/
+
+			WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			WeaponRootAnimTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_ROOT_SOCKET_NAME, WeaponRootAnimTransform);
+
 			BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			BendGoalLeftTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, RootBoneName, BendGoalLeftTransform);
+			BendGoalLeftTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, BendGoalLeftTransform);
 
 			BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			BendGoalRightTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, RootBoneName, BendGoalRightTransform);
-
-			LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			LCollarboneTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, RootBoneName, LCollarboneTransform);
-
-			RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			RCollarboneTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, RootBoneName, RCollarboneTransform);
+			BendGoalRightTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, BendGoalRightTransform);
 
 			if ((bIsCharacterProned && bHasCharacterVelocity) || (bIsCharacterSprinting && (bIsPistol || bIsOneHanded)))
 			{
 				LPalmTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-				LPalmTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, RootBoneName, LPalmTransform);
+				LPalmTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, LPalmTransform);
 
 				RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-				RPalmTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, RootBoneName, RPalmTransform);
+				RPalmTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, RPalmTransform);
 			}
-
-			WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			WeaponRootAnimTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, RootBoneName, WeaponRootAnimTransform);
 		}
 	}
 
 	// Disable for now until new transform logic is set
-	/*if (!bIsHolster && CombatAction == ECombatAction::CA_Idle && !bIsCharacterThirdAction)
+	if (!bIsHolster && CombatAction == ECombatAction::CA_Idle && !bIsCharacterThirdAction)
 	{
-		FVector ProceduralAnimLocation;
-		FRotator ProceduralAnimRotation;
-		ProceduralAnimLocation.X = ProceduralAnimHorizontalMovement + SwayHorizontalMovement;
-		ProceduralAnimLocation.Z = ProceduralAnimVerticalMovement - SwayVerticalMovement;
-		ProceduralAnimRotation.Pitch = ProceduralAnimRollRotation + SwayRollRotation;
-		WeaponRootAnimTransform.SetLocation(ProceduralAnimLocation);
-		WeaponRootAnimTransform.SetRotation(FQuat(ProceduralAnimRotation));
-	}*/
+		ProceduralAnimHorizontalMovement += SwayHorizontalMovement;
+		ProceduralAnimVerticalMovement += SwayVerticalMovement;
+		ProceduralAnimRollRotation += SwayRollRotation;
+		WeaponRootAnimTransform = FTransform(FRotator(ProceduralAnimRollRotation, 0.0f, 0.0f), FVector(ProceduralAnimHorizontalMovement, 0.0f, ProceduralAnimVerticalMovement), FVector::OneVector);
+		//FVector ProceduralAnimLocation;
+		//FRotator ProceduralAnimRotation;
+		//ProceduralAnimLocation.X = ProceduralAnimHorizontalMovement /*+ SwayHorizontalMovement*/;
+		//ProceduralAnimLocation.Z = ProceduralAnimVerticalMovement /*- SwayVerticalMovement*/;
+		//ProceduralAnimRotation.Pitch = ProceduralAnimRollRotation /*+ SwayRollRotation*/;
+		//WeaponRootAnimTransform.SetLocation(ProceduralAnimLocation);
+		//WeaponRootAnimTransform.SetRotation(FQuat(ProceduralAnimRotation));
+	}
 
 	//CharacterMesh = ShooterCharacter != nullptr ? ShooterCharacter->GetMesh() : nullptr;
 	//bIsCharacterProned = ShooterCharacter && ShooterCharacter->bIsProned;

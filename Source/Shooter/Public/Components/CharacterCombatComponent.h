@@ -6,9 +6,11 @@
 #include "Components/ActorComponent.h"
 #include "CharacterCombatComponent.generated.h"
 
+class AShooterCharacter;
 class AWeapon;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatComponentWeaponAnimNotifySignature, AWeapon*, Weapon);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatComponentWeaponAnimNotifySignature, AWeapon*, Weapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatComponentEquippedWeaponChangedSignature, AWeapon*, Weapon);
 
 UENUM(BlueprintType)
 enum class ECombatAction : uint8
@@ -44,6 +46,14 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	//virtual void EquipWeapon(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName = NAME_None);
+	virtual void EquipWeapon(AWeapon* WeaponToEquip);
+	//virtual void UnequipWeapon(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName);
+	virtual void HolsterWeapon();
+
+protected:
+	virtual void BeginPlay() override;
+
 	virtual void ActionEnd();
 	virtual void ActionStart();
 	virtual void Idle();
@@ -59,11 +69,26 @@ public:
 	virtual void WeaponMagOut();
 	virtual void WeaponReloadCharge();
 
-	virtual void EquipWeapon(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName = NAME_None);
-	virtual void UnequipWeapon(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName);
+	virtual void EquipNextWeapon();
+	virtual void UnequipWeapon();
 
-protected:
-	virtual void BeginPlay() override;
+	UFUNCTION(Server, Reliable)
+	virtual void Server_EquipWeapon(AWeapon* WeaponToEquip);
+
+	UFUNCTION(Server, Reliable)
+	virtual void Server_HolsterWeapon();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterHandsAnimInstanceIdle();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterHandsAnimInstanceIdleToOut();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterHandsAnimInstanceOut();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterHandsAnimInstanceOutToIdle();
 
 	UFUNCTION()
 	virtual void Handle_OnWeaponActionEnd(AWeapon* Weapon);
@@ -120,7 +145,7 @@ protected:
 	virtual void OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon);
 
 public:
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionEnd;
+	/*FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionEnd;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionStart;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponChamberCheck;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponFire;
@@ -135,7 +160,9 @@ public:
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOut;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOutToIdle;
 	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOutToIdleArm;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponReloadCharge;
+	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponReloadCharge;*/
+
+	FOnCombatComponentEquippedWeaponChangedSignature OnCombatComponentEquippedWeaponChanged;
 
 protected:
 	/*UPROPERTY(Replicated)
@@ -146,6 +173,8 @@ protected:
 	TObjectPtr<AWeapon> NextWeapon;
 
 private:
+	TObjectPtr<AShooterCharacter> ShooterCharacter;
+
 	UPROPERTY(ReplicatedUsing = OnRep_CombatAction)
 	ECombatAction CombatAction;
 

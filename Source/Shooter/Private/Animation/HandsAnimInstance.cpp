@@ -76,31 +76,31 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	// New
 	if (CharacterMesh)
 	{
-		RibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RibcageTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, ROOT_JOINT_SOCKET_NAME, RibcageTransform);
+		FTransform CharacterRibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		RootBoneLocation = FShooterUtility::TransformToBoneSpace(CharacterMesh, ROOT_JOINT_SOCKET_NAME, CharacterRibcageTransform).GetLocation();
 
 		if (HandsMesh && bIsThirdAction && !bIsWeaponEquipped)
 		{
-			LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			LCollarboneTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME, LCollarboneTransform);
+			/*LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			LCollarboneTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME, LCollarboneTransform);*/
 
-			RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			RCollarboneTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME, RCollarboneTransform);
+			/*RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			RCollarboneTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME, RCollarboneTransform);*/
 
-			WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			WeaponRootAnimTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME, WeaponRootAnimTransform);
+			/*WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			WeaponRootAnimTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_ROOT_SOCKET_NAME, WeaponRootAnimTransform);*/
 
 			BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			BendGoalLeftTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME, BendGoalLeftTransform);
+			BendGoalLeftTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_SOCKET_NAME, BendGoalLeftTransform);
 
 			BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			BendGoalRightTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME, BendGoalRightTransform);
+			BendGoalRightTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_SOCKET_NAME, BendGoalRightTransform);
 
 			LPalmTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			LPalmTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME, LPalmTransform);
+			LPalmTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_SOCKET_NAME, LPalmTransform);
 
 			RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			RPalmTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME, RPalmTransform);
+			RPalmTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_SOCKET_NAME, RPalmTransform);
 
 		}
 	}
