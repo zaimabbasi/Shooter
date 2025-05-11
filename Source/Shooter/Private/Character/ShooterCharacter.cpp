@@ -157,6 +157,10 @@ void AShooterCharacter::PostInitializeComponents()
 			CharacterAnimInstance->OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted);
 		}
 	}
+	if (LegsMesh)
+	{
+		LegsMesh->SetLeaderPoseComponent(GetMesh());
+	}
 	// Moved to character combat component
 	/*if (HandsMesh)
 	{
