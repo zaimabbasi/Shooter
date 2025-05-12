@@ -87,9 +87,9 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	CharacterMesh = ShooterCharacter->GetMesh();
 	bIsCharacterProned = ShooterCharacter->bIsProned;
 	bIsCharacterSprinting = ShooterCharacter->bIsSprinting;
-	ProceduralAnimHorizontalMovement = ShooterCharacter->GetProceduralAnimHorizontalMovement();
-	ProceduralAnimVerticalMovement = ShooterCharacter->GetProceduralAnimVerticalMovement();
-	ProceduralAnimRollRotation = ShooterCharacter->GetProceduralAnimRollRotation();
+	//ProceduralAnimHorizontalMovement = ShooterCharacter->GetProceduralAnimHorizontalMovement();
+	//ProceduralAnimVerticalMovement = ShooterCharacter->GetProceduralAnimVerticalMovement();
+	//ProceduralAnimRollRotation = ShooterCharacter->GetProceduralAnimRollRotation();
 
 	bHasCharacterVelocity = ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
 
@@ -118,7 +118,12 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		}
 	}
 
-	float InterpSpeed = 5.0f;
+	float InterpSpeed = 25.0f;
+	ProceduralAnimHorizontalMovement = FMath::FInterpTo(ProceduralAnimHorizontalMovement, ShooterCharacter->GetProceduralAnimHorizontalMovement(), DeltaSeconds, InterpSpeed);
+	ProceduralAnimVerticalMovement = FMath::FInterpTo(ProceduralAnimVerticalMovement, ShooterCharacter->GetProceduralAnimVerticalMovement(), DeltaSeconds, InterpSpeed);
+	ProceduralAnimRollRotation = FMath::FInterpTo(ProceduralAnimRollRotation, ShooterCharacter->GetProceduralAnimRollRotation(), DeltaSeconds, InterpSpeed);
+
+	InterpSpeed = 5.0f;
 	SwayHorizontalMovement = FMath::FInterpTo(SwayHorizontalMovement, 0.0f, DeltaSeconds, InterpSpeed);
 	SwayVerticalMovement = FMath::FInterpTo(SwayVerticalMovement, 0.0f, DeltaSeconds, InterpSpeed);
 	SwayRollRotation = FMath::FInterpTo(SwayRollRotation, 0.0f, DeltaSeconds, InterpSpeed);
@@ -204,20 +209,9 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		}
 	}
 
-	// Disable for now until new transform logic is set
 	if (!bIsHolster && CombatAction == ECombatAction::CA_Idle && !bIsCharacterThirdAction)
 	{
-		ProceduralAnimHorizontalMovement += SwayHorizontalMovement;
-		ProceduralAnimVerticalMovement += SwayVerticalMovement;
-		ProceduralAnimRollRotation += SwayRollRotation;
-		WeaponRootAnimTransform = FTransform(FRotator(ProceduralAnimRollRotation, 0.0f, 0.0f), FVector(ProceduralAnimHorizontalMovement, 0.0f, ProceduralAnimVerticalMovement), FVector::OneVector);
-		//FVector ProceduralAnimLocation;
-		//FRotator ProceduralAnimRotation;
-		//ProceduralAnimLocation.X = ProceduralAnimHorizontalMovement /*+ SwayHorizontalMovement*/;
-		//ProceduralAnimLocation.Z = ProceduralAnimVerticalMovement /*- SwayVerticalMovement*/;
-		//ProceduralAnimRotation.Pitch = ProceduralAnimRollRotation /*+ SwayRollRotation*/;
-		//WeaponRootAnimTransform.SetLocation(ProceduralAnimLocation);
-		//WeaponRootAnimTransform.SetRotation(FQuat(ProceduralAnimRotation));
+		WeaponRootAnimTransform = FTransform(FRotator(ProceduralAnimRollRotation + SwayRollRotation, 0.0f, 0.0f), FVector(ProceduralAnimHorizontalMovement + SwayHorizontalMovement, 0.0f, ProceduralAnimVerticalMovement + SwayVerticalMovement), FVector::OneVector);
 	}
 
 	//CharacterMesh = ShooterCharacter != nullptr ? ShooterCharacter->GetMesh() : nullptr;

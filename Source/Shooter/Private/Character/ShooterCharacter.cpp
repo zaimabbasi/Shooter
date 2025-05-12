@@ -73,15 +73,15 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	OnTurningAnimTimelineUpdate.BindUFunction(this, TEXT("Handle_OnTurningAnimTimelineUpdate"));
 	OnTurningAnimTimelineFinished.BindUFunction(this, TEXT("Handle_OnTurningAnimTimelineFinished"));
 
-	IdleAnimMaxHorizontalMovement = 0.2f;
-	IdleAnimMinHorizontalMovement = -0.2f;
+	IdleAnimMaxHorizontalMovement = 0.15f;
+	IdleAnimMinHorizontalMovement = -0.15f;
 	IdleAnimMaxVerticalMovement = 0.25f;
 	IdleAnimMinVerticalMovement = -0.5f;
 	IdleAnimMaxRollRotation = 1.5f;
 	IdleAnimMinRollRotation = -1.5f;
 
-	WalkAnimMaxHorizontalMovement = 0.3f;
-	WalkAnimMinHorizontalMovement = -0.3f;
+	WalkAnimMaxHorizontalMovement = 0.2f;
+	WalkAnimMinHorizontalMovement = -0.2f;
 	WalkAnimMaxVerticalMovement = 0.25f;
 	WalkAnimMinVerticalMovement = -0.5f;
 	WalkAnimMaxRollRotation = 2.5f;
@@ -601,7 +601,7 @@ void AShooterCharacter::OnMovementUpdated(float DeltaTime, const FVector& OldLoc
 		VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, ActorRotation.Yaw, 0.0)).Yaw;
 	}
 
-	if (GetCombatAction() == ECombatAction::CA_Idle && !bIsThirdAction)
+	if (GetCombatAction() == ECombatAction::CA_Idle && GetEquippedWeapon() && !bIsThirdAction)
 	{
 		if (bHasVelocity)
 		{
