@@ -6,8 +6,6 @@
 #include "Animation/AnimInstance.h"
 #include "WeaponAnimInstance.generated.h"
 
-//class AAmmo;
-//class AMod;
 class AShooterCharacter;
 class AWeapon;
 enum class ECombatAction : uint8;
@@ -93,10 +91,15 @@ protected:
 	void AnimNotify_WeaponLIKMarker();
 
 private:
+	void CalculateIKAlpha(float DeltaSeconds);
+	void CalculateSway(float DeltaSeconds);
+	void CalculateTransforms();
+	void CalculateRootBoneLocation();
+	void CalculateLPalmTransform();
+	void CalculateThirdActionTransforms();
+	void CalculateWeaponRootAnimTransform();
+	bool ShouldCopyCharacterIKSLPalm();
 	//float CalculateVelocityYawOffsetAlpha(float VelocityYawOffset);
-	//void CalculateSway(FRotator DeltaRotation);
-	//void InterpBackSway(float DeltaSeconds, float InterpSpeed);
-	//void CalculateIKAlpha(float DeltaSeconds);
 
 public:
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceActionEnd;
@@ -124,35 +127,18 @@ private:
 	TObjectPtr<AWeapon> Weapon;
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
-	FRotator CharacterControlRotation;
-	FRotator CharacterControlRotationLast;
+	FRotator ControlRotation;
+	FRotator ControlRotationLast;
 	int8 IKBlendInOutFlag;
 	float IKBlendDuration;
 	float IKBlendDurationCounter;
-	/*FRotator CharacterViewRotation;
-	FRotator CharacterViewRotationLast;*/
-	float ProceduralAnimHorizontalMovement;
-	float ProceduralAnimVerticalMovement;
-	float ProceduralAnimRollRotation;
+	//float ProceduralAnimHorizontalMovement;
+	//float ProceduralAnimVerticalMovement;
+	//float ProceduralAnimRollRotation;
 	float SwayHorizontalMovement;
 	float SwayVerticalMovement;
 	float SwayRollRotation;
-	//TObjectPtr<AMod> AttachedForegrip;
-	//TObjectPtr<AMod> AttachedHandguard;
-	//TObjectPtr<AAmmo> PatronInWeaponAmmo;
-
-	//TObjectPtr<AWeapon> CharacterEquippedWeapon;
-	//FRotator CharacterBaseAimRotation;
-	//FRotator CharacterBaseAimRotationLast;
-	//FVector CharacterVelocity;
-	//ECombatAction CharacterCombatAction;
-	//bool bIsCharacterTransition;
-	//float CharacterSwayHorizontalMovementLimit;
-	//float CharacterSwayVerticalMovementLimit;
-	//float CharacterSwayRollRotationLimit;
-	//float CharacterSwayHorizontalMovementSensitivity;
-	//float CharacterSwayVerticalMovementSensitivity;
-	//float CharacterSwayRollRotationSensitivity;
+	float SwayInterpSpeed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> CharacterMesh;
