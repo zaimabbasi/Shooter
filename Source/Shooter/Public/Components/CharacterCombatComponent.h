@@ -9,7 +9,6 @@
 class AShooterCharacter;
 class AWeapon;
 
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatComponentWeaponAnimNotifySignature, AWeapon*, Weapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatComponentEquippedWeaponChangedSignature, AWeapon*, Weapon);
 
 UENUM(BlueprintType)
@@ -46,10 +45,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	//virtual void EquipWeapon(AWeapon* WeaponToEquip, USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName = NAME_None);
 	virtual void EquipWeapon(AWeapon* WeaponToEquip);
-	//virtual void UnequipWeapon(USkeletalMeshComponent* ParentSkeletalMesh, FName InParentSocketName);
-	virtual void HolsterWeapon();
+	virtual void ReloadWeapon();
 
 protected:
 	virtual void BeginPlay() override;
@@ -71,12 +68,6 @@ protected:
 
 	virtual void EquipNextWeapon();
 	virtual void UnequipWeapon();
-
-	UFUNCTION(Server, Reliable)
-	virtual void Server_EquipWeapon(AWeapon* WeaponToEquip);
-
-	UFUNCTION(Server, Reliable)
-	virtual void Server_HolsterWeapon();
 
 	UFUNCTION()
 	virtual void Handle_OnCharacterHandsAnimInstanceIdle();
@@ -145,23 +136,6 @@ protected:
 	virtual void OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon);
 
 public:
-	/*FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionEnd;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponActionStart;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponChamberCheck;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponFire;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponFireDry;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponFiremode;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponFiremodeCheck;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponIdle;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponIdleToOut;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponMagCheck;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponMagIn;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponMagOut;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOut;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOutToIdle;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponOutToIdleArm;
-	FOnCombatComponentWeaponAnimNotifySignature OnCombatComponentWeaponReloadCharge;*/
-
 	FOnCombatComponentEquippedWeaponChangedSignature OnCombatComponentEquippedWeaponChanged;
 
 protected:

@@ -28,7 +28,6 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
-	// Legs can be set mesh as leaderpose
 	LegsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LegsMesh"));
 	LegsMesh->SetupAttachment(GetMesh());
 	LegsMesh->bOnlyOwnerSee = true;
@@ -110,8 +109,6 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsSlowing, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsSprinting, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, bIsTransition, COND_SimulatedOnly);
-	//DOREPLIFETIME_CONDITION(AShooterCharacter, RemoteViewYaw, COND_SkipOwner);
-	//DOREPLIFETIME_CONDITION(AShooterCharacter, RemoteViewYaw, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, TurningDirection, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, RootBoneYaw, COND_SimulatedOnly);
 	DOREPLIFETIME_CONDITION(AShooterCharacter, AO_Pitch, COND_SimulatedOnly);
@@ -123,10 +120,10 @@ void AShooterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	if (USkeletalMeshComponent* CharacterMesh = GetMesh())
+	if (GetMesh())
 	{
-		CharacterMesh->SetSkeletalMeshAsset(USkeletalMergingLibrary::MergeMeshes(CharacterMeshMergeParams));
-		if (UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(CharacterMesh->GetAnimInstance()))
+		GetMesh()->SetSkeletalMeshAsset(USkeletalMergingLibrary::MergeMeshes(CharacterMeshMergeParams));
+		if (UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()))
 		{
 			/*CharacterAnimInstance->OnCharacterAnimInstanceIdle.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceIdle);
 			CharacterAnimInstance->OnCharacterAnimInstanceWalk.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceWalk);
@@ -161,42 +158,11 @@ void AShooterCharacter::PostInitializeComponents()
 	{
 		LegsMesh->SetLeaderPoseComponent(GetMesh());
 	}
-	// Moved to character combat component
-	/*if (HandsMesh)
-	{
-		if (UHandsAnimInstance* HandsAnimInstance = Cast<UHandsAnimInstance>(HandsMesh->GetAnimInstance()))
-		{
-			HandsAnimInstance->OnHandsAnimInstanceIdle.AddDynamic(this, &AShooterCharacter::Handle_OnHandsAnimInstanceIdle);
-			HandsAnimInstance->OnHandsAnimInstanceIdleToOut.AddDynamic(this, &AShooterCharacter::Handle_OnHandsAnimInstanceIdleToOut);
-			HandsAnimInstance->OnHandsAnimInstanceOut.AddDynamic(this, &AShooterCharacter::Handle_OnHandsAnimInstanceOut);
-			HandsAnimInstance->OnHandsAnimInstanceOutToIdle.AddDynamic(this, &AShooterCharacter::Handle_OnHandsAnimInstanceOutToIdle);
-		}
-	}*/
 	if (FirstPersonCamera)
 	{
 		CameraDefaultFOV = FirstPersonCamera->FieldOfView;
 	}
 
-	// Handled in combat component
-	/*if (CharacterCombat)
-	{
-		CharacterCombat->OnCombatComponentWeaponActionEnd.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentActionEnd);
-		CharacterCombat->OnCombatComponentWeaponActionStart.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentActionStart);
-		CharacterCombat->OnCombatComponentWeaponChamberCheck.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponChamberCheck);
-		CharacterCombat->OnCombatComponentWeaponFire.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponFire);
-		CharacterCombat->OnCombatComponentWeaponFireDry.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponFireDry);
-		CharacterCombat->OnCombatComponentWeaponFiremode.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponFiremode);
-		CharacterCombat->OnCombatComponentWeaponFiremodeCheck.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponFiremodeCheck);
-		CharacterCombat->OnCombatComponentWeaponIdle.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentIdle);
-		CharacterCombat->OnCombatComponentWeaponIdleToOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentIdleToOut);
-		CharacterCombat->OnCombatComponentWeaponMagCheck.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponMagCheck);
-		CharacterCombat->OnCombatComponentWeaponMagIn.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponMagIn);
-		CharacterCombat->OnCombatComponentWeaponMagOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponMagOut);
-		CharacterCombat->OnCombatComponentWeaponOut.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentOut);
-		CharacterCombat->OnCombatComponentWeaponOutToIdle.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentOutToIdle);
-		CharacterCombat->OnCombatComponentWeaponOutToIdleArm.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentOutToIdleArm);
-		CharacterCombat->OnCombatComponentWeaponReloadCharge.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentWeaponReloadCharge);
-	}*/
 	if (CharacterCombat)
 	{
 		CharacterCombat->OnCombatComponentEquippedWeaponChanged.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentEquippedWeaponChanged);
@@ -315,8 +281,6 @@ void AShooterCharacter::Init()
 
 		for (AWeapon* Weapon : CharacterInventory->GetWeaponArray())
 		{
-			FName WeaponHolsterSocketName = GetCharacterWeaponHolsterSocketName(Weapon);
-			//Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponHolsterSocketName);
 			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
 			Weapon->bIsHolster = true;
 		}
@@ -347,13 +311,10 @@ void AShooterCharacter::BeginPlay()
 			CharacterMesh->SetCastHiddenShadow(true);
 		}
 
-		if (CharacterInventory && CharacterCombat)
+		if (CharacterInventory)
 		{
-			AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-			if (PrimaryWeapon && PrimaryWeapon != CharacterCombat->GetEquippedWeapon())
-			{
-				//Server_EquipWeaponProgressive(PrimaryWeapon);
-			}
+			//AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
+			//Server_EquipWeapon(PrimaryWeapon);
 		}
 	}
 
@@ -361,12 +322,12 @@ void AShooterCharacter::BeginPlay()
 
 ECombatAction AShooterCharacter::GetCombatAction() const
 {
-	return CharacterCombat != nullptr ? CharacterCombat->CombatAction : ECombatAction::CA_None;
+	return CharacterCombat != nullptr ? CharacterCombat->GetCombatAction() : ECombatAction::CA_None;
 }
 
 AWeapon* AShooterCharacter::GetEquippedWeapon() const
 {
-	return CharacterCombat != nullptr ? CharacterCombat->EquippedWeapon: nullptr;
+	return CharacterCombat != nullptr ? CharacterCombat->GetEquippedWeapon() : nullptr;
 }
 
 float AShooterCharacter::GetAllowedAO_Yaw() const
@@ -402,73 +363,6 @@ void AShooterCharacter::UpdateAO_Yaw(float ControlRotationYaw, float DeltaTime)
 		}
 	}
 }
-
-//float AShooterCharacter::GetAO_Pitch(float CurrentPitch, float DeltaTime) const
-//{
-//	float Pitch = IsLocallyControlled() ? GetControlRotation().Pitch : FMath::RInterpTo(FRotator(CurrentPitch, 0.0, 0.0), FRotator(GetBaseAimRotation().Pitch, 0.0, 0.0), DeltaTime, 10.0f).Pitch;
-//	if (Pitch > 90.0f)
-//	{
-//		FVector2D InRange = FVector2D(270.0, 360.0);
-//		FVector2D OutRange = FVector2D(-90.0, 0.0);
-//		Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, Pitch);
-//	}
-//	return Pitch;
-//}
-
-//float AShooterCharacter::GetAO_Yaw(float CurrentYaw, float DeltaTime) const
-//{
-//	float ControlRotationYaw = GetController() ? GetControlRotation().Yaw : FRotator::DecompressAxisFromByte(RemoteViewYaw);
-//	float Yaw = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, ControlRotationYaw, 0.0), FRotator(0.0, GetActorRotation().Yaw, 0.0)).Yaw;
-//	if (!IsLocallyControlled())
-//	{
-//		Yaw = FMath::RInterpTo(FRotator(0.0, CurrentYaw, 0.0), FRotator(0.0, Yaw, 0.0), DeltaTime, 10.0f).Yaw;
-//	}
-//	return Yaw;
-//}
-
-//float AShooterCharacter::GetVelocityYawOffset() const
-//{
-//	float VelocityYaw = UKismetMathLibrary::MakeRotFromX(GetVelocity()).Yaw;
-//	return UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, GetActorRotation().Yaw, 0.0)).Yaw;	
-//}
-
-//void AShooterCharacter::CalculateSwayHorizontalMovement(float& OutSwayHorizontalMovement, float DeltaYaw) const
-//{
-//	OutSwayHorizontalMovement += DeltaYaw * SwayHorizontalMovementSensitivity;
-//	OutSwayHorizontalMovement = FMath::Clamp(OutSwayHorizontalMovement, -SwayHorizontalMovementLimit, SwayHorizontalMovementLimit);
-//}
-
-//void AShooterCharacter::CalculateSwayVerticalMovement(float& OutSwayVerticalMovement, float DeltaPitch) const
-//{
-//	OutSwayVerticalMovement += DeltaPitch * SwayVerticalMovementSensitivity;
-//	OutSwayVerticalMovement = FMath::Clamp(OutSwayVerticalMovement, -SwayVerticalMovementLimit, SwayVerticalMovementLimit);
-//}
-
-//void AShooterCharacter::CalculateSwayRollRotation(float& OutSwayRollRotation, float DeltaYaw) const
-//{
-//	OutSwayRollRotation += DeltaYaw * SwayRollRotationSensitivity;
-//	OutSwayRollRotation = FMath::Clamp(OutSwayRollRotation, -SwayRollRotationLimit, SwayRollRotationLimit);
-//}
-
-//FVector AShooterCharacter::GetCurrentAcceleration() const
-//{
-//	return GetCharacterMovement() ? GetCharacterMovement()->GetCurrentAcceleration() : FVector::ZeroVector;
-//}
-
-//bool AShooterCharacter::IsPlayingIdleAnimTimeline() const
-//{
-//	return IdleAnimTimeline && IdleAnimTimeline->IsPlaying();
-//}
-
-//bool AShooterCharacter::IsPlayingWalkAnimTimeline() const
-//{
-//	return WalkAnimTimeline && WalkAnimTimeline->IsPlaying();
-//}
-
-//bool AShooterCharacter::IsThirdAction() const
-//{
-//	return bIsTransition || bIsSprinting || (bIsProned && GetVelocity().SizeSquared2D() > 0.0f);
-//}
 
 bool AShooterCharacter::CanProne() const
 {
@@ -570,7 +464,7 @@ void AShooterCharacter::OnStartProne(float HalfHeightAdjust, float ScaledHalfHei
 
 void AShooterCharacter::Prone(bool bClientSimulation)
 {
-	if (ShooterCharacterMovement&& CanProne())
+	if (ShooterCharacterMovement && CanProne())
 	{
 		ShooterCharacterMovement->bWantsToProne = true;
 	}
@@ -642,7 +536,7 @@ void AShooterCharacter::OnMovementUpdated(float DeltaTime, const FVector& OldLoc
 
 void AShooterCharacter::Slow()
 {
-	if (ShooterCharacterMovement&& CanSlow())
+	if (ShooterCharacterMovement && CanSlow())
 	{
 		ShooterCharacterMovement->bWantsToSlow = true;
 	}
@@ -650,7 +544,7 @@ void AShooterCharacter::Slow()
 
 void AShooterCharacter::Sprint()
 {
-	if (ShooterCharacterMovement&& CanSprint())
+	if (ShooterCharacterMovement && CanSprint())
 	{
 		ShooterCharacterMovement->bWantsToSprint = true;
 	}
@@ -719,32 +613,21 @@ void AShooterCharacter::UnAim()
 bool AShooterCharacter::CanLean() const
 {
 	bool bIsAccelerating = GetCharacterMovement() && GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f;
-	return !bIsSprinting && !(bIsProned && GetVelocity().SizeSquared2D() > 0.0f && bIsAccelerating);
+	bool bHasVelocity = GetVelocity().SizeSquared2D() > 0.0f;
+	return !bIsSprinting && !(bIsProned && bHasVelocity && bIsAccelerating);
 }
 
 void AShooterCharacter::Server_Lean_Implementation(ELeaningDirection NewLeaningDirection)
 {
-	ELeaningDirection OldLeaningDirection = LeaningDirection;
-	LeaningDirection = NewLeaningDirection;
-	
-	CalculateLeaningTargetAngle();
-	CalculateLeaningTransitionDuration(OldLeaningDirection);
-}
+	if (CanLean())
+	{
+		ELeaningDirection OldLeaningDirection = LeaningDirection;
+		LeaningDirection = NewLeaningDirection;
 
-//bool AShooterCharacter::CanPerformCrouchAction() const
-//{
-//	return bIsTransition == false;
-//}
-//
-//bool AShooterCharacter::CanPerformMoveAction() const
-//{
-//	return bIsTransition == false;
-//}
-//
-//bool AShooterCharacter::CanPerformProneAction() const
-//{
-//	return bIsTransition == false;
-//}
+		CalculateLeaningTargetAngle();
+		CalculateLeaningTransitionDuration(OldLeaningDirection);
+	}
+}
 
 void AShooterCharacter::Handle_OnADSTimelineUpdate(float Value)
 {
@@ -967,167 +850,12 @@ void AShooterCharacter::Handle_OnCombatComponentEquippedWeaponChanged(AWeapon* W
 	}
 }
 
-//void AShooterCharacter::Handle_OnCombatComponentActionEnd(AWeapon* Weapon)
-//{
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentActionStart(AWeapon* Weapon)
-//{
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentIdle(AWeapon* Weapon)
-//{
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentIdleToOut(AWeapon* Weapon)
-//{
-//	if (HasAuthority() && CharacterCombat)
-//	{
-//		CharacterCombat->Out();
-//	}
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentOut(AWeapon* Weapon)
-//{
-//	if (HasAuthority() && CharacterCombat)
-//	{
-//		if (AWeapon* EquippedWeapon = CharacterCombat->GetEquippedWeapon())
-//		{
-//			FName WeaponHolsterSocketName = GetCharacterWeaponHolsterSocketName(EquippedWeapon);
-//			CharacterCombat->UnequipWeapon(GetMesh(), WeaponHolsterSocketName);
-//		}
-//		if (NextWeaponToEquip)
-//		{
-//			Server_EquipWeaponProgressive(NextWeaponToEquip);
-//		}
-//		else
-//		{
-//			Server_HolsterWeaponProgressive();
-//		}
-//	}
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentOutToIdle(AWeapon* Weapon)
-//{
-//	if (HasAuthority() && CharacterCombat)
-//	{
-//		CharacterCombat->Idle();
-//	}
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentOutToIdleArm(AWeapon* Weapon)
-//{
-//	if (HasAuthority() && CharacterCombat)
-//	{
-//		CharacterCombat->Idle();
-//	}
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentWeaponChamberCheck(AWeapon* Weapon)
-//{
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentWeaponFire(AWeapon* Weapon)
-//{	
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentWeaponFireDry(AWeapon* Weapon)
-//{
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentWeaponFiremode(AWeapon* Weapon)
-//{
-//	if (HasAuthority() && CharacterCombat)
-//	{
-//		CharacterCombat->Idle();
-//	}
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentWeaponFiremodeCheck(AWeapon* Weapon)
-//{
-//	if (HasAuthority() && CharacterCombat)
-//	{
-//		CharacterCombat->Idle();
-//	}
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentWeaponMagCheck(AWeapon* Weapon)
-//{
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentWeaponMagIn(AWeapon* Weapon)
-//{
-//	if (HasAuthority() && Weapon && CharacterCombat)
-//	{
-//		const AMag* WeaponMag = Weapon ? Weapon->GetMag() : nullptr;
-//		const uint8 MagAmmoCount = WeaponMag ? WeaponMag->GetAmmoCount() : 0;
-//		const bool bHasPatronInWeaponAmmo = Weapon && Weapon->GetPatronInWeaponAmmo() != nullptr;
-//		if (WeaponMag && MagAmmoCount > 0 && !bHasPatronInWeaponAmmo)
-//		{
-//			CharacterCombat->WeaponReloadCharge();
-//		}
-//		else
-//		{
-//			CharacterCombat->ActionEnd();
-//		}
-//	}
-//
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentWeaponMagOut(AWeapon* Weapon)
-//{
-//	if (HasAuthority() && Weapon && CharacterCombat && CharacterInventory)
-//	{
-//		int8 WeaponIndex = CharacterInventory->FindWeapon(Weapon);
-//		if (WeaponIndex != INDEX_NONE)
-//		{
-//			CharacterInventory->LoadAmmoInWeaponMag(WeaponIndex);
-//		}
-//		CharacterCombat->WeaponMagIn();
-//	}
-//}
-
-//void AShooterCharacter::Handle_OnCombatComponentWeaponReloadCharge(AWeapon* Weapon)
-//{
-//}
-
-//void AShooterCharacter::Handle_OnHandsAnimInstanceIdle()
-//{
-//}
-
-//void AShooterCharacter::Handle_OnHandsAnimInstanceIdleToOut()
-//{
-//	if (HasAuthority() && CharacterCombat)
-//	{
-//		CharacterCombat->Out();
-//	}
-//}
-
-//void AShooterCharacter::Handle_OnHandsAnimInstanceOut()
-//{
-//	if (HasAuthority() && NextWeaponToEquip)
-//	{
-//		Server_EquipWeaponProgressive(NextWeaponToEquip);
-//	}
-//}
-
-//void AShooterCharacter::Handle_OnHandsAnimInstanceOutToIdle()
-//{
-//	if (HasAuthority() && CharacterCombat)
-//	{
-//		CharacterCombat->Idle();
-//	}
-//}
-
 void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 {
-	if (CharacterInventory && CharacterCombat)
+	if (CharacterInventory)
 	{
-		AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-		if (PrimaryWeapon && PrimaryWeapon != CharacterCombat->GetEquippedWeapon())
-		{
-			//Server_EquipWeaponProgressive(PrimaryWeapon);
-		}
+		//AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
+		//Server_EquipWeapon(PrimaryWeapon);
 	}
 }
 
@@ -1162,13 +890,13 @@ void AShooterCharacter::OnCharacterAimAction(const FInputActionValue& Value)
 
 void AShooterCharacter::OnCharacterAlterAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
+	bool CurrentValue = Value.Get<bool>();
 	bIsAlterAction = CurrentValue;
 }
 
 void AShooterCharacter::OnCharacterCrouchAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
+	bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue && !bIsTransition)
 	{
 		if (!bIsCrouched)
@@ -1184,46 +912,37 @@ void AShooterCharacter::OnCharacterCrouchAction(const FInputActionValue& Value)
 
 void AShooterCharacter::OnCharacterEquipPrimaryWeaponAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && CharacterInventory&& CharacterCombat)
+	bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue && CharacterInventory)
 	{
 		AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-		if (PrimaryWeapon && PrimaryWeapon != CharacterCombat->GetEquippedWeapon())
-		{
-			//Server_EquipWeaponProgressive(PrimaryWeapon);
-			CharacterCombat->EquipWeapon(PrimaryWeapon);
-		}
+		Server_EquipWeapon(PrimaryWeapon);
 	}
 }
 
 void AShooterCharacter::OnCharacterEquipSecondaryWeaponAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && CharacterInventory&& CharacterCombat)
+	bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue && CharacterInventory)
 	{
 		AWeapon* SecondaryWeapon = CharacterInventory->GetWeaponAtIndex(SECONDARY_WEAPON_INDEX);
-		if (SecondaryWeapon && SecondaryWeapon != CharacterCombat->GetEquippedWeapon())
-		{
-			//Server_EquipWeaponProgressive(SecondaryWeapon);
-			CharacterCombat->EquipWeapon(SecondaryWeapon);
-		}
+		Server_EquipWeapon(SecondaryWeapon);
 	}
 }
 
 void AShooterCharacter::OnCharacterHolsterWeaponAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && CharacterCombat && CharacterCombat->EquippedWeapon != nullptr)
+	bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue)
 	{
-		//Server_HolsterWeaponProgressive();
-		CharacterCombat->HolsterWeapon();
+		Server_EquipWeapon(nullptr);
 	}
 }
 
 void AShooterCharacter::OnCharacterLeanLeftAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && CanLean())
+	bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue)
 	{
 		ELeaningDirection NewLeaningDirection = LeaningDirection == ELeaningDirection::LD_Left ? ELeaningDirection::LD_None : ELeaningDirection::LD_Left;
 		Server_Lean(NewLeaningDirection);
@@ -1232,8 +951,8 @@ void AShooterCharacter::OnCharacterLeanLeftAction(const FInputActionValue& Value
 
 void AShooterCharacter::OnCharacterLeanRightAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && CanLean())
+	bool CurrentValue = Value.Get<bool>();
+	if (CurrentValue)
 	{
 		ELeaningDirection NewLeaningDirection = LeaningDirection == ELeaningDirection::LD_Right ? ELeaningDirection::LD_None : ELeaningDirection::LD_Right;
 		Server_Lean(NewLeaningDirection);
@@ -1242,7 +961,7 @@ void AShooterCharacter::OnCharacterLeanRightAction(const FInputActionValue& Valu
 
 void AShooterCharacter::OnCharacterLookAction(const FInputActionValue& Value)
 {
-	const FVector2D CurrentValue = Value.Get<FVector2D>();
+	FVector2D CurrentValue = Value.Get<FVector2D>();
 
 	AddControllerYawInput(CurrentValue.X);
 	AddControllerPitchInput(CurrentValue.Y);
@@ -1363,7 +1082,7 @@ void AShooterCharacter::OnCharacterMoveRightAction(const FInputActionValue& Valu
 
 void AShooterCharacter::OnCharacterProneAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
+	bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue && !bIsTransition)
 	{
 		if (!bIsProned)
@@ -1379,7 +1098,7 @@ void AShooterCharacter::OnCharacterProneAction(const FInputActionValue& Value)
 
 void AShooterCharacter::OnCharacterSlowAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
+	bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue)
 	{
 		Slow();
@@ -1392,7 +1111,7 @@ void AShooterCharacter::OnCharacterSlowAction(const FInputActionValue& Value)
 
 void AShooterCharacter::OnCharacterSprintAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
+	bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue)
 	{
 		Sprint();
@@ -1405,7 +1124,7 @@ void AShooterCharacter::OnCharacterSprintAction(const FInputActionValue& Value)
 
 void AShooterCharacter::OnWeaponChamberCheckAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
+	bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue && bIsAlterAction)
 	{
 		Server_CheckWeaponChamber();
@@ -1414,13 +1133,13 @@ void AShooterCharacter::OnWeaponChamberCheckAction(const FInputActionValue& Valu
 
 void AShooterCharacter::OnWeaponFireAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
+	bool CurrentValue = Value.Get<bool>();
 	Server_FireWeapon(CurrentValue);
 }
 
 void AShooterCharacter::OnWeaponFiremodeAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
+	bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue)
 	{
 		if (bIsAlterAction)
@@ -1436,7 +1155,7 @@ void AShooterCharacter::OnWeaponFiremodeAction(const FInputActionValue& Value)
 
 void AShooterCharacter::OnWeaponReloadAction(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
+	bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue)
 	{
 		if (bIsAlterAction)
@@ -1445,54 +1164,18 @@ void AShooterCharacter::OnWeaponReloadAction(const FInputActionValue& Value)
 		}
 		else
 		{
-			Server_WeaponMagOut();
+			Server_ReloadWeapon();
 		}
 	}
 }
 
-//void AShooterCharacter::Server_EquipWeaponProgressive_Implementation(AWeapon* WeaponToEquip)
-//{
-//	if (WeaponToEquip == nullptr || CharacterCombat == nullptr)
-//	{
-//		return;
-//	}
-//	const ECombatAction CombatAction = CharacterCombat->GetCombatAction();
-//	if (NextWeaponToEquip == nullptr && CombatAction == ECombatAction::CA_Idle)
-//	{
-//		NextWeaponToEquip = WeaponToEquip;
-//		CharacterCombat->IdleToOut();
-//	}
-//	else if (NextWeaponToEquip && CombatAction == ECombatAction::CA_Out)
-//	{
-//		//CharacterCombat->EquipWeapon(NextWeaponToEquip, HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME);
-//		CharacterCombat->EquipWeapon(NextWeaponToEquip, GetMesh());
-//		/*if (HandsMesh && NextWeaponToEquip->GetMesh())
-//		{
-//			CharacterCombat->EquipWeapon(NextWeaponToEquip, GetMesh());
-//			HandsMesh->SetLeaderPoseComponent(NextWeaponToEquip->GetMesh());
-//		}*/
-//		CharacterCombat->OutToIdle();
-//		NextWeaponToEquip = nullptr;
-//	}
-//}
-
-//void AShooterCharacter::Server_HolsterWeaponProgressive_Implementation()
-//{
-//	if (CharacterCombat== nullptr)
-//	{
-//		return;
-//	}
-//	const ECombatAction CombatAction = CharacterCombat->GetCombatAction();
-//	if (CombatAction == ECombatAction::CA_Idle)
-//	{
-//		NextWeaponToEquip = nullptr;
-//		CharacterCombat->IdleToOut();
-//	}
-//	else if (NextWeaponToEquip == nullptr && CombatAction == ECombatAction::CA_Out)
-//	{
-//		CharacterCombat->OutToIdle();
-//	}
-//}
+void AShooterCharacter::Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip)
+{
+	if (CharacterCombat)
+	{
+		CharacterCombat->EquipWeapon(WeaponToEquip);
+	}
+}
 
 void AShooterCharacter::Server_CheckWeaponChamber_Implementation()
 {
@@ -1534,32 +1217,13 @@ void AShooterCharacter::Server_CheckWeaponMag_Implementation()
 	}
 }
 
-void AShooterCharacter::Server_WeaponMagOut_Implementation()
+void AShooterCharacter::Server_ReloadWeapon_Implementation()
 {
-	if (CharacterCombat && CharacterInventory)
+	if (CharacterCombat)
 	{
-		if (AWeapon* EquippedWeapon = CharacterCombat->GetEquippedWeapon())
-		{
-			const int8 WeaponIndex = CharacterInventory->FindWeapon(EquippedWeapon);
-			if (WeaponIndex != INDEX_NONE)
-			{
-				const AMag* WeaponMag = EquippedWeapon->GetMag();
-				const uint8 MagAmmoCount = WeaponMag ? WeaponMag->GetAmmoCount() : 0;
-				const uint8 MagAmmoCapacity = WeaponMag ? WeaponMag->GetAmmoCapacity() : 0;
-				const uint8 WeaponAmmoInInventory = CharacterInventory->GetWeaponAmmoAtIndex(WeaponIndex);
-				if (WeaponAmmoInInventory > 0 && (MagAmmoCapacity - MagAmmoCount) > 0)
-				{
-					CharacterCombat->WeaponMagOut();
-				}
-			}
-		}
+		CharacterCombat->ReloadWeapon();
 	}
 }
-
-//void AShooterCharacter::SetRemoteViewYaw(float NewRemoteYaw)
-//{
-//	RemoteViewYaw = FRotator::CompressAxisToByte(NewRemoteYaw);
-//}
 
 void AShooterCharacter::CalculateADSCameraTargetLocation()
 {

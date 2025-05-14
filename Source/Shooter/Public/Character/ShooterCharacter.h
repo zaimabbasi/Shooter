@@ -112,11 +112,8 @@ protected:
 	UFUNCTION(Server, Reliable)
 	virtual void Server_Lean(ELeaningDirection NewLeaningDirection);
 
-	/*UFUNCTION(Server, Reliable)
-	virtual void Server_EquipWeaponProgressive(AWeapon* WeaponToEquip);*/
-
-	/*UFUNCTION(Server, Reliable)
-	virtual void Server_HolsterWeaponProgressive();*/
+	UFUNCTION(Server, Reliable)
+	virtual void Server_EquipWeapon(AWeapon* WeaponToEquip);
 
 	UFUNCTION(Server, Reliable)
 	virtual void Server_CheckWeaponChamber();
@@ -134,7 +131,7 @@ protected:
 	virtual void Server_CheckWeaponMag();
 
 	UFUNCTION(Server, Reliable)
-	virtual void Server_WeaponMagOut();
+	virtual void Server_ReloadWeapon();
 
 	UFUNCTION()
 	virtual void OnRep_LeaningDirection(ELeaningDirection OldLeaningDirection);
@@ -252,66 +249,6 @@ protected:
 
 	UFUNCTION()
 	virtual void Handle_OnCombatComponentEquippedWeaponChanged(AWeapon* Weapon);
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentActionEnd(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentActionStart(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentIdle(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentIdleToOut(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentOut(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentOutToIdle(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentOutToIdleArm(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponChamberCheck(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponFire(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponFireDry(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponFiremode(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponFiremodeCheck(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponMagCheck(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponMagIn(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponMagOut(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnCombatComponentWeaponReloadCharge(AWeapon* Weapon);*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnHandsAnimInstanceIdle();*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnHandsAnimInstanceIdleToOut();*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnHandsAnimInstanceOut();*/
-
-	/*UFUNCTION()
-	virtual void Handle_OnHandsAnimInstanceOutToIdle();*/
 
 	UFUNCTION()
 	virtual void Handle_OnInventoryComponentWeaponArrayReplicated();
@@ -556,8 +493,6 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_LeaningDirection)
 	ELeaningDirection LeaningDirection;
 
-	//TObjectPtr<AWeapon> NextWeaponToEquip;
-
 	UPROPERTY(Replicated)
 	ETurningDirection TurningDirection;
 
@@ -595,6 +530,7 @@ private:
 public:
 	FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
+	FORCEINLINE UCharacterInventoryComponent* GetCharacterInventory() const { return CharacterInventory; }
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE bool GetIsTransition() const { return bIsTransition; }
 	FORCEINLINE ELeaningDirection GetLeaningDirection() const { return LeaningDirection; }

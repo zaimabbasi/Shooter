@@ -25,7 +25,7 @@ public:
 	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	virtual void Init(const FInventoryParams& InventoryParams);
-	virtual int8 FindWeapon(AWeapon*& Weapon) const;
+	virtual int8 FindWeapon(AWeapon* const& Weapon) const;
 	virtual AWeapon* GetWeaponAtIndex(uint8 Index) const;
 	virtual uint8 GetWeaponAmmoAtIndex(uint8 Index) const;
 	virtual void LoadAmmoInWeaponMag(uint8 WeaponIndex);

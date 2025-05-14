@@ -58,7 +58,7 @@ void UCharacterInventoryComponent::Init(const FInventoryParams& InventoryParams)
 
 }
 
-int8 UCharacterInventoryComponent::FindWeapon(AWeapon*& Weapon) const
+int8 UCharacterInventoryComponent::FindWeapon(AWeapon* const& Weapon) const
 {
 	return WeaponArray.Find(Weapon);
 }
