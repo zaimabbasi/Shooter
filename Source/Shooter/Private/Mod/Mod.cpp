@@ -14,8 +14,8 @@ AMod::AMod()
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
 
-	WeaponModComponent = CreateDefaultSubobject<UWeaponModComponent>(TEXT("ModComponent"));
-	WeaponModComponent->SetIsReplicated(true);
+	/*WeaponModComponent = CreateDefaultSubobject<UWeaponModComponent>(TEXT("ModComponent"));
+	WeaponModComponent->SetIsReplicated(true);*/
 
 }
 
@@ -42,10 +42,10 @@ FName AMod::GetDefaultAttachParentSocketName() const
 	return NAME_None;
 }
 
-void AMod::Init()
-{
-	if (WeaponModComponent)
-	{
-		WeaponModComponent->Init(ModDataAsset.LoadSynchronous());
-	}
-}
+//void AMod::Init()
+//{
+//	if (WeaponModComponent)
+//	{
+//		WeaponModComponent->Init(ModDataAsset.LoadSynchronous());
+//	}
+//}

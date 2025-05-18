@@ -20,6 +20,24 @@ void UWeaponModComponent::BeginPlay()
 
 }
 
+AMod* UWeaponModComponent::SpawnMod(TSubclassOf<AMod> ModClass, AActor* ParentActor, FName AttachParentSocketName)
+{
+	if (UWorld* World = GetWorld())
+	{
+		if (AMod* SpawnedMod = World->SpawnActor<AMod>(ModClass))
+		{
+			AActor* OwningActor = GetOwner();
+			SpawnedMod->SetOwner(OwningActor);
+			//SpawnedMod->Init();
+			SpawnedMod->AttachToActor(ParentActor, FAttachmentTransformRules::KeepRelativeTransform, AttachParentSocketName);
+			
+			ModArray.Add(SpawnedMod);
+		}
+		return nullptr;
+	}
+	return nullptr;
+}
+
 //void UWeaponModComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 //{
 //	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -34,6 +52,35 @@ void UWeaponModComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 }
 
+//void UWeaponModComponent::Init(const UModDataAsset* ModDataAsset)
+//{
+//	if (ModDataAsset == nullptr)
+//	{
+//		return;
+//	}
+//	if (AActor* OwningActor = GetOwner())
+//	{
+//		if (UWorld* World = GetWorld())
+//		{
+//			for (const FModData& ModData : ModDataAsset->ModDataArray)
+//			{
+//				//if (const TSubclassOf<AMod>& ModClass = ModData.ModClass)
+//				{
+//					if (AMod* SpawnedMod = World->SpawnActor<AMod>(ModData.ModClass))
+//					{
+//						SpawnedMod->SetOwner(OwningActor);
+//						//SpawnedMod->Init();
+//						SpawnedMod->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, ModData.AttachParentSocketName);
+//
+//						ModArray.Add(SpawnedMod);
+//					}
+//				}
+//			}
+//			
+//		}
+//	}
+//}
+
 void UWeaponModComponent::Init(const UModDataAsset* ModDataAsset)
 {
 	if (ModDataAsset == nullptr)
@@ -46,19 +93,45 @@ void UWeaponModComponent::Init(const UModDataAsset* ModDataAsset)
 		{
 			for (const FModData& ModData : ModDataAsset->ModDataArray)
 			{
-				//if (const TSubclassOf<AMod>& ModClass = ModData.ModClass)
+				if (ModData.ModParentClass)
 				{
-					if (AMod* SpawnedMod = World->SpawnActor<AMod>(ModData.ModClass))
+					// Check parent is in the ModDataArray?
+					const FModData* ModParentData = ModDataAsset->ModDataArray.FindByPredicate([&](const FModData& ModDataInArray) {
+						return ModDataInArray.ModClass == ModData.ModParentClass;
+						});
+					if (ModParentData)
 					{
-						SpawnedMod->SetOwner(OwningActor);
-						SpawnedMod->Init();
-						SpawnedMod->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, ModData.AttachParentSocketName);
-
-						ModArray.Add(SpawnedMod);
+						// Check already exists?
+						TObjectPtr<AMod>* Mod = ModArray.FindByPredicate([&](AMod* const& Mod) {
+							return Mod->IsA(ModParentData->ModClass);
+							});
+						if (Mod)
+						{
+							SpawnMod(ModData.ModClass, *Mod, ModData.AttachParentSocketName);
+						}
+						else
+						{
+							AMod* ParentMod = SpawnMod(ModParentData->ModClass, GetOwner(), ModParentData->AttachParentSocketName);
+							SpawnMod(ModData.ModClass, ParentMod, ModData.AttachParentSocketName);
+						}
+					}
+					else
+					{
+						// Mod parent is not valid, so do not spawn mod
+					}
+				}
+				else
+				{
+					// Check already exists?
+					const FModData* ModParentData = ModDataAsset->ModDataArray.FindByPredicate([&](const FModData& ModDataInArray) {
+						return ModDataInArray.ModClass == ModData.ModParentClass;
+						});
+					if (!ModParentData)
+					{
+						SpawnMod(ModData.ModClass, GetOwner(), ModData.AttachParentSocketName);
 					}
 				}
 			}
-			
 		}
 	}
 }

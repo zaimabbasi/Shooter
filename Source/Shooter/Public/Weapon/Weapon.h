@@ -41,7 +41,7 @@ public:
 	uint16 GetRateOfFire() const;
 	uint8 GetNumFiremodes() const;
 
-	template<class T>
+	/*template<class T>
 	T* GetAttachedActor() const
 	{
 		T* AttachedMod = nullptr;
@@ -49,14 +49,14 @@ public:
 		GetAttachedActors(AttachedActors, false, true);
 		AttachedActors.FindItemByClass(&AttachedMod);
 		return AttachedMod;
-	}
+	}*/
 
 	EWeaponFiremode GetFiremode() const;
 
 	//AForegrip* GetForegrip() const;
 	//AHandguard* GetHandguard() const;
-	AMag* GetMag() const;
 
+	AMag* GetMag() const;
 	USkeletalMeshComponent* GetForegripHandguardMesh() const;
 	USkeletalMeshComponent* GetScopeSightMesh() const;
 

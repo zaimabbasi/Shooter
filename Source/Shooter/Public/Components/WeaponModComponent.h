@@ -19,6 +19,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	//virtual void Init(const UModDataAsset* ModDataAsset);
 	virtual void Init(const UModDataAsset* ModDataAsset);
 
 	template<class T>
@@ -30,7 +31,8 @@ public:
 	};
 
 protected:
-	virtual void BeginPlay() override;	
+	virtual void BeginPlay() override;
+	virtual AMod* SpawnMod(TSubclassOf<AMod> ModClass, AActor* ParentActor, FName AttachParentSocketName = NAME_None);
 	
 private:
 	UPROPERTY(Replicated)

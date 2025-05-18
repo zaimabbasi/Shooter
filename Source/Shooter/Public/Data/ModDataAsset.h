@@ -19,6 +19,10 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AMod> ModClass;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AMod> ModParentClass;
+
 };
 
 UCLASS()

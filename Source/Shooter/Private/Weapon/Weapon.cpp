@@ -154,27 +154,33 @@ EWeaponFiremode AWeapon::GetFiremode() const
 
 AMag* AWeapon::GetMag() const
 {
-	return WeaponModComponent ? WeaponModComponent->GetMod<AMag>() : nullptr;
+	if (WeaponModComponent == nullptr)
+	{
+		return nullptr;
+	}
+	return WeaponModComponent->GetMod<AMag>();
 }
 
 USkeletalMeshComponent* AWeapon::GetForegripHandguardMesh() const
 {
-	AMod* ForegripHandguard = GetAttachedActor<AForegrip>();
-	if (ForegripHandguard == nullptr)
+	if (WeaponModComponent == nullptr)
 	{
-		ForegripHandguard = GetAttachedActor<AHandguard>();
+		return nullptr;
 	}
-	return ForegripHandguard == nullptr ? nullptr : ForegripHandguard->GetMesh();
+	AMod* ModForegrip = WeaponModComponent->GetMod<AForegrip>();
+	AMod* ModHandguard = WeaponModComponent->GetMod<AHandguard>();
+	return ModForegrip != nullptr ? ModForegrip->GetMesh() : ModHandguard != nullptr ? ModHandguard->GetMesh() : nullptr;
 }
 
 USkeletalMeshComponent* AWeapon::GetScopeSightMesh() const
 {
-	AMod* ScopeSight = GetAttachedActor<AScope>();
-	if (ScopeSight == nullptr)
+	if (WeaponModComponent == nullptr)
 	{
-		ScopeSight = GetAttachedActor<ASightRear>();
+		return nullptr;
 	}
-	return ScopeSight == nullptr ? nullptr : ScopeSight->GetMesh();
+	AMod* ModScope = WeaponModComponent->GetMod<AScope>();
+	AMod* ModSightRear = WeaponModComponent->GetMod<ASightRear>();
+	return ModScope != nullptr ? ModScope->GetMesh() : ModSightRear != nullptr ? ModSightRear->GetMesh() : nullptr;
 }
 
 void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
