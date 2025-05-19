@@ -482,10 +482,10 @@ void AShooterCharacter::RecalculatePronedEyeHeight()
 
 void AShooterCharacter::OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity)
 {
-	const FVector Velocity = GetVelocity();
-	const bool bHasVelocity = Velocity.SizeSquared2D() > 0.0f;
-	const FRotator ActorRotation = GetActorRotation();
-	const bool bIsThirdAction = bIsTransition || bIsSprinting || (bIsProned && bHasVelocity);
+	FVector Velocity = GetVelocity();
+	bool bHasVelocity = Velocity.SizeSquared2D() > 0.0f;
+	FRotator ActorRotation = GetActorRotation();
+	bool bIsThirdAction = bIsTransition || bIsSprinting || (bIsProned && bHasVelocity);
 	
 	if (bHasVelocity)
 	{

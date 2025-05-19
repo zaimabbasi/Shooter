@@ -19,6 +19,7 @@ enum class ECombatAction : uint8
 	CA_ActionStart UMETA(DisplayName = "ActionStart"),
 	CA_ChamberCheck UMETA(DisplayName = "ChamberCheck"),
 	CA_Fire UMETA(DisplayName = "Fire"),
+	CA_FireDry UMETA(DisplayName = "FireDry"),
 	CA_Firemode UMETA(DisplayName = "Firemode"),
 	CA_FiremodeCheck UMETA(DisplayName = "FiremodeCheck"),
 	CA_Idle UMETA(DisplayName = "Idle"),
@@ -143,6 +144,7 @@ protected:
 	bool bIsFiring;*/
 
 	bool bWantsToFire;
+	uint8 NumRoundsFired;
 
 	TObjectPtr<AWeapon> NextWeapon;
 

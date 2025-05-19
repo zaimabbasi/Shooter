@@ -18,8 +18,8 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 
 	if (Weapon)
 	{
-		FireAnimPlayRate = Weapon->GetRateOfFire() / 60.0f;
-		//FireAnimPlayRate = 1.0f;
+		//FireAnimPlayRate = Weapon->GetRateOfFire() / 60.0f;
+		FireAnimPlayRate = 1.0f;
 	}
 
 	CombatAction = ECombatAction::CA_Out;
@@ -49,7 +49,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsHolster = Weapon->GetIsHolster();
 	bIsPistol = Weapon->IsPistol();
 	bIsOneHanded = Weapon->GetIsOneHanded();
-	bHasPatronInWeaponAmmo = Weapon->GetPatronInWeaponAmmo() != nullptr;
+	//bHasPatronInWeaponAmmo = Weapon->GetPatronInWeaponAmmo() != nullptr;
 	ForegripHandguardMesh = Weapon->GetForegripHandguardMesh();
 	bHasForegripHandguardMesh = ForegripHandguardMesh != nullptr;
 
