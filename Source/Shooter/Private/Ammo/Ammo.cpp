@@ -32,7 +32,7 @@ void AAmmo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePro
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AAmmo, bIsEmpty);
+	DOREPLIFETIME_CONDITION(AAmmo, bIsEmpty, COND_SimulatedOnly);
 
 }
 

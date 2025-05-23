@@ -2,6 +2,7 @@
 
 
 #include "Animation/WeaponAnimInstance.h"
+#include "Animation/AnimNode_StateMachine.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Character/ShooterCharacter.h"
 #include "Components/CharacterCombatComponent.h"
@@ -18,8 +19,8 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 
 	if (Weapon)
 	{
-		//FireAnimPlayRate = Weapon->GetRateOfFire() / 60.0f;
-		FireAnimPlayRate = 1.0f;
+		FireAnimPlayRate = Weapon->GetRateOfFire() / 60.0f;
+		//FireAnimPlayRate = 1.0f;
 	}
 
 	CombatAction = ECombatAction::CA_Out;
@@ -49,7 +50,6 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsHolster = Weapon->GetIsHolster();
 	bIsPistol = Weapon->IsPistol();
 	bIsOneHanded = Weapon->GetIsOneHanded();
-	//bHasPatronInWeaponAmmo = Weapon->GetPatronInWeaponAmmo() != nullptr;
 	ForegripHandguardMesh = Weapon->GetForegripHandguardMesh();
 	bHasForegripHandguardMesh = ForegripHandguardMesh != nullptr;
 
@@ -94,6 +94,20 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		{
 			WalkAnimMaxHorizontalMovementOffset = FMath::FInterpTo(WalkAnimMaxHorizontalMovementOffset, 0, DeltaSeconds, 5.0f);
 			WalkAnimMinHorizontalMovementOffset = FMath::FInterpTo(WalkAnimMinHorizontalMovementOffset, WalkAnimMinHorizontalMovement * CharacterVelocityYawOffsetAlpha, DeltaSeconds, 5.0f);
+		}
+	}*/
+
+	/*const FAnimNode_StateMachine* StateMachineInstance = GetStateMachineInstanceFromName(TEXT("Default"));
+	if (StateMachineInstance && !bIsHolster)
+	{
+		const FBakedAnimationState& CurrentStateInfo = StateMachineInstance->GetStateInfo(StateMachineInstance->GetCurrentState());
+		if (Weapon->HasAuthority())
+		{	
+			UE_LOG(LogTemp, Warning, TEXT("Server State: %s"), *CurrentStateInfo.StateName.ToString());	
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Client State: %s"), *CurrentStateInfo.StateName.ToString());
 		}
 	}*/
 

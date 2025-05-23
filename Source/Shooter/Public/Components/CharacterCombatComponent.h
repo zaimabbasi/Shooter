@@ -48,27 +48,31 @@ public:
 
 	virtual void EquipWeapon(AWeapon* WeaponToEquip);
 	virtual void ReloadWeapon();
+	virtual void CheckWeaponChamber();
+	virtual void FireWeapon(bool bFire);
+	virtual void ChangeWeaponFiremode();
+	virtual void CheckWeaponFiremode();
+	virtual void CheckWeaponMag();
+
+	ECombatAction GetWeaponAnimCombatAction() const;
+	ECombatAction GetHandsAnimCombatAction() const;
+	ECombatAction GetAnimCombatAction() const;
 
 protected:
 	virtual void BeginPlay() override;
 
-	virtual void ActionEnd();
-	virtual void ActionStart();
-	virtual void Idle();
-	virtual void IdleToOut();
-	virtual void Out();
+	//virtual void ActionEnd();
+	//virtual void ActionStart();
+	//virtual void Idle();
+	//virtual void IdleToOut();
+	//virtual void Out();
 	virtual void OutToIdle();
-	virtual void WeaponChamberCheck();
-	virtual void WeaponFire(bool bFire);
-	virtual void WeaponFiremode();
-	virtual void WeaponFiremodeCheck();
-	virtual void WeaponMagCheck();
-	virtual void WeaponMagIn();
-	virtual void WeaponMagOut();
-	virtual void WeaponReloadCharge();
-
-	virtual void EquipNextWeapon();
-	virtual void UnequipWeapon();
+	//virtual void WeaponMagIn();
+	//virtual void WeaponMagOut();
+	//virtual void WeaponReloadCharge();
+	
+	virtual void AddDelegates(AWeapon* Weapon);
+	virtual void RemoveDelegates(AWeapon* Weapon);
 
 	UFUNCTION()
 	virtual void Handle_OnCharacterHandsAnimInstanceIdle();

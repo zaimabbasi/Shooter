@@ -38,6 +38,7 @@ public:
 
 	virtual void Init();
 	ECombatAction GetCombatAction() const;
+	ECombatAction GetAnimCombatAction() const;
 	AWeapon* GetEquippedWeapon() const;
 	virtual float GetAllowedAO_Yaw() const;
 	virtual void UpdateAO_Pitch(float ControlRotationPitch, float DeltaTime);
@@ -110,28 +111,36 @@ protected:
 	virtual void OnWeaponReloadAction(const FInputActionValue& Value);
 
 	UFUNCTION(Server, Reliable)
-	virtual void Server_Lean(ELeaningDirection NewLeaningDirection);
+	void Server_Lean(ELeaningDirection NewLeaningDirection);
+	virtual void Server_Lean_Implementation(ELeaningDirection NewLeaningDirection);
 
 	UFUNCTION(Server, Reliable)
-	virtual void Server_EquipWeapon(AWeapon* WeaponToEquip);
+	void Server_EquipWeapon(AWeapon* WeaponToEquip);
+	virtual void Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip);
 
 	UFUNCTION(Server, Reliable)
-	virtual void Server_CheckWeaponChamber();
+	void Server_CheckWeaponChamber();
+	virtual void Server_CheckWeaponChamber_Implementation();
 
 	UFUNCTION(Server, Reliable)
-	virtual void Server_FireWeapon(bool bFire);
+	void Server_FireWeapon(bool bFire);
+	virtual void Server_FireWeapon_Implementation(bool bFire);
 
 	UFUNCTION(Server, Reliable)
-	virtual void Server_ChangeWeaponFiremode();
+	void Server_ChangeWeaponFiremode();
+	virtual void Server_ChangeWeaponFiremode_Implementation();
 
 	UFUNCTION(Server, Reliable)
-	virtual void Server_CheckWeaponFiremode();
+	void Server_CheckWeaponFiremode();
+	virtual void Server_CheckWeaponFiremode_Implementation();
 
 	UFUNCTION(Server, Reliable)
-	virtual void Server_CheckWeaponMag();
+	void Server_CheckWeaponMag();
+	virtual void Server_CheckWeaponMag_Implementation();
 
 	UFUNCTION(Server, Reliable)
-	virtual void Server_ReloadWeapon();
+	void Server_ReloadWeapon();
+	virtual void Server_ReloadWeapon_Implementation();
 
 	UFUNCTION()
 	virtual void OnRep_LeaningDirection(ELeaningDirection OldLeaningDirection);

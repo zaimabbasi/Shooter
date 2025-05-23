@@ -16,8 +16,8 @@ void AMag::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProp
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AMag, AmmoCount);
-	DOREPLIFETIME(AMag, AmmoArray);
+	DOREPLIFETIME_CONDITION(AMag, AmmoCount, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AMag, AmmoArray, COND_OwnerOnly);
 
 }
 

@@ -136,10 +136,7 @@ public:
 	uint8 FiremodeIndex;
 
 	UPROPERTY(Replicated)
-	TObjectPtr<AAmmo> PatronInWeaponAmmo;
-
-	UPROPERTY(Replicated)
-	TObjectPtr<AAmmo> ShellPortAmmo;
+	TObjectPtr<AAmmo> AmmoInWeapon;
 
 	FOnWeaponAnimNotifySignature OnWeaponActionEnd;
 	FOnWeaponAnimNotifySignature OnWeaponActionStart;
@@ -175,7 +172,7 @@ private:
 public:
 	FORCEINLINE bool GetIsHolster() const { return bIsHolster; }
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
-	FORCEINLINE AAmmo* GetPatronInWeaponAmmo() const { return PatronInWeaponAmmo; }
+	FORCEINLINE AAmmo* GetAmmoInWeapon() const { return AmmoInWeapon; }
 	FORCEINLINE AShooterCharacter* GetShooterCharacterOwner() const { return ShooterCharacterOwner; }
 	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
 

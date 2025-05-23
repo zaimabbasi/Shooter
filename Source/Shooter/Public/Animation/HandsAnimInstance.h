@@ -111,4 +111,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform RPalmTransform;
 
+public:
+	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }
+
 };

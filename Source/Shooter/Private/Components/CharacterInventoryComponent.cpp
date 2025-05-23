@@ -31,7 +31,7 @@ void UCharacterInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(UCharacterInventoryComponent, WeaponArray, COND_OwnerOnly);
-	DOREPLIFETIME(UCharacterInventoryComponent, WeaponAmmoArray);
+	DOREPLIFETIME_CONDITION(UCharacterInventoryComponent, WeaponAmmoArray, COND_OwnerOnly);
 
 }
 

@@ -90,8 +90,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 
 	DOREPLIFETIME(AWeapon, bIsHolster);
 	DOREPLIFETIME(AWeapon, FiremodeIndex);
-	DOREPLIFETIME(AWeapon, PatronInWeaponAmmo);
-	DOREPLIFETIME(AWeapon, ShellPortAmmo);
+	DOREPLIFETIME(AWeapon, AmmoInWeapon);
 
 }
 
@@ -201,7 +200,7 @@ void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
 		PoppedAmmo->SetOwner(this);
 		PoppedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, PATRON_IN_WEAPON_SOCKET_NAME);
 	}
-	PatronInWeaponAmmo = PoppedAmmo;
+	AmmoInWeapon = PoppedAmmo;
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceActionEnd()
@@ -297,17 +296,18 @@ void AWeapon::Handle_OnWeaponAnimInstanceReloadCharge()
 
 void AWeapon::Handle_OnWeaponAnimInstanceShellPort()
 {
-	if (ShellPortAmmo)
+	if (AmmoInWeapon)
 	{
-		ShellPortAmmo->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		if (USkeletalMeshComponent* ShellPortAmmoMesh = ShellPortAmmo->GetMesh())
+		AmmoInWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		if (USkeletalMeshComponent* AmmoInWeaponMesh = AmmoInWeapon->GetMesh())
 		{
-			ShellPortAmmoMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-			ShellPortAmmoMesh->SetSimulatePhysics(true);
-			ShellPortAmmoMesh->SetEnableGravity(true);
-			FVector ImpulseVector = (-3.0f * ShellPortAmmoMesh->GetForwardVector()) + (-2.0f * ShellPortAmmoMesh->GetRightVector()) + (3.0f * ShellPortAmmoMesh->GetUpVector());
-			ShellPortAmmoMesh->AddImpulse(ImpulseVector);
+			AmmoInWeaponMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+			AmmoInWeaponMesh->SetSimulatePhysics(true);
+			AmmoInWeaponMesh->SetEnableGravity(true);
+			FVector ImpulseVector = (-3.0f * AmmoInWeaponMesh->GetForwardVector()) + (-2.0f * AmmoInWeaponMesh->GetRightVector()) + (3.0f * AmmoInWeaponMesh->GetUpVector());
+			AmmoInWeaponMesh->AddImpulse(ImpulseVector);
 		}
+		AmmoInWeapon = nullptr;
 	}
 }
 
@@ -315,12 +315,10 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 {
 	if (HasAuthority())
 	{
-		if (PatronInWeaponAmmo)
+		if (AmmoInWeapon)
 		{
-			PatronInWeaponAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, SHELL_PORT_SOCKET_NAME);
-			PatronInWeaponAmmo->SetIsEmpty(true);
-			ShellPortAmmo = PatronInWeaponAmmo;
-			PatronInWeaponAmmo = nullptr;
+			AmmoInWeapon->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, SHELL_PORT_SOCKET_NAME);
+			AmmoInWeapon->SetIsEmpty(true);
 		}
 	}
 }

@@ -158,9 +158,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bHasForegripHandguardMesh;
 
-	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	bool bHasPatronInWeaponAmmo;*/
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsPistol;
 
@@ -217,5 +214,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float IKAlpha;
+
+public:
+	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }
 
 };
