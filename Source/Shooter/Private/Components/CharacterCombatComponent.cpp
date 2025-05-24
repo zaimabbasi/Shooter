@@ -50,18 +50,27 @@ void UCharacterCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	//DOREPLIFETIME(UCharacterCombatComponent, bIsFiring);
-	DOREPLIFETIME(UCharacterCombatComponent, CombatAction);
+	DOREPLIFETIME_CONDITION(UCharacterCombatComponent, CombatAction, COND_SimulatedOnly);
 	DOREPLIFETIME(UCharacterCombatComponent, EquippedWeapon);
 
 }
 
 void UCharacterCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
+	/*FName ServerOrClient = HasAuthority() ? TEXT("Server") : TEXT("Client");
+	FName WeaponToEquipName = WeaponToEquip != nullptr ? WeaponToEquip->GetFName() : NAME_None;
+	FName EquippedWeaponName = EquippedWeapon != nullptr ? EquippedWeapon->GetFName() : NAME_None;
+	UE_LOG(LogTemp, Error, TEXT("%s: EquipWeapon(%s), EquippedWeapon: %s"), *ServerOrClient.ToString(), *WeaponToEquipName.ToString(), *EquippedWeaponName.ToString());*/
 	if (EquippedWeapon != WeaponToEquip && GetAnimCombatAction() == ECombatAction::CA_Idle)
 	{
 		NextWeapon = WeaponToEquip;
 		CombatAction = ECombatAction::CA_IdleToOut;
 	}
+}
+
+void UCharacterCombatComponent::Client_EquipWeapon_Implementation(AWeapon* WeaponToEquip)
+{
+	UE_LOG(LogTemp, Error, TEXT(__FUNCTION__));
 }
 
 void UCharacterCombatComponent::ReloadWeapon()
@@ -169,6 +178,71 @@ ECombatAction UCharacterCombatComponent::GetAnimCombatAction() const
 		return GetHandsAnimCombatAction();
 	}
 }
+
+//FName UCharacterCombatComponent::GetHumanReadableCombatAction(ECombatAction Action) const
+//{
+//	FName HumanReadableCombatAction = NAME_None;
+//	switch (Action)
+//	{
+//	case ECombatAction::CA_None:
+//		HumanReadableCombatAction = TEXT("CA_None");
+//		break;
+//	case ECombatAction::CA_ActionEnd:
+//		HumanReadableCombatAction = TEXT("CA_ActionEnd");
+//		break;
+//	case ECombatAction::CA_ActionStart:
+//		HumanReadableCombatAction = TEXT("CA_ActionStart");
+//		break;
+//	case ECombatAction::CA_ChamberCheck:
+//		HumanReadableCombatAction = TEXT("CA_ChamberCheck");
+//		break;
+//	case ECombatAction::CA_Fire:
+//		HumanReadableCombatAction = TEXT("CA_Fire");
+//		break;
+//	case ECombatAction::CA_FireDry:
+//		HumanReadableCombatAction = TEXT("CA_FireDry");
+//		break;
+//	case ECombatAction::CA_Firemode:
+//		HumanReadableCombatAction = TEXT("CA_Firemode");
+//		break;
+//	case ECombatAction::CA_FiremodeCheck:
+//		HumanReadableCombatAction = TEXT("CA_FiremodeCheck");
+//		break;
+//	case ECombatAction::CA_Idle:
+//		HumanReadableCombatAction = TEXT("CA_Idle");
+//		break;
+//	case ECombatAction::CA_IdleToOut:
+//		HumanReadableCombatAction = TEXT("CA_IdleToOut");
+//		break;
+//	case ECombatAction::CA_MagCheck:
+//		HumanReadableCombatAction = TEXT("CA_MagCheck");
+//		break;
+//	case ECombatAction::CA_MagIn:
+//		HumanReadableCombatAction = TEXT("CA_MagIn");
+//		break;
+//	case ECombatAction::CA_MagOut:
+//		HumanReadableCombatAction = TEXT("CA_MagOut");
+//		break;
+//	case ECombatAction::CA_Out:
+//		HumanReadableCombatAction = TEXT("CA_Out");
+//		break;
+//	case ECombatAction::CA_OutToIdle:
+//		HumanReadableCombatAction = TEXT("CA_OutToIdle");
+//		break;
+//	case ECombatAction::CA_OutToIdleArm:
+//		HumanReadableCombatAction = TEXT("CA_OutToIdleArm");
+//		break;
+//	case ECombatAction::CA_ReloadCharge:
+//		HumanReadableCombatAction = TEXT("CA_ReloadCharge");
+//		break;
+//	case ECombatAction::Default_MAX:
+//		HumanReadableCombatAction = TEXT("Default_MAX");
+//		break;
+//	default:
+//		break;
+//	}
+//	return HumanReadableCombatAction;
+//}
 
 //void UCharacterCombatComponent::ActionEnd()
 //{
@@ -296,8 +370,8 @@ void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceIdle()
 }
 
 void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceIdleToOut()
-{
-	if (HasAuthority())
+{	
+	//if (HasAuthority())
 	{
 		CombatAction = ECombatAction::CA_Out;
 	}
@@ -305,14 +379,14 @@ void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceIdleToOut()
 
 void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceOut()
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		EquippedWeapon = NextWeapon;
 		NextWeapon = nullptr;
 
 		if (EquippedWeapon)
 		{
-			EquippedWeapon->bIsHolster = false;
+			//EquippedWeapon->bIsHolster = false;
 			AddDelegates(EquippedWeapon);
 		}
 
@@ -327,7 +401,7 @@ void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceOut()
 
 void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceOutToIdle()
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -335,7 +409,7 @@ void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceOutToIdle()
 
 void UCharacterCombatComponent::Handle_OnWeaponActionEnd(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -347,7 +421,7 @@ void UCharacterCombatComponent::Handle_OnWeaponActionStart(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponChamberCheck(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -355,7 +429,7 @@ void UCharacterCombatComponent::Handle_OnWeaponChamberCheck(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		if (Weapon)
 		{
@@ -380,7 +454,7 @@ void UCharacterCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponFireDry(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -388,7 +462,7 @@ void UCharacterCombatComponent::Handle_OnWeaponFireDry(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponFiremode(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -396,7 +470,7 @@ void UCharacterCombatComponent::Handle_OnWeaponFiremode(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponFiremodeCheck(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -408,7 +482,7 @@ void UCharacterCombatComponent::Handle_OnWeaponIdle(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponIdleToOut(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		CombatAction = ECombatAction::CA_Out;
 	}
@@ -416,7 +490,7 @@ void UCharacterCombatComponent::Handle_OnWeaponIdleToOut(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponMagCheck(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -424,7 +498,7 @@ void UCharacterCombatComponent::Handle_OnWeaponMagCheck(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponMagIn(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		AMag* WeaponMag = Weapon != nullptr ? Weapon->GetMag() : nullptr;
 		bool bHasMagAmmo = WeaponMag && WeaponMag->GetAmmoCount() > 0;
@@ -442,7 +516,7 @@ void UCharacterCombatComponent::Handle_OnWeaponMagIn(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponMagOut(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		if (ShooterCharacter && ShooterCharacter->GetCharacterInventory())
 		{
@@ -457,12 +531,12 @@ void UCharacterCombatComponent::Handle_OnWeaponMagOut(AWeapon* Weapon)
 }
 
 void UCharacterCombatComponent::Handle_OnWeaponOut(AWeapon* Weapon)
-{
-	if (HasAuthority())
+{	
+	//if (HasAuthority())
 	{
 		if (Weapon)
 		{
-			Weapon->bIsHolster = true;
+			//Weapon->bIsHolster = true;
 			RemoveDelegates(Weapon);
 		}
 
@@ -471,7 +545,7 @@ void UCharacterCombatComponent::Handle_OnWeaponOut(AWeapon* Weapon)
 
 		if (EquippedWeapon)
 		{
-			EquippedWeapon->bIsHolster = false;
+			//EquippedWeapon->bIsHolster = false;
 			AddDelegates(EquippedWeapon);
 		}
 
@@ -486,7 +560,7 @@ void UCharacterCombatComponent::Handle_OnWeaponOut(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponOutToIdle(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -494,7 +568,7 @@ void UCharacterCombatComponent::Handle_OnWeaponOutToIdle(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponOutToIdleArm(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -502,20 +576,24 @@ void UCharacterCombatComponent::Handle_OnWeaponOutToIdleArm(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponReloadCharge(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
 }
 
-void UCharacterCombatComponent::OnRep_CombatAction()
+void UCharacterCombatComponent::OnRep_CombatAction(ECombatAction PrevCombatAction)
 {
-	UE_LOG(LogTemp, Error, TEXT(__FUNCTION__));
+	/*FName HumanReadableCombatAction = GetHumanReadableCombatAction(CombatAction);
+	FName HumanReadablePrevCombatAction = GetHumanReadableCombatAction(PrevCombatAction);
+	UE_LOG(LogTemp, Error, TEXT(__FUNCTION__" CombatAction: %s, PrevCombatAction: %s"), *HumanReadableCombatAction.ToString(), *HumanReadablePrevCombatAction.ToString());*/
 }
 
 void UCharacterCombatComponent::OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon)
 {
-	UE_LOG(LogTemp, Error, TEXT(__FUNCTION__));
+	/*FName EquippedWeaponName = EquippedWeapon != nullptr ? EquippedWeapon->GetFName() : NAME_None;
+	FName PrevEquippedWeaponName = PrevEquippedWeapon != nullptr ? PrevEquippedWeapon->GetFName() : NAME_None;
+	UE_LOG(LogTemp, Error, TEXT(__FUNCTION__" EquippedWeapon: %s, PrevEquippedWeapon: %s"), *EquippedWeaponName.ToString(), *PrevEquippedWeaponName.ToString());*/
 	
 	if (PrevEquippedWeapon)
 	{

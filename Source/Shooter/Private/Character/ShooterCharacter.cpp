@@ -282,7 +282,7 @@ void AShooterCharacter::Init()
 		for (AWeapon* Weapon : CharacterInventory->GetWeaponArray())
 		{
 			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
-			Weapon->bIsHolster = true;
+			//Weapon->bIsHolster = true;
 		}
 	}
 
@@ -860,6 +860,10 @@ void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
 	if (CharacterInventory)
 	{
 		AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
+		if (CharacterCombat)
+		{
+			CharacterCombat->EquipWeapon(PrimaryWeapon);
+		}
 		Server_EquipWeapon(PrimaryWeapon);
 	}
 }
@@ -921,6 +925,10 @@ void AShooterCharacter::OnCharacterEquipPrimaryWeaponAction(const FInputActionVa
 	if (CurrentValue && CharacterInventory)
 	{
 		AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
+		if (CharacterCombat)
+		{
+			CharacterCombat->EquipWeapon(PrimaryWeapon);
+		}
 		Server_EquipWeapon(PrimaryWeapon);
 	}
 }
@@ -931,6 +939,10 @@ void AShooterCharacter::OnCharacterEquipSecondaryWeaponAction(const FInputAction
 	if (CurrentValue && CharacterInventory)
 	{
 		AWeapon* SecondaryWeapon = CharacterInventory->GetWeaponAtIndex(SECONDARY_WEAPON_INDEX);
+		if (CharacterCombat)
+		{
+			CharacterCombat->EquipWeapon(SecondaryWeapon);
+		}
 		Server_EquipWeapon(SecondaryWeapon);
 	}
 }
@@ -940,6 +952,10 @@ void AShooterCharacter::OnCharacterHolsterWeaponAction(const FInputActionValue& 
 	bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue)
 	{
+		if (CharacterCombat)
+		{
+			CharacterCombat->EquipWeapon(nullptr);
+		}
 		Server_EquipWeapon(nullptr);
 	}
 }
@@ -1132,6 +1148,10 @@ void AShooterCharacter::OnWeaponChamberCheckAction(const FInputActionValue& Valu
 	bool CurrentValue = Value.Get<bool>();
 	if (CurrentValue && bIsAlterAction)
 	{
+		if (CharacterCombat)
+		{
+			CharacterCombat->CheckWeaponChamber();
+		}
 		Server_CheckWeaponChamber();
 	}
 }
@@ -1139,6 +1159,10 @@ void AShooterCharacter::OnWeaponChamberCheckAction(const FInputActionValue& Valu
 void AShooterCharacter::OnWeaponFireAction(const FInputActionValue& Value)
 {
 	bool CurrentValue = Value.Get<bool>();
+	if (CharacterCombat)
+	{
+		CharacterCombat->FireWeapon(CurrentValue);
+	}
 	Server_FireWeapon(CurrentValue);
 }
 
@@ -1149,10 +1173,18 @@ void AShooterCharacter::OnWeaponFiremodeAction(const FInputActionValue& Value)
 	{
 		if (bIsAlterAction)
 		{
+			if (CharacterCombat)
+			{
+				CharacterCombat->CheckWeaponFiremode();
+			}
 			Server_CheckWeaponFiremode();
 		}
 		else
 		{
+			if (CharacterCombat)
+			{
+				CharacterCombat->ChangeWeaponFiremode();
+			}
 			Server_ChangeWeaponFiremode();
 		}
 	}
@@ -1165,10 +1197,18 @@ void AShooterCharacter::OnWeaponReloadAction(const FInputActionValue& Value)
 	{
 		if (bIsAlterAction)
 		{
+			if (CharacterCombat)
+			{
+				CharacterCombat->CheckWeaponMag();
+			}
 			Server_CheckWeaponMag();
 		}
 		else
 		{
+			if (CharacterCombat)
+			{
+				CharacterCombat->ReloadWeapon();
+			}
 			Server_ReloadWeapon();
 		}
 	}

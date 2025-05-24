@@ -2,7 +2,9 @@
 
 
 #include "Animation/HandsAnimInstance.h"
+//#include "Animation/AnimNode_StateMachine.h"
 #include "Character/ShooterCharacter.h"
+//#include "Components/CharacterCombatComponent.h"
 #include "Types/ShooterNames.h"
 #include "Utility/ShooterUtility.h"
 #include "Weapon/Weapon.h"
@@ -104,6 +106,16 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 		}
 	}
+
+	/*FName HumanReadableCombatAction = ShooterCharacter->GetCharacterCombat() != nullptr ? ShooterCharacter->GetCharacterCombat()->GetHumanReadableCombatAction(CombatAction) : NAME_None;
+	FName ServerOrClient = ShooterCharacter->HasAuthority() ? TEXT("Server") : TEXT("Client");
+
+	const FAnimNode_StateMachine* StateMachineInstance = GetStateMachineInstanceFromName(TEXT("Default"));
+	if (StateMachineInstance)
+	{
+		const FBakedAnimationState& CurrentStateInfo = StateMachineInstance->GetStateInfo(StateMachineInstance->GetCurrentState());
+		UE_LOG(LogTemp, Warning, TEXT("%s: Hands with CombatAction: %s and State: %s"), *ServerOrClient.ToString(), *HumanReadableCombatAction.ToString(), *CurrentStateInfo.StateName.ToString());
+	}*/
 
 }
 

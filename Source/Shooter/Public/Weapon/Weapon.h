@@ -126,11 +126,13 @@ protected:
 	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstanceWeaponSelector();
 
+	virtual void LineTrace();
+
 public:
 	TObjectPtr<AShooterCharacter> ShooterCharacterOwner;
 
-	UPROPERTY(Replicated)
-	bool bIsHolster;
+	/*UPROPERTY(Replicated)
+	bool bIsHolster;*/
 
 	UPROPERTY(Replicated)
 	uint8 FiremodeIndex;
@@ -170,7 +172,7 @@ private:
 	TObjectPtr<UBoxComponent> BoxComponent;
 
 public:
-	FORCEINLINE bool GetIsHolster() const { return bIsHolster; }
+	//FORCEINLINE bool GetIsHolster() const { return bIsHolster; }
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	FORCEINLINE AAmmo* GetAmmoInWeapon() const { return AmmoInWeapon; }
 	FORCEINLINE AShooterCharacter* GetShooterCharacterOwner() const { return ShooterCharacterOwner; }

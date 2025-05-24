@@ -4,6 +4,7 @@
 #include "Weapon/Weapon.h"
 #include "Components/BoxComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Ammo/Ammo.h"
 #include "Animation/WeaponAnimInstance.h"
@@ -22,7 +23,7 @@
 #include "Types/WeaponTypes.h"
 
 AWeapon::AWeapon() :
-	bIsHolster(false),
+	//bIsHolster(false),
 	FiremodeIndex(0)
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -88,7 +89,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AWeapon, bIsHolster);
+	//DOREPLIFETIME(AWeapon, bIsHolster);
 	DOREPLIFETIME(AWeapon, FiremodeIndex);
 	DOREPLIFETIME(AWeapon, AmmoInWeapon);
 
@@ -280,7 +281,7 @@ void AWeapon::Handle_OnWeaponAnimInstanceOutToIdleArm()
 
 void AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon()
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		if (AMag* Mag = GetMag())
 		{
@@ -313,7 +314,7 @@ void AWeapon::Handle_OnWeaponAnimInstanceShellPort()
 
 void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		if (AmmoInWeapon)
 		{
@@ -321,12 +322,44 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 			AmmoInWeapon->SetIsEmpty(true);
 		}
 	}
+	//LineTrace();
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector()
 {
-	if (HasAuthority())
+	//if (HasAuthority())
 	{
 		FiremodeIndex = FMath::Modulo<uint8>(FiremodeIndex + 1, GetNumFiremodes());
+	}
+}
+
+void AWeapon::LineTrace()
+{
+	UWorld* const World = GetWorld();
+	FTransform FireportTransform = Mesh != nullptr ? Mesh->GetSocketTransform(TEXT("fireport"), ERelativeTransformSpace::RTS_World) : FTransform();
+	FVector Start = FireportTransform.GetLocation();
+	FVector End = Start + (UKismetMathLibrary::GetRightVector(FireportTransform.Rotator()) * 2000.0f);
+	
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+	FHitResult OutHit;
+
+	bool bHit = false;
+
+	bHit = World->LineTraceSingleByChannel(
+		OutHit,
+		Start,
+		End,
+		ECC_Visibility
+	);
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
+
+	if (bHit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Single Trace Object Name: %s"), *OutHit.HitObjectHandle.GetName());
+
+		//FString ActorDisplayName = UKismetSystemLibrary::GetDisplayName(OutHit.GetActor());
+		//UE_LOG(LogTemp, Warning, TEXT("Profile Trace OutHit Display Name: %s"), *ActorDisplayName);
 	}
 }

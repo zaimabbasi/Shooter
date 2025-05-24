@@ -2,7 +2,7 @@
 
 
 #include "Animation/WeaponAnimInstance.h"
-#include "Animation/AnimNode_StateMachine.h"
+//#include "Animation/AnimNode_StateMachine.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Character/ShooterCharacter.h"
 #include "Components/CharacterCombatComponent.h"
@@ -23,6 +23,7 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 		//FireAnimPlayRate = 1.0f;
 	}
 
+	// Maybe just set the first state as Out
 	CombatAction = ECombatAction::CA_Out;
 
 	IKAlpha = 0.0f;
@@ -31,6 +32,8 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 	IKBlendDurationCounter = 0.0f;
 
 	SwayInterpSpeed = 5.0f;
+
+	
 }
 
 void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -47,7 +50,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	Firemode = Weapon->GetFiremode();
-	bIsHolster = Weapon->GetIsHolster();
+	//bIsHolster = Weapon->GetIsHolster();
 	bIsPistol = Weapon->IsPistol();
 	bIsOneHanded = Weapon->GetIsOneHanded();
 	ForegripHandguardMesh = Weapon->GetForegripHandguardMesh();
@@ -62,9 +65,15 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bool bIsCharacterTransition = ShooterCharacter && ShooterCharacter->GetIsTransition();
 	bIsCharacterThirdAction = bIsCharacterTransition || bIsCharacterSprinting || (bIsCharacterProned && bHasCharacterVelocity);
 
+	/*AWeapon* CharacterEquippedWeapon = ShooterCharacter != nullptr ? ShooterCharacter->GetEquippedWeapon() : nullptr;
+	ECombatAction CharacterCombatAction = ShooterCharacter != nullptr ? ShooterCharacter->GetCombatAction() : ECombatAction::CA_None;
+	CombatAction = Weapon == CharacterEquippedWeapon ? CharacterCombatAction : ECombatAction::CA_Out;*/
 	AWeapon* CharacterEquippedWeapon = ShooterCharacter != nullptr ? ShooterCharacter->GetEquippedWeapon() : nullptr;
 	ECombatAction CharacterCombatAction = ShooterCharacter != nullptr ? ShooterCharacter->GetCombatAction() : ECombatAction::CA_None;
-	CombatAction = Weapon == CharacterEquippedWeapon ? CharacterCombatAction : ECombatAction::CA_Out;
+	if (Weapon == CharacterEquippedWeapon)
+	{
+		CombatAction = CharacterCombatAction;
+	}
 
 	AO_Pitch = ShooterCharacter != nullptr ? ShooterCharacter->GetAO_Pitch() : 0.0f;
 	AO_Yaw = ShooterCharacter != nullptr ? ShooterCharacter->GetAO_Yaw() : 0.0f;
@@ -97,17 +106,18 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		}
 	}*/
 
-	/*const FAnimNode_StateMachine* StateMachineInstance = GetStateMachineInstanceFromName(TEXT("Default"));
-	if (StateMachineInstance && !bIsHolster)
+	/*FName EquippedOrNotEquipped = CharacterEquippedWeapon == Weapon ? TEXT("Equipped") : TEXT("NotEquipped");
+	FName ServerOrClient = Weapon->HasAuthority() ? TEXT("Server") : TEXT("Client");
+	FName HumanReadableCombatAction = ShooterCharacter && ShooterCharacter->GetCharacterCombat() ? ShooterCharacter->GetCharacterCombat()->GetHumanReadableCombatAction(CombatAction) : NAME_None;
+	const FAnimNode_StateMachine* StateMachineInstance = GetStateMachineInstanceFromName(TEXT("Default"));
+	if (StateMachineInstance)
 	{
 		const FBakedAnimationState& CurrentStateInfo = StateMachineInstance->GetStateInfo(StateMachineInstance->GetCurrentState());
-		if (Weapon->HasAuthority())
-		{	
-			UE_LOG(LogTemp, Warning, TEXT("Server State: %s"), *CurrentStateInfo.StateName.ToString());	
-		}
-		else
+		UE_LOG(LogTemp, Warning, TEXT("%s: %s is %s with CombatAction: %s and State: %s"), *ServerOrClient.ToString(), *Weapon->GetFName().ToString(), *EquippedOrNotEquipped.ToString(), *HumanReadableCombatAction.ToString(), *CurrentStateInfo.StateName.ToString());
+
+		if (CombatAction == ECombatAction::CA_Idle && CurrentStateInfo.StateName == TEXT("Out"))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Client State: %s"), *CurrentStateInfo.StateName.ToString());
+			UE_LOG(LogTemp, Error, TEXT("%s: Initial Transition to Idle"), *ServerOrClient.ToString());
 		}
 	}*/
 
@@ -358,7 +368,7 @@ void UWeaponAnimInstance::CalculateWeaponRootAnimTransform()
 	WeaponRootAnimTransform = FTransform(FRotator(ProceduralAnimRollRotation + SwayRollRotation, 0.0f, 0.0f), FVector(ProceduralAnimHorizontalMovement + SwayHorizontalMovement, 0.0f, ProceduralAnimVerticalMovement + SwayVerticalMovement), FVector::OneVector);
 }
 
-bool UWeaponAnimInstance::ShouldCopyCharacterIKSLPalm()
+bool UWeaponAnimInstance::ShouldCopyCharacterIKSLPalm() const
 {
 	return (bIsCharacterProned && bHasCharacterVelocity) || (bIsCharacterSprinting && (bIsPistol || bIsOneHanded));
 }

@@ -98,7 +98,7 @@ private:
 	void CalculateLPalmTransform();
 	void CalculateThirdActionTransforms();
 	void CalculateWeaponRootAnimTransform();
-	bool ShouldCopyCharacterIKSLPalm();
+	bool ShouldCopyCharacterIKSLPalm() const;
 	//float CalculateVelocityYawOffsetAlpha(float VelocityYawOffset);
 
 public:
@@ -152,8 +152,8 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	EWeaponFiremode Firemode;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	bool bIsHolster;
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	bool bIsHolster;*/
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bHasForegripHandguardMesh;

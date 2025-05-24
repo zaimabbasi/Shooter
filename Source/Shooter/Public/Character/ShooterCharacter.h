@@ -539,6 +539,7 @@ private:
 public:
 	FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
+	FORCEINLINE UCharacterCombatComponent* GetCharacterCombat() const { return CharacterCombat; }
 	FORCEINLINE UCharacterInventoryComponent* GetCharacterInventory() const { return CharacterInventory; }
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE bool GetIsTransition() const { return bIsTransition; }

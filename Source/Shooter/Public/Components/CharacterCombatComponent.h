@@ -57,6 +57,7 @@ public:
 	ECombatAction GetWeaponAnimCombatAction() const;
 	ECombatAction GetHandsAnimCombatAction() const;
 	ECombatAction GetAnimCombatAction() const;
+	//FName GetHumanReadableCombatAction(ECombatAction Action) const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -73,6 +74,10 @@ protected:
 	
 	virtual void AddDelegates(AWeapon* Weapon);
 	virtual void RemoveDelegates(AWeapon* Weapon);
+
+	UFUNCTION(Client, Reliable)
+	void Client_EquipWeapon(AWeapon* WeaponToEquip);
+	virtual void Client_EquipWeapon_Implementation(AWeapon* WeaponToEquip);
 
 	UFUNCTION()
 	virtual void Handle_OnCharacterHandsAnimInstanceIdle();
@@ -135,7 +140,7 @@ protected:
 	virtual void Handle_OnWeaponReloadCharge(AWeapon* Weapon);
 
 	UFUNCTION()
-	virtual void OnRep_CombatAction();
+	virtual void OnRep_CombatAction(ECombatAction PrevCombatAction);
 
 	UFUNCTION()
 	virtual void OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon);
