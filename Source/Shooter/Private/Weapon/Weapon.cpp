@@ -11,7 +11,7 @@
 #include "Character/ShooterCharacter.h"
 #include "Components/WeaponModComponent.h"
 #include "Data/MagDataAsset.h"
-#include "Data/ModDataAsset.h"
+#include "Data/WeaponModDataAsset.h"
 #include "Data/WeaponDataAsset.h"
 #include "Mod/Foregrip.h"
 #include "Mod/Handguard.h"
@@ -108,7 +108,7 @@ void AWeapon::Init()
 	{
 		if (const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous())
 		{
-			WeaponModComponent->Init(LoadedWeaponDataAsset->ModDataAsset.LoadSynchronous());
+			WeaponModComponent->Init(LoadedWeaponDataAsset->WeaponModDataAsset.LoadSynchronous());
 		}
 	}
 

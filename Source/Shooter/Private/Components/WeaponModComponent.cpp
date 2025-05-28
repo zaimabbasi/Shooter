@@ -3,7 +3,7 @@
 
 #include "Components/WeaponModComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "Data/ModDataAsset.h"
+#include "Data/WeaponModDataAsset.h"
 #include "Mod/Mod.h"
 #include "Types/ShooterNames.h"
 #include "Utility/ShooterUtility.h"
@@ -81,9 +81,9 @@ void UWeaponModComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 //	}
 //}
 
-void UWeaponModComponent::Init(const UModDataAsset* ModDataAsset)
+void UWeaponModComponent::Init(const UWeaponModDataAsset* WeaponModDataAsset)
 {
-	if (ModDataAsset == nullptr)
+	if (WeaponModDataAsset == nullptr)
 	{
 		return;
 	}
@@ -91,12 +91,12 @@ void UWeaponModComponent::Init(const UModDataAsset* ModDataAsset)
 	{
 		if (UWorld* World = GetWorld())
 		{
-			for (const FModData& ModData : ModDataAsset->ModDataArray)
+			for (const FModData& ModData : WeaponModDataAsset->ModDataArray)
 			{
 				if (ModData.ModParentClass)
 				{
 					// Check parent is in the ModDataArray?
-					const FModData* ModParentData = ModDataAsset->ModDataArray.FindByPredicate([&](const FModData& ModDataInArray) {
+					const FModData* ModParentData = WeaponModDataAsset->ModDataArray.FindByPredicate([&](const FModData& ModDataInArray) {
 						return ModDataInArray.ModClass == ModData.ModParentClass;
 						});
 					if (ModParentData)
@@ -123,7 +123,7 @@ void UWeaponModComponent::Init(const UModDataAsset* ModDataAsset)
 				else
 				{
 					// Check already exists?
-					const FModData* ModParentData = ModDataAsset->ModDataArray.FindByPredicate([&](const FModData& ModDataInArray) {
+					const FModData* ModParentData = WeaponModDataAsset->ModDataArray.FindByPredicate([&](const FModData& ModDataInArray) {
 						return ModDataInArray.ModClass == ModData.ModParentClass;
 						});
 					if (!ModParentData)

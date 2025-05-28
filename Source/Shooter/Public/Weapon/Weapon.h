@@ -12,10 +12,7 @@ class AAmmo;
 class AMag;
 class AShooterCharacter;
 class UBoxComponent;
-class UHandsAnimationDataAsset;
 class UWeaponModComponent;
-class UModDataAsset;
-class UWeaponAnimationDataAsset;
 class UWeaponDataAsset;
 
 enum class EWeaponFiremode : uint8;

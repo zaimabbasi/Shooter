@@ -7,7 +7,7 @@
 #include "WeaponModComponent.generated.h"
 
 class AMod;
-class UModDataAsset;
+class UWeaponModDataAsset;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SHOOTER_API UWeaponModComponent : public UActorComponent
@@ -20,7 +20,7 @@ public:
 	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	//virtual void Init(const UModDataAsset* ModDataAsset);
-	virtual void Init(const UModDataAsset* ModDataAsset);
+	virtual void Init(const UWeaponModDataAsset* ModDataAsset);
 
 	template<class T>
 	T* GetMod() const

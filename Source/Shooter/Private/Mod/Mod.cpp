@@ -2,8 +2,6 @@
 
 
 #include "Mod/Mod.h"
-#include "Components/WeaponModComponent.h"
-#include "Data/ModDataAsset.h"
 #include "Types/ShooterNames.h"
 
 AMod::AMod()
@@ -13,9 +11,6 @@ AMod::AMod()
 
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
-
-	/*WeaponModComponent = CreateDefaultSubobject<UWeaponModComponent>(TEXT("ModComponent"));
-	WeaponModComponent->SetIsReplicated(true);*/
 
 }
 
@@ -41,11 +36,3 @@ FName AMod::GetDefaultAttachParentSocketName() const
 {
 	return NAME_None;
 }
-
-//void AMod::Init()
-//{
-//	if (WeaponModComponent)
-//	{
-//		WeaponModComponent->Init(ModDataAsset.LoadSynchronous());
-//	}
-//}

@@ -6,7 +6,7 @@
 #include "Engine/DataAsset.h"
 #include "WeaponDataAsset.generated.h"
 
-class UModDataAsset;
+class UWeaponModDataAsset;
 enum class EWeaponFiremode : uint8;
 
 UCLASS()
@@ -25,6 +25,6 @@ public:
 	uint16 RateOfFire;
 
 	UPROPERTY(EditAnywhere, Category = "DataAsset")
-	TSoftObjectPtr<UModDataAsset> ModDataAsset;
+	TSoftObjectPtr<UWeaponModDataAsset> WeaponModDataAsset;
 
 };
