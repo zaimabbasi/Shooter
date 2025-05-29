@@ -9,7 +9,7 @@
 class AWeapon;
 struct FInventoryParams;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryComponentWeaponArrayReplicatedSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterInventoryWeaponArrayReplicatedSignature);
 
 #define PRIMARY_WEAPON_INDEX	(0)
 #define SECONDARY_WEAPON_INDEX	(1)
@@ -37,7 +37,7 @@ protected:
 	virtual void OnRep_WeaponArray() const;
 
 public:
-	FOnInventoryComponentWeaponArrayReplicatedSignature OnInventoryComponentWeaponArrayReplicated;
+	FOnCharacterInventoryWeaponArrayReplicatedSignature OnCharacterInventoryWeaponArrayReplicated;
 
 private:
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponArray)

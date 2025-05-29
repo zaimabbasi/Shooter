@@ -114,34 +114,6 @@ protected:
 	void Server_Lean(ELeaningDirection NewLeaningDirection);
 	virtual void Server_Lean_Implementation(ELeaningDirection NewLeaningDirection);
 
-	UFUNCTION(Server, Reliable)
-	void Server_EquipWeapon(AWeapon* WeaponToEquip);
-	virtual void Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip);
-
-	UFUNCTION(Server, Reliable)
-	void Server_CheckWeaponChamber();
-	virtual void Server_CheckWeaponChamber_Implementation();
-
-	UFUNCTION(Server, Reliable)
-	void Server_FireWeapon(bool bFire);
-	virtual void Server_FireWeapon_Implementation(bool bFire);
-
-	UFUNCTION(Server, Reliable)
-	void Server_ChangeWeaponFiremode();
-	virtual void Server_ChangeWeaponFiremode_Implementation();
-
-	UFUNCTION(Server, Reliable)
-	void Server_CheckWeaponFiremode();
-	virtual void Server_CheckWeaponFiremode_Implementation();
-
-	UFUNCTION(Server, Reliable)
-	void Server_CheckWeaponMag();
-	virtual void Server_CheckWeaponMag_Implementation();
-
-	UFUNCTION(Server, Reliable)
-	void Server_ReloadWeapon();
-	virtual void Server_ReloadWeapon_Implementation();
-
 	UFUNCTION()
 	virtual void OnRep_LeaningDirection(ELeaningDirection OldLeaningDirection);
 
@@ -257,10 +229,10 @@ protected:
 	virtual void Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted();
 
 	UFUNCTION()
-	virtual void Handle_OnCombatComponentEquippedWeaponChanged(AWeapon* Weapon);
+	virtual void Handle_OnCharacterCombatEquippedWeaponChanged(AWeapon* Weapon);
 
 	UFUNCTION()
-	virtual void Handle_OnInventoryComponentWeaponArrayReplicated();
+	virtual void Handle_OnCharacterInventoryWeaponArrayReplicated();
 
 	UFUNCTION()
 	virtual void Handle_OnMovementComponentSprint();

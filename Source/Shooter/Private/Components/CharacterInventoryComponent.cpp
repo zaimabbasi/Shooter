@@ -92,5 +92,5 @@ AWeapon* UCharacterInventoryComponent::GetWeaponAtIndex(uint8 Index) const
 
 void UCharacterInventoryComponent::OnRep_WeaponArray() const
 {
-	OnInventoryComponentWeaponArrayReplicated.Broadcast();
+	OnCharacterInventoryWeaponArrayReplicated.Broadcast();
 }

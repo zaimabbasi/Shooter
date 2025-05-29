@@ -165,11 +165,11 @@ void AShooterCharacter::PostInitializeComponents()
 
 	if (CharacterCombat)
 	{
-		CharacterCombat->OnCombatComponentEquippedWeaponChanged.AddDynamic(this, &AShooterCharacter::Handle_OnCombatComponentEquippedWeaponChanged);
+		CharacterCombat->OnCharacterCombatEquippedWeaponChanged.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterCombatEquippedWeaponChanged);
 	}
 	if (CharacterInventory)
 	{
-		CharacterInventory->OnInventoryComponentWeaponArrayReplicated.AddDynamic(this, &AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated);
+		CharacterInventory->OnCharacterInventoryWeaponArrayReplicated.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterInventoryWeaponArrayReplicated);
 	}
 	if (ShooterCharacterMovement)
 	{
@@ -311,10 +311,10 @@ void AShooterCharacter::BeginPlay()
 			CharacterMesh->SetCastHiddenShadow(true);
 		}
 
-		if (CharacterInventory)
+		if (CharacterInventory && CharacterCombat)
 		{
 			AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-			Server_EquipWeapon(PrimaryWeapon);
+			CharacterCombat->EquipWeapon(PrimaryWeapon);
 		}
 	}
 
@@ -846,7 +846,7 @@ void AShooterCharacter::Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdl
 	bIsTransition = true;
 }
 
-void AShooterCharacter::Handle_OnCombatComponentEquippedWeaponChanged(AWeapon* Weapon)
+void AShooterCharacter::Handle_OnCharacterCombatEquippedWeaponChanged(AWeapon* Weapon)
 {
 	if (HandsMesh)
 	{
@@ -855,16 +855,12 @@ void AShooterCharacter::Handle_OnCombatComponentEquippedWeaponChanged(AWeapon* W
 	}
 }
 
-void AShooterCharacter::Handle_OnInventoryComponentWeaponArrayReplicated()
+void AShooterCharacter::Handle_OnCharacterInventoryWeaponArrayReplicated()
 {
-	if (CharacterInventory)
+	if (CharacterInventory && CharacterCombat)
 	{
 		AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-		if (CharacterCombat)
-		{
-			CharacterCombat->EquipWeapon(PrimaryWeapon);
-		}
-		Server_EquipWeapon(PrimaryWeapon);
+		CharacterCombat->EquipWeapon(PrimaryWeapon);
 	}
 }
 
@@ -922,41 +918,29 @@ void AShooterCharacter::OnCharacterCrouchAction(const FInputActionValue& Value)
 void AShooterCharacter::OnCharacterEquipPrimaryWeaponAction(const FInputActionValue& Value)
 {
 	bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && CharacterInventory)
+	if (CurrentValue && CharacterInventory && CharacterCombat)
 	{
 		AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-		if (CharacterCombat)
-		{
-			CharacterCombat->EquipWeapon(PrimaryWeapon);
-		}
-		Server_EquipWeapon(PrimaryWeapon);
+		CharacterCombat->EquipWeapon(PrimaryWeapon);
 	}
 }
 
 void AShooterCharacter::OnCharacterEquipSecondaryWeaponAction(const FInputActionValue& Value)
 {
 	bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && CharacterInventory)
+	if (CurrentValue && CharacterInventory && CharacterCombat)
 	{
 		AWeapon* SecondaryWeapon = CharacterInventory->GetWeaponAtIndex(SECONDARY_WEAPON_INDEX);
-		if (CharacterCombat)
-		{
-			CharacterCombat->EquipWeapon(SecondaryWeapon);
-		}
-		Server_EquipWeapon(SecondaryWeapon);
+		CharacterCombat->EquipWeapon(SecondaryWeapon);
 	}
 }
 
 void AShooterCharacter::OnCharacterHolsterWeaponAction(const FInputActionValue& Value)
 {
 	bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue)
+	if (CurrentValue && CharacterCombat)
 	{
-		if (CharacterCombat)
-		{
-			CharacterCombat->EquipWeapon(nullptr);
-		}
-		Server_EquipWeapon(nullptr);
+		CharacterCombat->EquipWeapon(nullptr);
 	}
 }
 
@@ -1146,13 +1130,9 @@ void AShooterCharacter::OnCharacterSprintAction(const FInputActionValue& Value)
 void AShooterCharacter::OnWeaponChamberCheckAction(const FInputActionValue& Value)
 {
 	bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue && bIsAlterAction)
+	if (CurrentValue && bIsAlterAction && CharacterCombat)
 	{
-		if (CharacterCombat)
-		{
-			CharacterCombat->CheckWeaponChamber();
-		}
-		Server_CheckWeaponChamber();
+		CharacterCombat->CheckWeaponChamber();
 	}
 }
 
@@ -1163,29 +1143,20 @@ void AShooterCharacter::OnWeaponFireAction(const FInputActionValue& Value)
 	{
 		CharacterCombat->FireWeapon(CurrentValue);
 	}
-	Server_FireWeapon(CurrentValue);
 }
 
 void AShooterCharacter::OnWeaponFiremodeAction(const FInputActionValue& Value)
 {
 	bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue)
+	if (CurrentValue && CharacterCombat)
 	{
 		if (bIsAlterAction)
 		{
-			if (CharacterCombat)
-			{
-				CharacterCombat->CheckWeaponFiremode();
-			}
-			Server_CheckWeaponFiremode();
+			CharacterCombat->CheckWeaponFiremode();
 		}
 		else
 		{
-			if (CharacterCombat)
-			{
-				CharacterCombat->ChangeWeaponFiremode();
-			}
-			Server_ChangeWeaponFiremode();
+			CharacterCombat->ChangeWeaponFiremode();
 		}
 	}
 }
@@ -1193,80 +1164,16 @@ void AShooterCharacter::OnWeaponFiremodeAction(const FInputActionValue& Value)
 void AShooterCharacter::OnWeaponReloadAction(const FInputActionValue& Value)
 {
 	bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue)
+	if (CurrentValue && CharacterCombat)
 	{
 		if (bIsAlterAction)
 		{
-			if (CharacterCombat)
-			{
-				CharacterCombat->CheckWeaponMag();
-			}
-			Server_CheckWeaponMag();
+			CharacterCombat->CheckWeaponMag();
 		}
 		else
 		{
-			if (CharacterCombat)
-			{
-				CharacterCombat->ReloadWeapon();
-			}
-			Server_ReloadWeapon();
+			CharacterCombat->ReloadWeapon();
 		}
-	}
-}
-
-void AShooterCharacter::Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip)
-{
-	if (CharacterCombat)
-	{
-		CharacterCombat->EquipWeapon(WeaponToEquip);
-	}
-}
-
-void AShooterCharacter::Server_ReloadWeapon_Implementation()
-{
-	if (CharacterCombat)
-	{
-		CharacterCombat->ReloadWeapon();
-	}
-}
-
-void AShooterCharacter::Server_CheckWeaponChamber_Implementation()
-{
-	if (CharacterCombat)
-	{
-		CharacterCombat->CheckWeaponChamber();
-	}
-}
-
-void AShooterCharacter::Server_FireWeapon_Implementation(bool bFire)
-{
-	if (CharacterCombat)
-	{
-		CharacterCombat->FireWeapon(bFire);
-	}
-}
-
-void AShooterCharacter::Server_ChangeWeaponFiremode_Implementation()
-{
-	if (CharacterCombat)
-	{
-		CharacterCombat->ChangeWeaponFiremode();
-	}
-}
-
-void AShooterCharacter::Server_CheckWeaponFiremode_Implementation()
-{
-	if (CharacterCombat)
-	{
-		CharacterCombat->CheckWeaponFiremode();
-	}
-}
-
-void AShooterCharacter::Server_CheckWeaponMag_Implementation()
-{
-	if (CharacterCombat)
-	{
-		CharacterCombat->CheckWeaponMag();
 	}
 }
 

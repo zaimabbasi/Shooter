@@ -2,7 +2,6 @@
 
 
 #include "Animation/WeaponAnimInstance.h"
-//#include "Animation/AnimNode_StateMachine.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Character/ShooterCharacter.h"
 #include "Components/CharacterCombatComponent.h"
@@ -32,7 +31,6 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 	IKBlendDurationCounter = 0.0f;
 
 	SwayInterpSpeed = 5.0f;
-
 	
 }
 
@@ -65,15 +63,9 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bool bIsCharacterTransition = ShooterCharacter && ShooterCharacter->GetIsTransition();
 	bIsCharacterThirdAction = bIsCharacterTransition || bIsCharacterSprinting || (bIsCharacterProned && bHasCharacterVelocity);
 
-	/*AWeapon* CharacterEquippedWeapon = ShooterCharacter != nullptr ? ShooterCharacter->GetEquippedWeapon() : nullptr;
-	ECombatAction CharacterCombatAction = ShooterCharacter != nullptr ? ShooterCharacter->GetCombatAction() : ECombatAction::CA_None;
-	CombatAction = Weapon == CharacterEquippedWeapon ? CharacterCombatAction : ECombatAction::CA_Out;*/
 	AWeapon* CharacterEquippedWeapon = ShooterCharacter != nullptr ? ShooterCharacter->GetEquippedWeapon() : nullptr;
 	ECombatAction CharacterCombatAction = ShooterCharacter != nullptr ? ShooterCharacter->GetCombatAction() : ECombatAction::CA_None;
-	if (Weapon == CharacterEquippedWeapon)
-	{
-		CombatAction = CharacterCombatAction;
-	}
+	CombatAction = Weapon == CharacterEquippedWeapon ? CharacterCombatAction : ECombatAction::CA_Out;
 
 	AO_Pitch = ShooterCharacter != nullptr ? ShooterCharacter->GetAO_Pitch() : 0.0f;
 	AO_Yaw = ShooterCharacter != nullptr ? ShooterCharacter->GetAO_Yaw() : 0.0f;
@@ -103,21 +95,6 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		{
 			WalkAnimMaxHorizontalMovementOffset = FMath::FInterpTo(WalkAnimMaxHorizontalMovementOffset, 0, DeltaSeconds, 5.0f);
 			WalkAnimMinHorizontalMovementOffset = FMath::FInterpTo(WalkAnimMinHorizontalMovementOffset, WalkAnimMinHorizontalMovement * CharacterVelocityYawOffsetAlpha, DeltaSeconds, 5.0f);
-		}
-	}*/
-
-	/*FName EquippedOrNotEquipped = CharacterEquippedWeapon == Weapon ? TEXT("Equipped") : TEXT("NotEquipped");
-	FName ServerOrClient = Weapon->HasAuthority() ? TEXT("Server") : TEXT("Client");
-	FName HumanReadableCombatAction = ShooterCharacter && ShooterCharacter->GetCharacterCombat() ? ShooterCharacter->GetCharacterCombat()->GetHumanReadableCombatAction(CombatAction) : NAME_None;
-	const FAnimNode_StateMachine* StateMachineInstance = GetStateMachineInstanceFromName(TEXT("Default"));
-	if (StateMachineInstance)
-	{
-		const FBakedAnimationState& CurrentStateInfo = StateMachineInstance->GetStateInfo(StateMachineInstance->GetCurrentState());
-		UE_LOG(LogTemp, Warning, TEXT("%s: %s is %s with CombatAction: %s and State: %s"), *ServerOrClient.ToString(), *Weapon->GetFName().ToString(), *EquippedOrNotEquipped.ToString(), *HumanReadableCombatAction.ToString(), *CurrentStateInfo.StateName.ToString());
-
-		if (CombatAction == ECombatAction::CA_Idle && CurrentStateInfo.StateName == TEXT("Out"))
-		{
-			UE_LOG(LogTemp, Error, TEXT("%s: Initial Transition to Idle"), *ServerOrClient.ToString());
 		}
 	}*/
 

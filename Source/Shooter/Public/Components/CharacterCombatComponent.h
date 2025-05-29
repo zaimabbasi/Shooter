@@ -9,7 +9,7 @@
 class AShooterCharacter;
 class AWeapon;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatComponentEquippedWeaponChangedSignature, AWeapon*, Weapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterCombatEquippedWeaponChangedSignature, AWeapon*, Weapon);
 
 UENUM(BlueprintType)
 enum class ECombatAction : uint8
@@ -57,7 +57,6 @@ public:
 	ECombatAction GetWeaponAnimCombatAction() const;
 	ECombatAction GetHandsAnimCombatAction() const;
 	ECombatAction GetAnimCombatAction() const;
-	//FName GetHumanReadableCombatAction(ECombatAction Action) const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -75,9 +74,13 @@ protected:
 	virtual void AddDelegates(AWeapon* Weapon);
 	virtual void RemoveDelegates(AWeapon* Weapon);
 
-	UFUNCTION(Client, Reliable)
-	void Client_EquipWeapon(AWeapon* WeaponToEquip);
-	virtual void Client_EquipWeapon_Implementation(AWeapon* WeaponToEquip);
+	UFUNCTION(Server, Reliable)
+	void Server_SetCombatAction(ECombatAction NewCombatAction);
+	virtual void Server_SetCombatAction_Implementation(ECombatAction NewCombatAction);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetEquippedWeapon(AWeapon* WeaponToEquip);
+	virtual void Server_SetEquippedWeapon_Implementation(AWeapon* WeaponToEquip);
 
 	UFUNCTION()
 	virtual void Handle_OnCharacterHandsAnimInstanceIdle();
@@ -146,12 +149,9 @@ protected:
 	virtual void OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon);
 
 public:
-	FOnCombatComponentEquippedWeaponChangedSignature OnCombatComponentEquippedWeaponChanged;
+	FOnCharacterCombatEquippedWeaponChangedSignature OnCharacterCombatEquippedWeaponChanged;
 
 protected:
-	/*UPROPERTY(Replicated)
-	bool bIsFiring;*/
-
 	bool bWantsToFire;
 	uint8 NumRoundsFired;
 
@@ -170,5 +170,9 @@ public:
 	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
 	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
+	FORCEINLINE bool IsLocallyControlled() const {
+		APawn* OwnerPawn = Cast<APawn>(GetOwner());
+		return OwnerPawn && OwnerPawn->IsLocallyControlled();
+	}
 
 };
