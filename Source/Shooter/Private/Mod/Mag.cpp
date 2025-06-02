@@ -21,6 +21,29 @@ void AMag::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProp
 
 }
 
+void AMag::Init()
+{
+	Super::Init();
+
+	if (MagDataAsset.LoadSynchronous() == nullptr)
+	{
+		return;
+	}
+	if (UWorld* World = GetWorld())
+	{
+		for (uint8 Index = 0; Index < MagDataAsset->AmmoCapacity; ++Index)
+		{
+			if (AAmmo* SpawnedAmmo = World->SpawnActor<AAmmo>(MagDataAsset->AmmoClass))
+			{
+				SpawnedAmmo->SetOwner(this);
+				SpawnedAmmo->SetActorHiddenInGame(true);
+
+				AmmoArray.Add(SpawnedAmmo);
+			}
+		}
+	}
+}
+
 FName AMag::GetDefaultAttachParentSocketName() const
 {
 	return MOD_MAGAZINE_SOCKET_NAME;
@@ -28,27 +51,63 @@ FName AMag::GetDefaultAttachParentSocketName() const
 
 uint8 AMag::GetAmmoCapacity() const
 {
-	const UMagDataAsset* LoadedMagDataAsset = MagDataAsset.LoadSynchronous();
-	return LoadedMagDataAsset ? LoadedMagDataAsset->AmmoCapacity : 0;
+	return MagDataAsset.LoadSynchronous() != nullptr ? MagDataAsset->AmmoCapacity : 0;
 }
 
-void AMag::AddAmmo(const uint8 Count)
+uint8 AMag::GetAmmoSpace() const
 {
-	if (Count > 0 && Count <= (GetAmmoCapacity() - AmmoCount))
+	return GetAmmoCapacity() - AmmoCount;
+}
+
+//void AMag::AddAmmo(const uint8 Count)
+//{
+//	if (Count > 0 && Count <= (GetAmmoCapacity() - AmmoCount))
+//	{
+//		if (UWorld* World = GetWorld())
+//		{
+//			for (uint8 Index = AmmoCount + 1; Index <= AmmoCount + Count; ++Index)
+//			{
+//				const FName PatronSocketName = PATRON_SOCKET_NAME(Index);
+//				if (GetMesh() && GetMesh()->DoesSocketExist(PatronSocketName))
+//				{
+//					if (AAmmo* SpawnedAmmo = World->SpawnActor<AAmmo>(MagDataAsset.LoadSynchronous()->AmmoClass))
+//					{
+//						SpawnedAmmo->SetOwner(this);
+//						SpawnedAmmo->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, PatronSocketName);
+//						AmmoArray.Add(SpawnedAmmo);
+//					}
+//				}
+//			}
+//		}
+//		AmmoCount += Count;
+//	}
+//}
+void AMag::AddAmmo(uint8 Count)
+{
+	if (Count > 0 && Count <= GetAmmoSpace())
 	{
-		if (UWorld* World = GetWorld())
+		for (uint8 Index = AmmoCount; Index < AmmoCount + Count; ++Index)
 		{
-			for (uint8 Index = AmmoCount + 1; Index <= AmmoCount + Count; ++Index)
+			if (AAmmo* Ammo = GetAmmoAtIndex(Index))
 			{
-				const FName PatronSocketName = PATRON_SOCKET_NAME(Index);
-				if (GetMesh() && GetMesh()->DoesSocketExist(PatronSocketName))
+				if (Ammo->GetIsEmpty())
 				{
-					if (AAmmo* SpawnedAmmo = World->SpawnActor<AAmmo>(MagDataAsset.LoadSynchronous()->AmmoClass))
-					{
-						SpawnedAmmo->SetOwner(this);
-						SpawnedAmmo->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, PatronSocketName);
-						AmmoArray.Add(SpawnedAmmo);
-					}
+					Ammo->SetIsEmpty(false);	
+				}
+				if (Ammo->GetMesh())
+				{
+					Ammo->GetMesh()->SetSimulatePhysics(false);
+					Ammo->GetMesh()->SetEnableGravity(false);
+					Ammo->GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				}
+
+				FName PatronSocketName = PATRON_SOCKET_NAME(Index + 1);
+				if (GetMesh())
+				{
+					Ammo->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, PatronSocketName);
+					
+					bool bDoesSocketExists = GetMesh()->DoesSocketExist(PatronSocketName);
+					Ammo->SetActorHiddenInGame(!bDoesSocketExists);
 				}
 			}
 		}
@@ -56,17 +115,30 @@ void AMag::AddAmmo(const uint8 Count)
 	}
 }
 
+//void AMag::PopAmmo()
+//{
+//	if (AmmoCount > 0)
+//	{
+//		AAmmo* PoppedAmmo = nullptr;
+//		const FName PatronSocketName = PATRON_SOCKET_NAME(AmmoCount);
+//		if (GetMesh() && GetMesh()->DoesSocketExist(PatronSocketName))
+//		{
+//			PoppedAmmo = AmmoArray.Pop(true);
+//		}
+//		--AmmoCount;
+//		OnMagAmmoPopped.Broadcast(PoppedAmmo);
+//	}
+//}
 void AMag::PopAmmo()
 {
 	if (AmmoCount > 0)
 	{
-		AAmmo* PoppedAmmo = nullptr;
-		const FName PatronSocketName = PATRON_SOCKET_NAME(AmmoCount);
-		if (GetMesh() && GetMesh()->DoesSocketExist(PatronSocketName))
-		{
-			PoppedAmmo = AmmoArray.Pop(true);
-		}
 		--AmmoCount;
-		OnMagAmmoPopped.Broadcast(PoppedAmmo);
+		OnMagAmmoPopped.Broadcast(GetAmmoAtIndex(AmmoCount));
 	}
+}
+
+AAmmo* AMag::GetAmmoAtIndex(uint8 AmmoIndex) const
+{
+	return AmmoArray.IsValidIndex(AmmoIndex) ? AmmoArray[AmmoIndex] : nullptr;
 }

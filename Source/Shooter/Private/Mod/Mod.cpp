@@ -32,6 +32,10 @@ void AMod::Tick(float DeltaTime)
 
 }
 
+void AMod::Init()
+{
+}
+
 FName AMod::GetDefaultAttachParentSocketName() const
 {
 	return NAME_None;

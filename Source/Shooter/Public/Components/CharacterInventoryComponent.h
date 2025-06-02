@@ -29,6 +29,7 @@ public:
 	virtual AWeapon* GetWeaponAtIndex(uint8 Index) const;
 	virtual uint8 GetWeaponAmmoAtIndex(uint8 Index) const;
 	virtual void LoadAmmoInWeaponMag(uint8 WeaponIndex);
+	virtual void LoadAmmoInWeaponMag(uint8 WeaponIndex, uint8 AmmoCount);
 
 protected:
 	virtual void BeginPlay() override;

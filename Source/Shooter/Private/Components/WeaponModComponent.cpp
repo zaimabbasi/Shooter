@@ -26,14 +26,14 @@ AMod* UWeaponModComponent::SpawnMod(TSubclassOf<AMod> ModClass, AActor* ParentAc
 	{
 		if (AMod* SpawnedMod = World->SpawnActor<AMod>(ModClass))
 		{
-			AActor* OwningActor = GetOwner();
-			SpawnedMod->SetOwner(OwningActor);
-			//SpawnedMod->Init();
+			SpawnedMod->SetOwner(GetOwner());
+			SpawnedMod->Init();
 			SpawnedMod->AttachToActor(ParentActor, FAttachmentTransformRules::KeepRelativeTransform, AttachParentSocketName);
 			
 			ModArray.Add(SpawnedMod);
+
+			return SpawnedMod;
 		}
-		return nullptr;
 	}
 	return nullptr;
 }
@@ -87,51 +87,50 @@ void UWeaponModComponent::Init(const UWeaponModDataAsset* WeaponModDataAsset)
 	{
 		return;
 	}
-	if (AActor* OwningActor = GetOwner())
+	for (const FModData& ModData : WeaponModDataAsset->ModDataArray)
 	{
-		if (UWorld* World = GetWorld())
+		if (ModData.ModParentClass)
 		{
-			for (const FModData& ModData : WeaponModDataAsset->ModDataArray)
+			// Check parent is in the ModDataArray?
+			const FModData* ModParentData = WeaponModDataAsset->ModDataArray.FindByPredicate([&](const FModData& ModDataInArray) {
+				return ModDataInArray.ModClass == ModData.ModParentClass;
+				});
+			if (ModParentData)
 			{
-				if (ModData.ModParentClass)
+				// Check already exists?
+				TObjectPtr<AMod>* Mod = ModArray.FindByPredicate([&](AMod* const& Mod) {
+					return Mod->IsA(ModParentData->ModClass);
+					});
+				if (Mod)
 				{
-					// Check parent is in the ModDataArray?
-					const FModData* ModParentData = WeaponModDataAsset->ModDataArray.FindByPredicate([&](const FModData& ModDataInArray) {
-						return ModDataInArray.ModClass == ModData.ModParentClass;
-						});
-					if (ModParentData)
-					{
-						// Check already exists?
-						TObjectPtr<AMod>* Mod = ModArray.FindByPredicate([&](AMod* const& Mod) {
-							return Mod->IsA(ModParentData->ModClass);
-							});
-						if (Mod)
-						{
-							SpawnMod(ModData.ModClass, *Mod, ModData.AttachParentSocketName);
-						}
-						else
-						{
-							AMod* ParentMod = SpawnMod(ModParentData->ModClass, GetOwner(), ModParentData->AttachParentSocketName);
-							SpawnMod(ModData.ModClass, ParentMod, ModData.AttachParentSocketName);
-						}
-					}
-					else
-					{
-						// Mod parent is not valid, so do not spawn mod
-					}
+					SpawnMod(ModData.ModClass, *Mod, ModData.AttachParentSocketName);
 				}
 				else
 				{
-					// Check already exists?
-					const FModData* ModParentData = WeaponModDataAsset->ModDataArray.FindByPredicate([&](const FModData& ModDataInArray) {
-						return ModDataInArray.ModClass == ModData.ModParentClass;
-						});
-					if (!ModParentData)
-					{
-						SpawnMod(ModData.ModClass, GetOwner(), ModData.AttachParentSocketName);
-					}
+					AMod* ParentMod = SpawnMod(ModParentData->ModClass, GetOwner(), ModParentData->AttachParentSocketName);
+					SpawnMod(ModData.ModClass, ParentMod, ModData.AttachParentSocketName);
 				}
+			}
+			else
+			{
+				// Mod parent is not valid, so do not spawn mod
+			}
+		}
+		else
+		{
+			// Check already exists?
+			const FModData* ModParentData = WeaponModDataAsset->ModDataArray.FindByPredicate([&](const FModData& ModDataInArray) {
+				return ModDataInArray.ModClass == ModData.ModParentClass;
+				});
+			if (!ModParentData)
+			{
+				SpawnMod(ModData.ModClass, GetOwner(), ModData.AttachParentSocketName);
 			}
 		}
 	}
+}
+
+void UWeaponModComponent::OnRep_ModArray() const
+{
+	OnWeaponModModArrayReplicated.Broadcast();
 }

@@ -9,6 +9,8 @@
 class AMod;
 class UWeaponModDataAsset;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponModModArrayReplicatedSignature);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SHOOTER_API UWeaponModComponent : public UActorComponent
 {
@@ -33,9 +35,15 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual AMod* SpawnMod(TSubclassOf<AMod> ModClass, AActor* ParentActor, FName AttachParentSocketName = NAME_None);
+
+	UFUNCTION()
+	virtual void OnRep_ModArray() const;
 	
+public:
+	FOnWeaponModModArrayReplicatedSignature OnWeaponModModArrayReplicated;
+
 private:
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_ModArray)
 	TArray<TObjectPtr<AMod>> ModArray;
 
 };

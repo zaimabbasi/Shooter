@@ -20,11 +20,17 @@ public:
 	AMag();	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	virtual void Init() override;
 	virtual FName GetDefaultAttachParentSocketName() const override;
 	uint8 GetAmmoCapacity() const;
+	uint8 GetAmmoSpace() const;
 
-	void AddAmmo(const uint8 Count);
+	//void AddAmmo(const uint8 Count);
+	void AddAmmo(uint8 Count);
 	void PopAmmo();
+
+protected:
+	AAmmo* GetAmmoAtIndex(uint8 AmmoIndex) const;
 
 public:
 	FOnMagAmmoPoppedSignature OnMagAmmoPopped;

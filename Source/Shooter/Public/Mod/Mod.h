@@ -16,6 +16,7 @@ public:
 	virtual void PostInitializeComponents() override;
 	virtual void Tick(float DeltaTime) override;
 	
+	virtual void Init();
 	virtual FName GetDefaultAttachParentSocketName() const;
 
 protected:

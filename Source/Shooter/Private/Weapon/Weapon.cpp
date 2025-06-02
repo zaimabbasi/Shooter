@@ -71,6 +71,10 @@ void AWeapon::PostInitializeComponents()
 		}
 	}
 
+	if (WeaponModComponent)
+	{
+		WeaponModComponent->OnWeaponModModArrayReplicated.AddDynamic(this, &AWeapon::Handle_OnWeaponModModArrayReplicated);
+	}
 }
 
 void AWeapon::BeginPlay()
@@ -183,22 +187,42 @@ USkeletalMeshComponent* AWeapon::GetScopeSightMesh() const
 	return ModScope != nullptr ? ModScope->GetMesh() : ModSightRear != nullptr ? ModSightRear->GetMesh() : nullptr;
 }
 
+void AWeapon::Handle_OnWeaponModModArrayReplicated()
+{
+	/*if (AMag* Mag = GetMag())
+	{
+		if (!Mag->OnMagAmmoPopped.IsBound())
+		{
+			Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
+		}
+	}*/
+}
+
+//void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
+//{
+//	AMag* Mag = GetMag();
+//	if (PoppedAmmo == nullptr && Mag)
+//	{
+//		if (const UMagDataAsset* MagDataAsset = Mag->GetMagDataAsset().LoadSynchronous())
+//		{
+//			if (UWorld* World = GetWorld())
+//			{
+//				PoppedAmmo = World->SpawnActor<AAmmo>(MagDataAsset->AmmoClass);
+//			}
+//		}
+//	}
+//	if (PoppedAmmo)
+//	{
+//		PoppedAmmo->SetOwner(this);
+//		PoppedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, PATRON_IN_WEAPON_SOCKET_NAME);
+//	}
+//	AmmoInWeapon = PoppedAmmo;
+//}
 void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
 {
-	AMag* Mag = GetMag();
-	if (PoppedAmmo == nullptr && Mag)
-	{
-		if (const UMagDataAsset* MagDataAsset = Mag->GetMagDataAsset().LoadSynchronous())
-		{
-			if (UWorld* World = GetWorld())
-			{
-				PoppedAmmo = World->SpawnActor<AAmmo>(MagDataAsset->AmmoClass);
-			}
-		}
-	}
 	if (PoppedAmmo)
 	{
-		PoppedAmmo->SetOwner(this);
+		PoppedAmmo->SetActorHiddenInGame(false);
 		PoppedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, PATRON_IN_WEAPON_SOCKET_NAME);
 	}
 	AmmoInWeapon = PoppedAmmo;
@@ -281,7 +305,7 @@ void AWeapon::Handle_OnWeaponAnimInstanceOutToIdleArm()
 
 void AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon()
 {
-	//if (HasAuthority())
+	if (HasAuthority())
 	{
 		if (AMag* Mag = GetMag())
 		{
@@ -300,13 +324,14 @@ void AWeapon::Handle_OnWeaponAnimInstanceShellPort()
 	if (AmmoInWeapon)
 	{
 		AmmoInWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		if (USkeletalMeshComponent* AmmoInWeaponMesh = AmmoInWeapon->GetMesh())
+		if (AmmoInWeapon->GetMesh())
 		{
-			AmmoInWeaponMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-			AmmoInWeaponMesh->SetSimulatePhysics(true);
-			AmmoInWeaponMesh->SetEnableGravity(true);
-			FVector ImpulseVector = (-3.0f * AmmoInWeaponMesh->GetForwardVector()) + (-2.0f * AmmoInWeaponMesh->GetRightVector()) + (3.0f * AmmoInWeaponMesh->GetUpVector());
-			AmmoInWeaponMesh->AddImpulse(ImpulseVector);
+			AmmoInWeapon->GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+			AmmoInWeapon->GetMesh()->SetSimulatePhysics(true);
+			AmmoInWeapon->GetMesh()->SetEnableGravity(true);
+
+			FVector ImpulseVector = (-3.0f * AmmoInWeapon->GetMesh()->GetForwardVector()) + (-2.0f * AmmoInWeapon->GetMesh()->GetRightVector()) + (3.0f * AmmoInWeapon->GetMesh()->GetUpVector());
+			AmmoInWeapon->GetMesh()->AddImpulse(ImpulseVector);
 		}
 		AmmoInWeapon = nullptr;
 	}
@@ -314,7 +339,7 @@ void AWeapon::Handle_OnWeaponAnimInstanceShellPort()
 
 void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 {
-	//if (HasAuthority())
+	if (HasAuthority())
 	{
 		if (AmmoInWeapon)
 		{
@@ -327,7 +352,7 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 
 void AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector()
 {
-	//if (HasAuthority())
+	if (HasAuthority())
 	{
 		FiremodeIndex = FMath::Modulo<uint8>(FiremodeIndex + 1, GetNumFiremodes());
 	}
@@ -346,12 +371,7 @@ void AWeapon::LineTrace()
 
 	bool bHit = false;
 
-	bHit = World->LineTraceSingleByChannel(
-		OutHit,
-		Start,
-		End,
-		ECC_Visibility
-	);
+	bHit = World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
 
 	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
 

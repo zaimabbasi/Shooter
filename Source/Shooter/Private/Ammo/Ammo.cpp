@@ -50,9 +50,8 @@ void AAmmo::OnRep_IsEmpty()
 
 void AAmmo::UpdateMesh() const
 {
-	const UAmmoDataAsset* LoadedAmmoDataAsset = AmmoDataAsset.LoadSynchronous();
-	if (Mesh && LoadedAmmoDataAsset)
+	if (Mesh && AmmoDataAsset.LoadSynchronous())
 	{
-		Mesh->SetSkeletalMesh(bIsEmpty ? LoadedAmmoDataAsset->ShellMesh : LoadedAmmoDataAsset->FullMesh);
+		Mesh->SetSkeletalMesh(bIsEmpty ? AmmoDataAsset->ShellMesh : AmmoDataAsset->FullMesh);
 	}
 }

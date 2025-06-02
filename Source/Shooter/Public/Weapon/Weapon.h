@@ -61,6 +61,9 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
+	virtual void Handle_OnWeaponModModArrayReplicated();
+
+	UFUNCTION()
 	virtual void Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo);
 
 	UFUNCTION()
@@ -126,17 +129,6 @@ protected:
 	virtual void LineTrace();
 
 public:
-	TObjectPtr<AShooterCharacter> ShooterCharacterOwner;
-
-	/*UPROPERTY(Replicated)
-	bool bIsHolster;*/
-
-	UPROPERTY(Replicated)
-	uint8 FiremodeIndex;
-
-	UPROPERTY(Replicated)
-	TObjectPtr<AAmmo> AmmoInWeapon;
-
 	FOnWeaponAnimNotifySignature OnWeaponActionEnd;
 	FOnWeaponAnimNotifySignature OnWeaponActionStart;
 	FOnWeaponAnimNotifySignature OnWeaponChamberCheck;
@@ -155,6 +147,17 @@ public:
 	FOnWeaponAnimNotifySignature OnWeaponReloadCharge;
 
 protected:
+	TObjectPtr<AShooterCharacter> ShooterCharacterOwner;
+
+	/*UPROPERTY(Replicated)
+	bool bIsHolster;*/
+
+	UPROPERTY(Replicated)
+	uint8 FiremodeIndex;
+
+	UPROPERTY(Replicated)
+	TObjectPtr<AAmmo> AmmoInWeapon;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UWeaponDataAsset> WeaponDataAsset;
 
@@ -171,8 +174,8 @@ private:
 public:
 	//FORCEINLINE bool GetIsHolster() const { return bIsHolster; }
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
-	FORCEINLINE AAmmo* GetAmmoInWeapon() const { return AmmoInWeapon; }
 	FORCEINLINE AShooterCharacter* GetShooterCharacterOwner() const { return ShooterCharacterOwner; }
+	FORCEINLINE AAmmo* GetAmmoInWeapon() const { return AmmoInWeapon; }
 	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
 
 };
