@@ -32,19 +32,12 @@ void AAmmo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePro
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(AAmmo, bIsEmpty, COND_SimulatedOnly);
-
 }
 
 void AAmmo::SetIsEmpty(bool bEmpty)
 {
 	bIsEmpty = bEmpty;
 
-	UpdateMesh();
-}
-
-void AAmmo::OnRep_IsEmpty()
-{
 	UpdateMesh();
 }
 

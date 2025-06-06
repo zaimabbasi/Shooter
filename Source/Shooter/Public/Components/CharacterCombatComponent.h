@@ -197,6 +197,5 @@ private:
 public:
 	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
-	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
 
 };

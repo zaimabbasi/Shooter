@@ -23,7 +23,6 @@
 #include "Types/WeaponTypes.h"
 
 AWeapon::AWeapon() :
-	//bIsHolster(false),
 	FiremodeIndex(0)
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -71,10 +70,6 @@ void AWeapon::PostInitializeComponents()
 		}
 	}
 
-	if (WeaponModComponent)
-	{
-		WeaponModComponent->OnWeaponModModArrayReplicated.AddDynamic(this, &AWeapon::Handle_OnWeaponModModArrayReplicated);
-	}
 }
 
 void AWeapon::BeginPlay()
@@ -93,9 +88,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	//DOREPLIFETIME(AWeapon, bIsHolster);
 	DOREPLIFETIME(AWeapon, FiremodeIndex);
-	DOREPLIFETIME(AWeapon, AmmoInWeapon);
 
 }
 
@@ -116,10 +109,6 @@ void AWeapon::Init()
 		}
 	}
 
-	if (AMag* Mag = GetMag())
-	{
-		Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
-	}
 }
 
 bool AWeapon::GetIsOneHanded() const
@@ -187,45 +176,55 @@ USkeletalMeshComponent* AWeapon::GetScopeSightMesh() const
 	return ModScope != nullptr ? ModScope->GetMesh() : ModSightRear != nullptr ? ModSightRear->GetMesh() : nullptr;
 }
 
-void AWeapon::Handle_OnWeaponModModArrayReplicated()
+void AWeapon::SpawnShellPortAmmo(TSubclassOf<AAmmo> AmmoClass)
 {
-	/*if (AMag* Mag = GetMag())
+	if (UWorld* World = GetWorld())
 	{
-		if (!Mag->OnMagAmmoPopped.IsBound())
+		if (AAmmo* SpawnedAmmo = World->SpawnActor<AAmmo>(AmmoClass))
 		{
-			Mag->OnMagAmmoPopped.AddDynamic(this, &AWeapon::Handle_OnMagAmmoPopped);
+			SpawnedAmmo->SetOwner(this);
+			SpawnedAmmo->SetReplicates(false);
+			SpawnedAmmo->SetIsEmpty(true);
+			SpawnedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, SHELL_PORT_SOCKET_NAME);
+			SpawnedAmmo->SetLifeSpan(2.0f);
+
+			ShellPortAmmo = SpawnedAmmo;
 		}
-	}*/
+	}
 }
 
-//void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
-//{
-//	AMag* Mag = GetMag();
-//	if (PoppedAmmo == nullptr && Mag)
-//	{
-//		if (const UMagDataAsset* MagDataAsset = Mag->GetMagDataAsset().LoadSynchronous())
-//		{
-//			if (UWorld* World = GetWorld())
-//			{
-//				PoppedAmmo = World->SpawnActor<AAmmo>(MagDataAsset->AmmoClass);
-//			}
-//		}
-//	}
-//	if (PoppedAmmo)
-//	{
-//		PoppedAmmo->SetOwner(this);
-//		PoppedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, PATRON_IN_WEAPON_SOCKET_NAME);
-//	}
-//	AmmoInWeapon = PoppedAmmo;
-//}
-void AWeapon::Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo)
+void AWeapon::EjectShellPortAmmo()
 {
-	if (PoppedAmmo)
+	if (ShellPortAmmo)
 	{
-		PoppedAmmo->SetActorHiddenInGame(false);
-		PoppedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, PATRON_IN_WEAPON_SOCKET_NAME);
+		ShellPortAmmo->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		if (ShellPortAmmo->GetMesh())
+		{
+			ShellPortAmmo->GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+			ShellPortAmmo->GetMesh()->SetSimulatePhysics(true);
+			ShellPortAmmo->GetMesh()->SetEnableGravity(true);
+
+			FVector ImpulseVector = (-3.0f * ShellPortAmmo->GetMesh()->GetForwardVector()) + (-2.0f * ShellPortAmmo->GetMesh()->GetRightVector()) + (3.0f * ShellPortAmmo->GetMesh()->GetUpVector());
+			ShellPortAmmo->GetMesh()->AddImpulse(ImpulseVector);
+		}
+		ShellPortAmmo = nullptr;
 	}
-	AmmoInWeapon = PoppedAmmo;
+}
+
+void AWeapon::Multicast_ProxySpawnShellPortAmmo_Implementation(TSubclassOf<AAmmo> AmmoClass)
+{
+	if (!HasNetOwner())
+	{
+		SpawnShellPortAmmo(AmmoClass);
+	}
+}
+
+void AWeapon::Multicast_ProxyEjectShellPortAmmo_Implementation()
+{
+	if (!HasNetOwner())
+	{
+		EjectShellPortAmmo();
+	}
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceActionEnd()
@@ -305,11 +304,14 @@ void AWeapon::Handle_OnWeaponAnimInstanceOutToIdleArm()
 
 void AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon()
 {
-	if (HasAuthority())
+	if (AMag* Mag = GetMag())
 	{
-		if (AMag* Mag = GetMag())
+		if (AAmmo* MagAmmo = Mag->PopAmmo())
 		{
-			Mag->PopAmmo();
+			MagAmmo->SetActorHiddenInGame(false);
+			MagAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, PATRON_IN_WEAPON_SOCKET_NAME);
+
+			PatronInWeaponAmmo = MagAmmo;
 		}
 	}
 }
@@ -321,33 +323,40 @@ void AWeapon::Handle_OnWeaponAnimInstanceReloadCharge()
 
 void AWeapon::Handle_OnWeaponAnimInstanceShellPort()
 {
-	if (AmmoInWeapon)
+	if (HasNetOwner())
 	{
-		AmmoInWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		if (AmmoInWeapon->GetMesh())
-		{
-			AmmoInWeapon->GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-			AmmoInWeapon->GetMesh()->SetSimulatePhysics(true);
-			AmmoInWeapon->GetMesh()->SetEnableGravity(true);
-
-			FVector ImpulseVector = (-3.0f * AmmoInWeapon->GetMesh()->GetForwardVector()) + (-2.0f * AmmoInWeapon->GetMesh()->GetRightVector()) + (3.0f * AmmoInWeapon->GetMesh()->GetUpVector());
-			AmmoInWeapon->GetMesh()->AddImpulse(ImpulseVector);
-		}
-		AmmoInWeapon = nullptr;
+		EjectShellPortAmmo();
+	}
+	if (HasAuthority())
+	{
+		Multicast_ProxyEjectShellPortAmmo();
 	}
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 {
-	if (HasAuthority())
+	if (AMag* Mag = GetMag())
 	{
-		if (AmmoInWeapon)
+		if (PatronInWeaponAmmo)
 		{
-			AmmoInWeapon->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, SHELL_PORT_SOCKET_NAME);
-			AmmoInWeapon->SetIsEmpty(true);
+			PatronInWeaponAmmo->AttachToComponent(Mag->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, PATRON_SOCKET_NAME(Mag->GetAmmoCount() + 1));
+			PatronInWeaponAmmo->SetActorHiddenInGame(true);
+			PatronInWeaponAmmo = nullptr;
+		}
+
+		if (Mag->GetMagDataAsset().LoadSynchronous())
+		{
+			if (HasNetOwner())
+			{
+				SpawnShellPortAmmo(Mag->GetMagDataAsset()->AmmoClass);
+			}
+			if (HasAuthority())
+			{
+				Multicast_ProxySpawnShellPortAmmo(Mag->GetMagDataAsset()->AmmoClass);
+			}
 		}
 	}
-	//LineTrace();
+
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector()

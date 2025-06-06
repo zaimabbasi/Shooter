@@ -60,11 +60,16 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	virtual void Handle_OnWeaponModModArrayReplicated();
+	virtual void SpawnShellPortAmmo(TSubclassOf<AAmmo> AmmoClass);
+	virtual void EjectShellPortAmmo();
 
-	UFUNCTION()
-	virtual void Handle_OnMagAmmoPopped(AAmmo* PoppedAmmo);
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ProxySpawnShellPortAmmo(TSubclassOf<AAmmo> AmmoClass);
+	virtual void Multicast_ProxySpawnShellPortAmmo_Implementation(TSubclassOf<AAmmo> AmmoClass);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ProxyEjectShellPortAmmo();
+	virtual void Multicast_ProxyEjectShellPortAmmo_Implementation();
 
 	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstanceActionEnd();
@@ -149,14 +154,11 @@ public:
 protected:
 	TObjectPtr<AShooterCharacter> ShooterCharacterOwner;
 
-	/*UPROPERTY(Replicated)
-	bool bIsHolster;*/
-
 	UPROPERTY(Replicated)
 	uint8 FiremodeIndex;
 
-	UPROPERTY(Replicated)
-	TObjectPtr<AAmmo> AmmoInWeapon;
+	TObjectPtr<AAmmo> PatronInWeaponAmmo;
+	TObjectPtr<AAmmo> ShellPortAmmo;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UWeaponDataAsset> WeaponDataAsset;
@@ -172,10 +174,8 @@ private:
 	TObjectPtr<UBoxComponent> BoxComponent;
 
 public:
-	//FORCEINLINE bool GetIsHolster() const { return bIsHolster; }
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	FORCEINLINE AShooterCharacter* GetShooterCharacterOwner() const { return ShooterCharacterOwner; }
-	FORCEINLINE AAmmo* GetAmmoInWeapon() const { return AmmoInWeapon; }
-	FORCEINLINE bool HasAuthority() const { return GetOwner() && GetOwner()->HasAuthority(); }
+	FORCEINLINE AAmmo* GetPatronInWeaponAmmo() const { return PatronInWeaponAmmo; }
 
 };

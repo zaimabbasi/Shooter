@@ -9,8 +9,6 @@
 class AAmmo;
 class UMagDataAsset;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMagAmmoPoppedSignature, AAmmo*, PoppedAmmo);
-
 UCLASS()
 class SHOOTER_API AMag: public AMod
 {
@@ -25,15 +23,11 @@ public:
 	uint8 GetAmmoCapacity() const;
 	uint8 GetAmmoSpace() const;
 
-	//void AddAmmo(const uint8 Count);
 	void AddAmmo(uint8 Count);
-	void PopAmmo();
+	AAmmo* PopAmmo();
 
 protected:
 	AAmmo* GetAmmoAtIndex(uint8 AmmoIndex) const;
-
-public:
-	FOnMagAmmoPoppedSignature OnMagAmmoPopped;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

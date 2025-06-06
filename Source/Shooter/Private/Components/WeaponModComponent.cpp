@@ -52,35 +52,6 @@ void UWeaponModComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 }
 
-//void UWeaponModComponent::Init(const UModDataAsset* ModDataAsset)
-//{
-//	if (ModDataAsset == nullptr)
-//	{
-//		return;
-//	}
-//	if (AActor* OwningActor = GetOwner())
-//	{
-//		if (UWorld* World = GetWorld())
-//		{
-//			for (const FModData& ModData : ModDataAsset->ModDataArray)
-//			{
-//				//if (const TSubclassOf<AMod>& ModClass = ModData.ModClass)
-//				{
-//					if (AMod* SpawnedMod = World->SpawnActor<AMod>(ModData.ModClass))
-//					{
-//						SpawnedMod->SetOwner(OwningActor);
-//						//SpawnedMod->Init();
-//						SpawnedMod->AttachToActor(OwningActor, FAttachmentTransformRules::KeepRelativeTransform, ModData.AttachParentSocketName);
-//
-//						ModArray.Add(SpawnedMod);
-//					}
-//				}
-//			}
-//			
-//		}
-//	}
-//}
-
 void UWeaponModComponent::Init(const UWeaponModDataAsset* WeaponModDataAsset)
 {
 	if (WeaponModDataAsset == nullptr)
@@ -128,9 +99,4 @@ void UWeaponModComponent::Init(const UWeaponModDataAsset* WeaponModDataAsset)
 			}
 		}
 	}
-}
-
-void UWeaponModComponent::OnRep_ModArray() const
-{
-	OnWeaponModModArrayReplicated.Broadcast();
 }

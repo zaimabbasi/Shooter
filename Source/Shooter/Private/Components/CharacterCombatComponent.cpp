@@ -52,14 +52,6 @@ void UCharacterCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 
 }
 
-//void UCharacterCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
-//{
-//	if (EquippedWeapon != WeaponToEquip && GetAnimCombatAction() == ECombatAction::CA_Idle)
-//	{
-//		NextWeapon = WeaponToEquip;
-//		CombatAction = ECombatAction::CA_IdleToOut;
-//	}
-//}
 void UCharacterCombatComponent::Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip)
 {
 	if (EquippedWeapon != WeaponToEquip && GetAnimCombatAction() == ECombatAction::CA_Idle)
@@ -69,46 +61,19 @@ void UCharacterCombatComponent::Server_EquipWeapon_Implementation(AWeapon* Weapo
 	}
 }
 
-//void UCharacterCombatComponent::ReloadWeapon()
-//{
-//	if (EquippedWeapon && GetWeaponAnimCombatAction() == ECombatAction::CA_Idle)
-//	{
-//		if (ShooterCharacter && ShooterCharacter->GetCharacterInventory())
-//		{
-//			int8 WeaponIndex = ShooterCharacter->GetCharacterInventory()->FindWeapon(EquippedWeapon);
-//			if (WeaponIndex != INDEX_NONE)
-//			{
-//				if (ShooterCharacter->GetCharacterInventory()->GetWeaponAmmoAtIndex(WeaponIndex) > 0)
-//				{
-//					if (AMag* WeaponMag = EquippedWeapon->GetMag())
-//					{
-//						if (WeaponMag->GetAmmoSpace() > 0)
-//						{
-//							CombatAction = ECombatAction::CA_MagOut;
-//						}
-//					}
-//				}
-//			}
-//		}
-//	}
-//}
 void UCharacterCombatComponent::Server_ReloadWeapon_Implementation()
 {
 	if (EquippedWeapon && GetWeaponAnimCombatAction() == ECombatAction::CA_Idle)
 	{
 		if (ShooterCharacter && ShooterCharacter->GetCharacterInventory())
 		{
-			int8 WeaponIndex = ShooterCharacter->GetCharacterInventory()->FindWeapon(EquippedWeapon);
-			if (WeaponIndex != INDEX_NONE)
+			if (ShooterCharacter->GetCharacterInventory()->GetWeaponAmmo(EquippedWeapon) > 0)
 			{
-				if (ShooterCharacter->GetCharacterInventory()->GetWeaponAmmoAtIndex(WeaponIndex) > 0)
+				if (AMag* WeaponMag = EquippedWeapon->GetMag())
 				{
-					if (AMag* WeaponMag = EquippedWeapon->GetMag())
+					if (WeaponMag->GetAmmoSpace() > 0)
 					{
-						if (WeaponMag->GetAmmoSpace() > 0)
-						{
-							CombatAction = ECombatAction::CA_MagOut;
-						}
+						CombatAction = ECombatAction::CA_MagOut;
 					}
 				}
 			}
@@ -116,13 +81,6 @@ void UCharacterCombatComponent::Server_ReloadWeapon_Implementation()
 	}
 }
 
-//void UCharacterCombatComponent::CheckWeaponChamber()
-//{
-//	if (EquippedWeapon && GetWeaponAnimCombatAction() == ECombatAction::CA_Idle)
-//	{
-//		CombatAction = ECombatAction::CA_ChamberCheck;
-//	}
-//}
 void UCharacterCombatComponent::Server_CheckWeaponChamber_Implementation()
 {
 	if (EquippedWeapon && GetWeaponAnimCombatAction() == ECombatAction::CA_Idle)
@@ -131,28 +89,12 @@ void UCharacterCombatComponent::Server_CheckWeaponChamber_Implementation()
 	}
 }
 
-//void UCharacterCombatComponent::FireWeapon(bool bFire)
-//{
-//	bWantsToFire = bFire;
-//	if (EquippedWeapon && GetWeaponAnimCombatAction() == ECombatAction::CA_Idle && bFire)
-//	{
-//		if (EquippedWeapon->GetAmmoInWeapon())
-//		{
-//			NumRoundsFired = 0;
-//			CombatAction = ECombatAction::CA_Fire;
-//		}
-//		else
-//		{
-//			CombatAction = ECombatAction::CA_FireDry;
-//		}
-//	}
-//}
 void UCharacterCombatComponent::Server_FireWeapon_Implementation(bool bFire)
 {
 	bWantsToFire = bFire;
 	if (EquippedWeapon && GetWeaponAnimCombatAction() == ECombatAction::CA_Idle && bFire)
 	{
-		if (EquippedWeapon->GetAmmoInWeapon())
+		if (EquippedWeapon->GetPatronInWeaponAmmo() != nullptr)
 		{
 			NumRoundsFired = 0;
 			CombatAction = ECombatAction::CA_Fire;
@@ -164,13 +106,6 @@ void UCharacterCombatComponent::Server_FireWeapon_Implementation(bool bFire)
 	}
 }
 
-//void UCharacterCombatComponent::ChangeWeaponFiremode()
-//{
-//	if (EquippedWeapon && GetWeaponAnimCombatAction() == ECombatAction::CA_Idle && EquippedWeapon->GetNumFiremodes() > 1)
-//	{
-//		CombatAction = ECombatAction::CA_Firemode;
-//	}
-//}
 void UCharacterCombatComponent::Server_ChangeWeaponFiremode_Implementation()
 {
 	if (EquippedWeapon && GetWeaponAnimCombatAction() == ECombatAction::CA_Idle && EquippedWeapon->GetNumFiremodes() > 1)
@@ -179,13 +114,6 @@ void UCharacterCombatComponent::Server_ChangeWeaponFiremode_Implementation()
 	}
 }
 
-//void UCharacterCombatComponent::CheckWeaponFiremode()
-//{
-//	if (EquippedWeapon && GetWeaponAnimCombatAction() == ECombatAction::CA_Idle && EquippedWeapon->GetNumFiremodes() > 1)
-//	{
-//		CombatAction = ECombatAction::CA_FiremodeCheck;
-//	}
-//}
 void UCharacterCombatComponent::Server_CheckWeaponFiremode_Implementation()
 {
 	if (EquippedWeapon && GetWeaponAnimCombatAction() == ECombatAction::CA_Idle && EquippedWeapon->GetNumFiremodes() > 1)
@@ -194,13 +122,6 @@ void UCharacterCombatComponent::Server_CheckWeaponFiremode_Implementation()
 	}
 }
 
-//void UCharacterCombatComponent::CheckWeaponMag()
-//{
-//	if (EquippedWeapon && GetWeaponAnimCombatAction() == ECombatAction::CA_Idle && EquippedWeapon->GetMag())
-//	{
-//		CombatAction = ECombatAction::CA_MagCheck;
-//	}
-//}
 void UCharacterCombatComponent::Server_CheckWeaponMag_Implementation()
 {
 	if (EquippedWeapon && GetWeaponAnimCombatAction() == ECombatAction::CA_Idle && EquippedWeapon->GetMag())
@@ -284,8 +205,8 @@ void UCharacterCombatComponent::OutToIdle()
 	{
 		AMag* WeaponMag = EquippedWeapon != nullptr ? EquippedWeapon->GetMag() : nullptr;
 		bool bHasMagAmmo = WeaponMag && WeaponMag->GetAmmoCount() > 0;
-		bool bHasAmmoInWeapon = EquippedWeapon && EquippedWeapon->GetAmmoInWeapon();
-		if (EquippedWeapon && bHasMagAmmo && !bHasAmmoInWeapon)
+		bool bHasPatronInWeaponAmmo = EquippedWeapon && EquippedWeapon->GetPatronInWeaponAmmo() != nullptr;
+		if (EquippedWeapon && bHasMagAmmo && !bHasPatronInWeaponAmmo)
 		{
 			CombatAction = ECombatAction::CA_OutToIdleArm;
 		}
@@ -372,7 +293,7 @@ void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceIdle()
 
 void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceIdleToOut()
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		CombatAction = ECombatAction::CA_Out;
 	}
@@ -380,7 +301,7 @@ void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceIdleToOut()
 
 void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceOut()
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		EquippedWeapon = NextWeapon;
 		NextWeapon = nullptr;
@@ -395,7 +316,7 @@ void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceOut()
 
 void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceOutToIdle()
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -403,7 +324,7 @@ void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceOutToIdle()
 
 void UCharacterCombatComponent::Handle_OnWeaponActionEnd(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -415,7 +336,7 @@ void UCharacterCombatComponent::Handle_OnWeaponActionStart(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponChamberCheck(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -423,7 +344,7 @@ void UCharacterCombatComponent::Handle_OnWeaponChamberCheck(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		if (Weapon)
 		{
@@ -438,7 +359,7 @@ void UCharacterCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
 			{
 				CombatAction = ECombatAction::CA_Idle;
 			}
-			else if (Weapon->GetAmmoInWeapon() == nullptr)
+			else if (Weapon->GetPatronInWeaponAmmo() == nullptr)
 			{
 				CombatAction = ECombatAction::CA_FireDry;
 			}
@@ -448,7 +369,7 @@ void UCharacterCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponFireDry(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -456,7 +377,7 @@ void UCharacterCombatComponent::Handle_OnWeaponFireDry(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponFiremode(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -464,7 +385,7 @@ void UCharacterCombatComponent::Handle_OnWeaponFiremode(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponFiremodeCheck(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -476,7 +397,7 @@ void UCharacterCombatComponent::Handle_OnWeaponIdle(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponIdleToOut(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		CombatAction = ECombatAction::CA_Out;
 	}
@@ -484,7 +405,7 @@ void UCharacterCombatComponent::Handle_OnWeaponIdleToOut(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponMagCheck(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -492,12 +413,12 @@ void UCharacterCombatComponent::Handle_OnWeaponMagCheck(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponMagIn(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		AMag* WeaponMag = Weapon != nullptr ? Weapon->GetMag() : nullptr;
 		bool bHasMagAmmo = WeaponMag && WeaponMag->GetAmmoCount() > 0;
-		bool bHasAmmoInWeapon = Weapon && Weapon->GetAmmoInWeapon();
-		if (bHasMagAmmo && !bHasAmmoInWeapon)
+		bool bHasPatronInWeaponAmmo = Weapon && Weapon->GetPatronInWeaponAmmo() != nullptr;
+		if (bHasMagAmmo && !bHasPatronInWeaponAmmo)
 		{
 			CombatAction = ECombatAction::CA_ReloadCharge;
 		}
@@ -510,15 +431,11 @@ void UCharacterCombatComponent::Handle_OnWeaponMagIn(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponMagOut(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		if (ShooterCharacter && ShooterCharacter->GetCharacterInventory())
 		{
-			int8 WeaponIndex = ShooterCharacter->GetCharacterInventory()->FindWeapon(Weapon);
-			if (WeaponIndex != INDEX_NONE)
-			{
-				ShooterCharacter->GetCharacterInventory()->LoadAmmoInWeaponMag(WeaponIndex);
-			}
+			ShooterCharacter->GetCharacterInventory()->Server_LoadAmmoInWeaponMag(Weapon);
 		}
 		CombatAction = ECombatAction::CA_MagIn;
 	}
@@ -526,7 +443,7 @@ void UCharacterCombatComponent::Handle_OnWeaponMagOut(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponOut(AWeapon* Weapon)
 {	
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		RemoveDelegates(Weapon);
 
@@ -543,7 +460,7 @@ void UCharacterCombatComponent::Handle_OnWeaponOut(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponOutToIdle(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -551,7 +468,7 @@ void UCharacterCombatComponent::Handle_OnWeaponOutToIdle(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponOutToIdleArm(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -559,7 +476,7 @@ void UCharacterCombatComponent::Handle_OnWeaponOutToIdleArm(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponReloadCharge(AWeapon* Weapon)
 {
-	if (HasAuthority())
+	if (GetOwnerRole() == ROLE_Authority)
 	{
 		CombatAction = ECombatAction::CA_Idle;
 	}
@@ -567,12 +484,9 @@ void UCharacterCombatComponent::Handle_OnWeaponReloadCharge(AWeapon* Weapon)
 
 void UCharacterCombatComponent::OnRep_CombatAction(ECombatAction PrevCombatAction)
 {
-	UE_LOG(LogTemp, Error, TEXT(__FUNCTION__));
 }
 
 void UCharacterCombatComponent::OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon)
 {
-	UE_LOG(LogTemp, Error, TEXT(__FUNCTION__));
-
 	OnCharacterCombatEquippedWeaponChanged.Broadcast(EquippedWeapon);
 }

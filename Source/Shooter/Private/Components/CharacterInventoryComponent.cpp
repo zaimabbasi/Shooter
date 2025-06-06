@@ -68,25 +68,16 @@ uint8 UCharacterInventoryComponent::GetWeaponAmmoAtIndex(uint8 Index) const
 	return WeaponAmmoArray.IsValidIndex(Index) ? WeaponAmmoArray[Index] : 0;
 }
 
-//void UCharacterInventoryComponent::LoadAmmoInWeaponMag(uint8 WeaponIndex)
-//{
-//	if (const AWeapon* Weapon = GetWeaponAtIndex(WeaponIndex))
-//	{
-//		if (AMag* WeaponMag = Weapon->GetMag())
-//		{
-//			const uint8 MagAmmoSpace = WeaponMag->GetAmmoCapacity() - WeaponMag->GetAmmoCount();
-//			const uint8 AmmoCount = FMath::Min(MagAmmoSpace, GetWeaponAmmoAtIndex(WeaponIndex));
-//			if (AmmoCount > 0)
-//			{
-//				WeaponMag->AddAmmo(AmmoCount);
-//				WeaponAmmoArray[WeaponIndex] -= AmmoCount;
-//			}
-//		}
-//	}
-//}
-void UCharacterInventoryComponent::LoadAmmoInWeaponMag(uint8 WeaponIndex)
+uint8 UCharacterInventoryComponent::GetWeaponAmmo(AWeapon* Weapon) const
 {
-	if (AWeapon* Weapon = GetWeaponAtIndex(WeaponIndex))
+	int8 WeaponIndex = FindWeapon(Weapon);
+	return WeaponIndex != INDEX_NONE ? GetWeaponAmmoAtIndex(WeaponIndex) : 0;
+}
+
+void UCharacterInventoryComponent::Server_LoadAmmoInWeaponMag_Implementation(AWeapon* Weapon)
+{
+	int8 WeaponIndex = FindWeapon(Weapon);
+	if (WeaponIndex != INDEX_NONE)
 	{
 		if (AMag* WeaponMag = Weapon->GetMag())
 		{
@@ -95,24 +86,6 @@ void UCharacterInventoryComponent::LoadAmmoInWeaponMag(uint8 WeaponIndex)
 			{
 				WeaponMag->AddAmmo(AmmoCount);
 				WeaponAmmoArray[WeaponIndex] -= AmmoCount;
-			}
-		}
-	}
-}
-
-void UCharacterInventoryComponent::LoadAmmoInWeaponMag(uint8 WeaponIndex, uint8 AmmoCount)
-{
-	if (AmmoCount > 0)
-	{
-		if (AWeapon* Weapon = GetWeaponAtIndex(WeaponIndex))
-		{
-			if (AMag* WeaponMag = Weapon->GetMag())
-			{
-				if (AmmoCount <= WeaponMag->GetAmmoSpace() && AmmoCount <= GetWeaponAmmoAtIndex(WeaponIndex))
-				{
-					WeaponMag->AddAmmo(AmmoCount);
-					WeaponAmmoArray[WeaponIndex] -= AmmoCount;
-				}
 			}
 		}
 	}

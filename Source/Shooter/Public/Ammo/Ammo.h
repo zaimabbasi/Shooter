@@ -24,15 +24,11 @@ protected:
 	virtual void BeginPlay() override;
 	
 	virtual void UpdateMesh() const;
-	
-	UFUNCTION()
-	virtual void OnRep_IsEmpty();
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UAmmoDataAsset> AmmoDataAsset;
 
-	UPROPERTY(ReplicatedUsing = OnRep_IsEmpty)
 	bool bIsEmpty;
 
 private:
