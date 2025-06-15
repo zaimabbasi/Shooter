@@ -11,29 +11,6 @@ class AWeapon;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterCombatEquippedWeaponChangedSignature, AWeapon*, Weapon);
 
-UENUM(BlueprintType)
-enum class ECombatAction : uint8
-{
-	CA_None UMETA(DisplayName = "None"),
-	CA_ActionEnd UMETA(DisplayName = "ActionEnd"),
-	CA_ActionStart UMETA(DisplayName = "ActionStart"),
-	CA_ChamberCheck UMETA(DisplayName = "ChamberCheck"),
-	CA_Fire UMETA(DisplayName = "Fire"),
-	CA_FireDry UMETA(DisplayName = "FireDry"),
-	CA_Firemode UMETA(DisplayName = "Firemode"),
-	CA_FiremodeCheck UMETA(DisplayName = "FiremodeCheck"),
-	CA_Idle UMETA(DisplayName = "Idle"),
-	CA_IdleToOut UMETA(DisplayName = "IdleToOut"),
-	CA_MagCheck UMETA(DisplayName = "MagCheck"),
-	CA_MagIn UMETA(DisplayName = "MagIn"),
-	CA_MagOut UMETA(DisplayName = "MagOut"),
-	CA_Out UMETA(DisplayName = "Out"),
-	CA_OutToIdle UMETA(DisplayName = "OutToIdle"),
-	CA_OutToIdleArm UMETA(DisplayName = "OutToIdleArm"),
-	CA_ReloadCharge UMETA(DisplayName = "ReloadCharge"),
-	Default_MAX UMETA(Hidden)
-};
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SHOOTER_API UCharacterCombatComponent : public UActorComponent
 {
@@ -46,13 +23,26 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	//virtual void EquipWeapon(AWeapon* WeaponToEquip);
-	//virtual void ReloadWeapon();
-	//virtual void CheckWeaponChamber();
-	//virtual void FireWeapon(bool bFire);
-	//virtual void ChangeWeaponFiremode();
-	//virtual void CheckWeaponFiremode();
-	//virtual void CheckWeaponMag();
+	virtual bool CanEquipWeapon(AWeapon* WeaponToEquip);
+	virtual void EquipWeapon(AWeapon* WeaponToEquip);
+
+	virtual bool CanReloadWeapon();
+	virtual void ReloadWeapon();
+
+	virtual bool CanCheckWeaponChamber();
+	virtual void CheckWeaponChamber();
+
+	virtual bool CanFireWeapon();
+	virtual void FireWeapon(bool bFire);
+
+	virtual bool CanChangeWeaponFiremode();
+	virtual void ChangeWeaponFiremode();
+
+	virtual bool CanCheckWeaponFiremode();
+	virtual void CheckWeaponFiremode();
+
+	virtual bool CanCheckWeaponMag();
+	virtual void CheckWeaponMag();
 
 	UFUNCTION(Server, Reliable)
 	void Server_EquipWeapon(AWeapon* WeaponToEquip);
@@ -92,7 +82,7 @@ protected:
 	//virtual void ActionEnd();
 	//virtual void ActionStart();
 	//virtual void ChamberCheck();
-	//virtual void Fire();
+	virtual void Fire();
 	//virtual void FireDry();
 	//virtual void Firemode();
 	//virtual void FiremodeCheck();
@@ -109,6 +99,8 @@ protected:
 	
 	virtual void AddDelegates(AWeapon* Weapon);
 	virtual void RemoveDelegates(AWeapon* Weapon);
+
+	UAnimInstance* GetRelevantAnimInstance() const;
 
 	UFUNCTION()
 	virtual void Handle_OnCharacterHandsAnimInstanceIdle();

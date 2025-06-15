@@ -4,7 +4,7 @@
 #include "Animation/WeaponAnimInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Character/ShooterCharacter.h"
-#include "Components/CharacterCombatComponent.h"
+#include "Types/CombatTypes.h"
 #include "Types/ShooterNames.h"
 #include "Utility/ShooterUtility.h"
 #include "Weapon/Weapon.h"
@@ -21,9 +21,6 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 		FireAnimPlayRate = Weapon->GetRateOfFire() / 60.0f;
 		//FireAnimPlayRate = 1.0f;
 	}
-
-	// Maybe just set the first state as Out
-	CombatAction = ECombatAction::CA_Out;
 
 	IKAlpha = 0.0f;
 	IKBlendInOutFlag = 0;
