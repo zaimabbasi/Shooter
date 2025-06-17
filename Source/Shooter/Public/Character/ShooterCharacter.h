@@ -38,7 +38,6 @@ public:
 
 	virtual void Init();
 	ECombatAction GetCombatAction() const;
-	ECombatAction GetAnimCombatAction() const;
 	AWeapon* GetEquippedWeapon() const;
 	virtual float GetAllowedAO_Yaw() const;
 	virtual void UpdateAO_Pitch(float ControlRotationPitch, float DeltaTime);

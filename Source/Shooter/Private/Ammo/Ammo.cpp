@@ -2,7 +2,7 @@
 
 
 #include "Ammo/Ammo.h"
-#include "Net/UnrealNetwork.h"
+//#include "Net/UnrealNetwork.h"
 #include "Data/AmmoDataAsset.h"
 
 AAmmo::AAmmo() :
@@ -32,6 +32,8 @@ void AAmmo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePro
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	//DOREPLIFETIME(AAmmo, bIsEmpty);
+
 }
 
 void AAmmo::SetIsEmpty(bool bEmpty)
@@ -48,3 +50,8 @@ void AAmmo::UpdateMesh() const
 		Mesh->SetSkeletalMesh(bIsEmpty ? AmmoDataAsset->ShellMesh : AmmoDataAsset->FullMesh);
 	}
 }
+
+//void AAmmo::OnRep_IsEmpty()
+//{
+//	UpdateMesh();
+//}

@@ -44,6 +44,35 @@ public:
 	virtual bool CanCheckWeaponMag();
 	virtual void CheckWeaponMag();
 
+protected:
+	virtual void BeginPlay() override;
+
+	//virtual void ActionEnd();
+	//virtual void ActionStart();
+	//virtual void ChamberCheck();
+	virtual void Fire();
+	//virtual void FireDry();
+	//virtual void Firemode();
+	//virtual void FiremodeCheck();
+	//virtual void Idle();
+	//virtual void IdleToOut();
+	//virtual void MagCheck();
+	//virtual void MagIn();
+	//virtual void MagOut();
+	//virtual void Out();
+	virtual void OutToIdle();
+	//virtual void WeaponMagIn();
+	//virtual void WeaponMagOut();
+	//virtual void WeaponReloadCharge();
+	
+	virtual void AddDelegates(AWeapon* Weapon);
+	virtual void RemoveDelegates(AWeapon* Weapon);
+
+	UAnimInstance* GetRelevantAnimInstance() const;
+	ECombatAction GetWeaponAnimCombatAction() const;
+	ECombatAction GetHandsAnimCombatAction() const;
+	ECombatAction GetRelevantAnimCombatAction() const;
+
 	UFUNCTION(Server, Reliable)
 	void Server_EquipWeapon(AWeapon* WeaponToEquip);
 	virtual void Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip);
@@ -71,36 +100,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_CheckWeaponMag();
 	virtual void Server_CheckWeaponMag_Implementation();
-
-	ECombatAction GetWeaponAnimCombatAction() const;
-	ECombatAction GetHandsAnimCombatAction() const;
-	ECombatAction GetAnimCombatAction() const;
-
-protected:
-	virtual void BeginPlay() override;
-
-	//virtual void ActionEnd();
-	//virtual void ActionStart();
-	//virtual void ChamberCheck();
-	virtual void Fire();
-	//virtual void FireDry();
-	//virtual void Firemode();
-	//virtual void FiremodeCheck();
-	//virtual void Idle();
-	//virtual void IdleToOut();
-	//virtual void MagCheck();
-	//virtual void MagIn();
-	//virtual void MagOut();
-	//virtual void Out();
-	virtual void OutToIdle();
-	//virtual void WeaponMagIn();
-	//virtual void WeaponMagOut();
-	//virtual void WeaponReloadCharge();
-	
-	virtual void AddDelegates(AWeapon* Weapon);
-	virtual void RemoveDelegates(AWeapon* Weapon);
-
-	UAnimInstance* GetRelevantAnimInstance() const;
 
 	UFUNCTION()
 	virtual void Handle_OnCharacterHandsAnimInstanceIdle();

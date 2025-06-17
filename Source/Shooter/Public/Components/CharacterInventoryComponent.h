@@ -29,10 +29,7 @@ public:
 	virtual AWeapon* GetWeaponAtIndex(uint8 Index) const;
 	virtual uint8 GetWeaponAmmoAtIndex(uint8 Index) const;
 	virtual uint8 GetWeaponAmmo(AWeapon* Weapon) const;
-
-	UFUNCTION(Server, Reliable)
-	void Server_LoadAmmoInWeaponMag(AWeapon* Weapon);
-	virtual void Server_LoadAmmoInWeaponMag_Implementation(AWeapon* Weapon);
+	virtual void LoadAmmoInWeaponMag(AWeapon* Weapon);
 
 protected:
 	virtual void BeginPlay() override;

@@ -74,7 +74,7 @@ uint8 UCharacterInventoryComponent::GetWeaponAmmo(AWeapon* Weapon) const
 	return WeaponIndex != INDEX_NONE ? GetWeaponAmmoAtIndex(WeaponIndex) : 0;
 }
 
-void UCharacterInventoryComponent::Server_LoadAmmoInWeaponMag_Implementation(AWeapon* Weapon)
+void UCharacterInventoryComponent::LoadAmmoInWeaponMag(AWeapon* Weapon)
 {
 	int8 WeaponIndex = FindWeapon(Weapon);
 	if (WeaponIndex != INDEX_NONE)
