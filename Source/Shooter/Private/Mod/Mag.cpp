@@ -15,7 +15,7 @@ void AMag::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProp
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(AMag, AmmoCount, COND_OwnerOnly);
+	//DOREPLIFETIME_CONDITION(AMag, AmmoCount, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(AMag, AmmoArray, COND_OwnerOnly);
 
 }
@@ -63,6 +63,10 @@ void AMag::AddAmmo(uint8 Count)
 	if (Count > 0 && Count <= GetAmmoSpace())
 	{
 		AmmoCount += Count;
+		if (HasAuthority())
+		{
+			Client_SetAmmoCount(AmmoCount);
+		}
 
 		for (uint8 Index = AmmoCount - Count; Index < AmmoCount; ++Index)
 		{
@@ -89,4 +93,9 @@ AAmmo* AMag::PopAmmo()
 AAmmo* AMag::GetAmmoAtIndex(uint8 AmmoIndex) const
 {
 	return AmmoArray.IsValidIndex(AmmoIndex) ? AmmoArray[AmmoIndex] : nullptr;
+}
+
+void AMag::Client_SetAmmoCount_Implementation(uint8 Count)
+{
+	AmmoCount = Count;
 }

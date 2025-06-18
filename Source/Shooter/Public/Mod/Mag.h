@@ -29,11 +29,15 @@ public:
 protected:
 	AAmmo* GetAmmoAtIndex(uint8 AmmoIndex) const;
 
+	UFUNCTION(Client, Reliable)
+	void Client_SetAmmoCount(uint8 Count);
+	virtual void Client_SetAmmoCount_Implementation(uint8 Count);
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UMagDataAsset> MagDataAsset;
 
-	UPROPERTY(Replicated)
+	//UPROPERTY(Replicated)
 	uint8 AmmoCount;
 
 	UPROPERTY(Replicated)
