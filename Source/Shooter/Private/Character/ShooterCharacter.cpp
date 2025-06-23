@@ -69,23 +69,27 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	OnWalkAnimTimelineVerticalMovementUpdate.BindUFunction(this, TEXT("Handle_OnWalkAnimTimelineVerticalMovementUpdate"));
 	OnWalkAnimTimelineRollRotationUpdate.BindUFunction(this, TEXT("Handle_OnWalkAnimTimelineRollRotationUpdate"));
 
+	IdleWalkAnimResetTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("IdleWalkAnimResetTimeline"));
+	OnIdleWalkAnimResetTimelineUpdate.BindUFunction(this, TEXT("Handle_OnIdleWalkAnimResetTimelineUpdate"));
+	OnIdleWalkAnimResetTimelineFinished.BindUFunction(this, TEXT("Handle_OnIdleWalkAnimResetTimelineFinished"));
+
 	TurningAnimTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("TurningAnimTimeline"));
 	OnTurningAnimTimelineUpdate.BindUFunction(this, TEXT("Handle_OnTurningAnimTimelineUpdate"));
 	OnTurningAnimTimelineFinished.BindUFunction(this, TEXT("Handle_OnTurningAnimTimelineFinished"));
 
-	IdleAnimMaxHorizontalMovement = 0.15f;
-	IdleAnimMinHorizontalMovement = -0.15f;
-	IdleAnimMaxVerticalMovement = 0.25f;
-	IdleAnimMinVerticalMovement = -0.5f;
-	IdleAnimMaxRollRotation = 1.5f;
-	IdleAnimMinRollRotation = -1.5f;
+	IdleAnimMaxHorizontalMovement = 0.1f;
+	IdleAnimMinHorizontalMovement = -0.1f;
+	IdleAnimMaxVerticalMovement = 0.35f;
+	IdleAnimMinVerticalMovement = -0.35f;
+	IdleAnimMaxRollRotation = 1.0f;
+	IdleAnimMinRollRotation = -1.0f;
 
-	WalkAnimMaxHorizontalMovement = 0.2f;
-	WalkAnimMinHorizontalMovement = -0.2f;
-	WalkAnimMaxVerticalMovement = 0.25f;
-	WalkAnimMinVerticalMovement = -0.5f;
-	WalkAnimMaxRollRotation = 2.5f;
-	WalkAnimMinRollRotation = -2.5f;
+	WalkAnimMaxHorizontalMovement = 0.1f;
+	WalkAnimMinHorizontalMovement = -0.1f;
+	WalkAnimMaxVerticalMovement = 0.35f;
+	WalkAnimMinVerticalMovement = -0.35f;
+	WalkAnimMaxRollRotation = 1.5f;
+	WalkAnimMinRollRotation = -1.5f;
 
 	SwayHorizontalMovementLimit = 1.0f;
 	SwayVerticalMovementLimit = 1.0f;
@@ -166,6 +170,7 @@ void AShooterCharacter::PostInitializeComponents()
 
 	if (CharacterCombat)
 	{
+		CharacterCombat->OnCharacterCombatCombatActionChanged.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterCombatCombatActionChanged);
 		CharacterCombat->OnCharacterCombatEquippedWeaponChanged.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterCombatEquippedWeaponChanged);
 	}
 	if (CharacterInventory)
@@ -196,6 +201,11 @@ void AShooterCharacter::PostInitializeComponents()
 		WalkAnimTimeline->AddInterpFloat(WalkAnimTimelineVerticalMovementCurve.LoadSynchronous(), OnWalkAnimTimelineVerticalMovementUpdate);
 		WalkAnimTimeline->AddInterpFloat(WalkAnimTimelineRollRotationCurve.LoadSynchronous(), OnWalkAnimTimelineRollRotationUpdate);
 		WalkAnimTimeline->SetLooping(true);
+	}
+	if (IdleWalkAnimResetTimeline)
+	{
+		IdleWalkAnimResetTimeline->AddInterpFloat(IdleWalkAnimResetTimelineCurve.LoadSynchronous(), OnIdleWalkAnimResetTimelineUpdate);
+		IdleWalkAnimResetTimeline->SetTimelineFinishedFunc(OnIdleWalkAnimResetTimelineFinished);
 	}
 	if (TurningAnimTimeline)
 	{
@@ -485,8 +495,8 @@ void AShooterCharacter::OnMovementUpdated(float DeltaTime, const FVector& OldLoc
 {
 	FVector Velocity = GetVelocity();
 	bool bHasVelocity = Velocity.SizeSquared2D() > 0.0f;
+	//bool bIsThirdAction = bIsTransition || bIsSprinting || (bIsProned && bHasVelocity);
 	FRotator ActorRotation = GetActorRotation();
-	bool bIsThirdAction = bIsTransition || bIsSprinting || (bIsProned && bHasVelocity);
 	
 	if (bHasVelocity)
 	{
@@ -496,17 +506,19 @@ void AShooterCharacter::OnMovementUpdated(float DeltaTime, const FVector& OldLoc
 		VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, ActorRotation.Yaw, 0.0)).Yaw;
 	}
 
-	if (GetCombatAction() == ECombatAction::CA_Idle && GetEquippedWeapon() && !bIsThirdAction)
+	if (GetEquippedWeapon() != nullptr && GetCombatAction() == ECombatAction::CA_Idle)
 	{
 		if (bHasVelocity)
 		{
 			if (IdleAnimTimeline && IdleAnimTimeline->IsPlaying())
 			{
 				IdleAnimTimeline->Stop();
-			}
-			if (WalkAnimTimeline && !WalkAnimTimeline->IsPlaying())
-			{
-				WalkAnimTimeline->PlayFromStart();
+
+				if (IdleWalkAnimResetTimeline && !IdleWalkAnimResetTimeline->IsPlaying())
+				{
+					IdleWalkAnimResetTimeline->PlayFromStart();
+					IdleWalkAnimResetTimeline->SetPlayRate(4.0f);
+				}
 			}
 		}
 		else
@@ -514,22 +526,13 @@ void AShooterCharacter::OnMovementUpdated(float DeltaTime, const FVector& OldLoc
 			if (WalkAnimTimeline && WalkAnimTimeline->IsPlaying())
 			{
 				WalkAnimTimeline->Stop();
+
+				if (IdleWalkAnimResetTimeline && !IdleWalkAnimResetTimeline->IsPlaying())
+				{
+					IdleWalkAnimResetTimeline->PlayFromStart();
+					IdleWalkAnimResetTimeline->SetPlayRate(3.0f);
+				}
 			}
-			if (IdleAnimTimeline && !IdleAnimTimeline->IsPlaying())
-			{
-				IdleAnimTimeline->PlayFromStart();
-			}
-		}
-	}
-	else
-	{
-		if (IdleAnimTimeline && IdleAnimTimeline->IsPlaying())
-		{
-			IdleAnimTimeline->Stop();
-		}
-		if (WalkAnimTimeline && WalkAnimTimeline->IsPlaying())
-		{
-			WalkAnimTimeline->Stop();
 		}
 	}
 
@@ -673,6 +676,37 @@ void AShooterCharacter::Handle_OnWalkAnimTimelineVerticalMovementUpdate(float Va
 void AShooterCharacter::Handle_OnWalkAnimTimelineRollRotationUpdate(float Value)
 {
 	ProceduralAnimRollRotation = UKismetMathLibrary::Lerp(WalkAnimMinRollRotation, WalkAnimMaxRollRotation, Value);
+}
+
+void AShooterCharacter::Handle_OnIdleWalkAnimResetTimelineUpdate(float Value)
+{
+	ProceduralAnimHorizontalMovement -= ProceduralAnimHorizontalMovement * Value;
+	ProceduralAnimVerticalMovement -= ProceduralAnimVerticalMovement * Value;
+	ProceduralAnimRollRotation -= ProceduralAnimRollRotation * Value;
+}
+
+void AShooterCharacter::Handle_OnIdleWalkAnimResetTimelineFinished()
+{
+	bool bHasVelocity = GetVelocity().SizeSquared2D() > 0.0f;
+	//bool bIsThirdAction = bIsTransition || bIsSprinting || (bIsProned && bHasVelocity);
+
+	if (GetEquippedWeapon() != nullptr && GetCombatAction() == ECombatAction::CA_Idle /* && !bIsThirdAction*/)
+	{
+		if (bHasVelocity)
+		{
+			if (WalkAnimTimeline && !WalkAnimTimeline->IsPlaying())
+			{
+				WalkAnimTimeline->PlayFromStart();
+			}
+		}
+		else
+		{
+			if (IdleAnimTimeline && !IdleAnimTimeline->IsPlaying())
+			{
+				IdleAnimTimeline->PlayFromStart();
+			}
+		}
+	}
 }
 
 void AShooterCharacter::Handle_OnTurningAnimTimelineUpdate(float Value)
@@ -840,6 +874,33 @@ void AShooterCharacter::Handle_OnCharacterAnimInstanceWalkAimToTransitionIdleAim
 void AShooterCharacter::Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted()
 {
 	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterCombatCombatActionChanged(ECombatAction CombatAction)
+{
+	if (GetEquippedWeapon() != nullptr)
+	{
+		if (CombatAction == ECombatAction::CA_Idle)
+		{
+			if (IdleWalkAnimResetTimeline && !IdleWalkAnimResetTimeline->IsPlaying())
+			{
+				IdleWalkAnimResetTimeline->PlayFromStart();
+				IdleWalkAnimResetTimeline->SetPlayRate(GetVelocity().SizeSquared2D() > 0.0f ? 4.0f : 3.0f);
+			}
+		}
+		else
+		{
+			if (IdleAnimTimeline && IdleAnimTimeline->IsPlaying())
+			{
+				IdleAnimTimeline->Stop();
+			}
+			if (WalkAnimTimeline && WalkAnimTimeline->IsPlaying())
+			{
+				WalkAnimTimeline->Stop();
+			}
+		}
+	}
+	
 }
 
 void AShooterCharacter::Handle_OnCharacterCombatEquippedWeaponChanged(AWeapon* Weapon)

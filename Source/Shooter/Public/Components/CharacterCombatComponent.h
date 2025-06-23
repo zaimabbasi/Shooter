@@ -9,6 +9,7 @@
 class AShooterCharacter;
 class AWeapon;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterCombatCombatActionChangedSignature, ECombatAction, CombatAction);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterCombatEquippedWeaponChangedSignature, AWeapon*, Weapon);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -46,6 +47,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void SetCombatAction(ECombatAction NewCombatAction);
 
 	//virtual void ActionEnd();
 	//virtual void ActionStart();
@@ -168,6 +171,7 @@ protected:
 	virtual void OnRep_EquippedWeapon(AWeapon* PrevEquippedWeapon);
 
 public:
+	FOnCharacterCombatCombatActionChangedSignature OnCharacterCombatCombatActionChanged;
 	FOnCharacterCombatEquippedWeaponChangedSignature OnCharacterCombatEquippedWeaponChanged;
 
 protected:

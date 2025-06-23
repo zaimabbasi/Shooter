@@ -141,6 +141,12 @@ protected:
 	virtual void Handle_OnWalkAnimTimelineRollRotationUpdate(float Value);
 
 	UFUNCTION()
+	virtual void Handle_OnIdleWalkAnimResetTimelineUpdate(float Value);
+
+	UFUNCTION()
+	virtual void Handle_OnIdleWalkAnimResetTimelineFinished();
+
+	UFUNCTION()
 	virtual void Handle_OnTurningAnimTimelineUpdate(float Value);
 
 	UFUNCTION()
@@ -226,6 +232,9 @@ protected:
 
 	UFUNCTION()
 	virtual void Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterCombatCombatActionChanged(ECombatAction CombatAction);
 
 	UFUNCTION()
 	virtual void Handle_OnCharacterCombatEquippedWeaponChanged(AWeapon* Weapon);
@@ -343,6 +352,9 @@ protected:
 	TObjectPtr<UTimelineComponent> WalkAnimTimeline;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTimelineComponent> IdleWalkAnimResetTimeline;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UTimelineComponent> TurningAnimTimeline;
 
 	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true"))
@@ -365,6 +377,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCurveFloat> WalkAnimTimelineRollRotationCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UCurveFloat> IdleWalkAnimResetTimelineCurve;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCurveFloat> TurningAnimTimelineCurve;
@@ -433,6 +448,9 @@ protected:
 	FOnTimelineFloat OnWalkAnimTimelineHorizontalMovementUpdate;
 	FOnTimelineFloat OnWalkAnimTimelineVerticalMovementUpdate;
 	FOnTimelineFloat OnWalkAnimTimelineRollRotationUpdate;
+
+	FOnTimelineFloat OnIdleWalkAnimResetTimelineUpdate;
+	FOnTimelineEventStatic OnIdleWalkAnimResetTimelineFinished;
 
 	FOnTimelineFloat OnTurningAnimTimelineUpdate;
 	FOnTimelineEventStatic OnTurningAnimTimelineFinished;
