@@ -49,6 +49,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void SetCombatAction(ECombatAction NewCombatAction);
+	virtual void SetEquippedWeapon(AWeapon* Weapon);
 
 	//virtual void ActionEnd();
 	//virtual void ActionStart();

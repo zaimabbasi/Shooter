@@ -48,6 +48,18 @@ void UCharacterCombatComponent::SetCombatAction(ECombatAction NewCombatAction)
 	}
 }
 
+void UCharacterCombatComponent::SetEquippedWeapon(AWeapon* Weapon)
+{
+	if (EquippedWeapon != Weapon)
+	{
+		RemoveDelegates(EquippedWeapon);
+		EquippedWeapon = Weapon;
+		AddDelegates(EquippedWeapon);
+
+		OnCharacterCombatEquippedWeaponChanged.Broadcast(EquippedWeapon);
+	}
+}
+
 //void UCharacterCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 //{
 //	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -421,12 +433,8 @@ void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceOut()
 {
 	if (GetOwnerRole() == ROLE_Authority)
 	{
-		EquippedWeapon = NextWeapon;
+		SetEquippedWeapon(NextWeapon);
 		NextWeapon = nullptr;
-
-		AddDelegates(EquippedWeapon);
-
-		OnCharacterCombatEquippedWeaponChanged.Broadcast(EquippedWeapon);
 		
 		OutToIdle();
 	}
@@ -542,14 +550,8 @@ void UCharacterCombatComponent::Handle_OnWeaponOut(AWeapon* Weapon)
 {	
 	if (GetOwnerRole() == ROLE_Authority)
 	{
-		RemoveDelegates(Weapon);
-
-		EquippedWeapon = NextWeapon;
+		SetEquippedWeapon(NextWeapon);
 		NextWeapon = nullptr;
-
-		AddDelegates(EquippedWeapon);
-
-		OnCharacterCombatEquippedWeaponChanged.Broadcast(EquippedWeapon);
 	
 		OutToIdle();
 	}
