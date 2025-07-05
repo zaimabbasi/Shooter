@@ -785,10 +785,12 @@ bool AShooterCharacter::Handle_OnRecoilUpdate(float DeltaTime)
 	RecoilHorizontalAccumulated += RecoilToAdd.Yaw;
 	RecoilVerticalAccumulated += RecoilToAdd.Pitch;
 
-	if (GetController())
+	// Setting controller rotation directly is giving unexpected results, so calling LookAction function instead
+	/*if (GetController())
 	{
 		GetController()->SetControlRotation(GetControlRotation().Add(RecoilToAdd.Pitch, RecoilToAdd.Yaw, 0.0f));
-	}
+	}*/
+	OnCharacterLookAction(FVector2D(RecoilToAdd.Yaw, RecoilToAdd.Pitch));
 
 	if (RecoilHorizontalAccumulated == RecoilHorizontal && RecoilVerticalAccumulated == RecoilVertical)
 	{
@@ -826,10 +828,12 @@ bool AShooterCharacter::Handle_OnRecoilRecoveryUpdate(float DeltaTime)
 	RecoilRecoveryToSubtract.Yaw *= DeltaControlRotation.Yaw > 0.0f ? -1.0f : 1.0f;
 	RecoilRecoveryToSubtract.Pitch *= DeltaControlRotation.Pitch > 0.0f ? -1.0f : 1.0f;
 
-	if (GetController())
+	// Setting controller rotation directly is giving unexpected results, so calling LookAction function instead
+	/*if (GetController())
 	{
 		GetController()->SetControlRotation(GetControlRotation().Add(RecoilRecoveryToSubtract.Pitch, RecoilRecoveryToSubtract.Yaw, 0.0f));
-	}
+	}*/
+	OnCharacterLookAction(FVector2D(RecoilRecoveryToSubtract.Yaw, RecoilRecoveryToSubtract.Pitch));
 
 	if (RecoilHorizontalAccumulatedTotal == 0.0f && RecoilVerticalAccumulatedTotal == 0.0f)
 	{
