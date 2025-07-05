@@ -328,6 +328,7 @@ void UCharacterCombatComponent::AddDelegates(AWeapon* Weapon)
 		Weapon->OnWeaponOutToIdle.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponOutToIdle);
 		Weapon->OnWeaponOutToIdleArm.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponOutToIdleArm);
 		Weapon->OnWeaponReloadCharge.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponReloadCharge);
+		Weapon->OnWeaponRecoilGenerated.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponRecoilGenerated);
 	}
 }
 
@@ -351,6 +352,7 @@ void UCharacterCombatComponent::RemoveDelegates(AWeapon* Weapon)
 		Weapon->OnWeaponOutToIdle.RemoveAll(this);
 		Weapon->OnWeaponOutToIdleArm.RemoveAll(this);
 		Weapon->OnWeaponReloadCharge.RemoveAll(this);
+		Weapon->OnWeaponRecoilGenerated.RemoveAll(this);
 	}
 }
 
@@ -570,6 +572,11 @@ void UCharacterCombatComponent::Handle_OnWeaponOutToIdleArm(AWeapon* Weapon)
 void UCharacterCombatComponent::Handle_OnWeaponReloadCharge(AWeapon* Weapon)
 {
 	SetCombatAction(ECombatAction::CA_Idle);
+}
+
+void UCharacterCombatComponent::Handle_OnWeaponRecoilGenerated(AWeapon* Weapon, float RecoilHorizontalKick, float RecoilVerticalKick)
+{
+	OnCharacterCombatWeaponRecoilGenerated.Broadcast(Weapon, RecoilHorizontalKick, RecoilVerticalKick);
 }
 
 void UCharacterCombatComponent::OnRep_CombatAction(ECombatAction PrevCombatAction)

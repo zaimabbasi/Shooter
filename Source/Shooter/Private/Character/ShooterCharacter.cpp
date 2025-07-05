@@ -77,6 +77,9 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	OnTurningAnimTimelineUpdate.BindUFunction(this, TEXT("Handle_OnTurningAnimTimelineUpdate"));
 	OnTurningAnimTimelineFinished.BindUFunction(this, TEXT("Handle_OnTurningAnimTimelineFinished"));
 
+	OnRecoilUpdate.BindUFunction(this, TEXT("Handle_OnRecoilUpdate"));
+	OnRecoilRecoveryUpdate.BindUFunction(this, TEXT("Handle_OnRecoilRecoveryUpdate"));
+
 	IdleAnimMaxHorizontalMovement = 0.1f;
 	IdleAnimMinHorizontalMovement = -0.1f;
 	IdleAnimMaxVerticalMovement = 0.35f;
@@ -98,6 +101,9 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	SwayHorizontalMovementSensitivity = 0.025;
 	SwayVerticalMovementSensitivity = 0.025;
 	SwayRollRotationSensitivity = 0.075;
+
+	RecoilKickTotalTime = 0.1f;
+	RecoilRecoveryTotalTime = 0.5f;
 
 	LeaningMaxAngle = 15.0f;
 	LeaningInterpSpeed = 5.0f;
@@ -172,6 +178,7 @@ void AShooterCharacter::PostInitializeComponents()
 	{
 		CharacterCombat->OnCharacterCombatCombatActionChanged.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterCombatCombatActionChanged);
 		CharacterCombat->OnCharacterCombatEquippedWeaponChanged.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterCombatEquippedWeaponChanged);
+		CharacterCombat->OnCharacterCombatWeaponRecoilGenerated.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterCombatWeaponRecoilGenerated);
 	}
 	if (CharacterInventory)
 	{
@@ -416,6 +423,31 @@ FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) co
 	return WeaponHolsterSocketName;
 }
 
+FRotator AShooterCharacter::CalculateRecoilToAdd(float DeltaTime) const
+{
+	float RecoilHorizontalRemaining = RecoilHorizontal - RecoilHorizontalAccumulated;
+	float RecoilVerticalRemaining = RecoilVertical - RecoilVerticalAccumulated;
+
+	float RecoilHorizontalStep = RecoilHorizontalVelocity * DeltaTime;
+	float RecoilVerticalStep = RecoilVerticalVelocity * DeltaTime;
+
+	float RecoilHorizontalToAdd = FMath::Abs(RecoilHorizontalStep) > FMath::Abs(RecoilHorizontalRemaining) ? RecoilHorizontalRemaining : RecoilHorizontalStep;
+	float RecoilVerticalToAdd = FMath::Abs(RecoilVerticalStep) > FMath::Abs(RecoilVerticalRemaining) ? RecoilVerticalRemaining : RecoilVerticalStep;
+	
+	return FRotator(RecoilVerticalToAdd, RecoilHorizontalToAdd, 0.0f);
+}
+
+FRotator AShooterCharacter::CalculateRecoilRecoveryToSubtract(float DeltaTime) const
+{
+	float RecoilRecoveryHorizontalStep = RecoilRecoveryHorizontalVelocity * DeltaTime;
+	float RecoilRecoveryVerticalStep = RecoilRecoveryVerticalVelocity * DeltaTime;
+
+	float RecoilRecoveryHorizontalToSubtract = FMath::Abs(RecoilRecoveryHorizontalStep) > FMath::Abs(RecoilHorizontalAccumulatedTotal) ? RecoilHorizontalAccumulatedTotal : RecoilRecoveryHorizontalStep;
+	float RecoilRecoveryVerticalToSubtract = FMath::Abs(RecoilRecoveryVerticalStep) > FMath::Abs(RecoilVerticalAccumulatedTotal) ? RecoilVerticalAccumulatedTotal : RecoilRecoveryVerticalStep;
+
+	return FRotator(RecoilRecoveryVerticalToSubtract, RecoilRecoveryHorizontalToSubtract, 0.0f);
+}
+
 void AShooterCharacter::OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
 {
 	RecalculateBaseEyeHeight();
@@ -621,6 +653,32 @@ bool AShooterCharacter::CanLean() const
 	return !bIsSprinting && !(bIsProned && bHasVelocity && bIsAccelerating);
 }
 
+void AShooterCharacter::StartRecoilUpdate()
+{
+	if (!OnRecoilUpdateHandle.Pin())
+	{
+		OnRecoilUpdateHandle = FTSTicker::GetCoreTicker().AddTicker(OnRecoilUpdate);
+	}
+}
+
+void AShooterCharacter::StopRecoilUpdate()
+{
+	FTSTicker::GetCoreTicker().RemoveTicker(OnRecoilUpdateHandle);
+}
+
+void AShooterCharacter::StartRecoilRecoveryUpdate()
+{
+	if (!OnRecoilRecoveryUpdateHandle.Pin())
+	{
+		OnRecoilRecoveryUpdateHandle = FTSTicker::GetCoreTicker().AddTicker(OnRecoilRecoveryUpdate);
+	}
+}
+
+void AShooterCharacter::StopRecoilRecoveryUpdate()
+{
+	FTSTicker::GetCoreTicker().RemoveTicker(OnRecoilRecoveryUpdateHandle);
+}
+
 void AShooterCharacter::Server_Lean_Implementation(ELeaningDirection NewLeaningDirection)
 {
 	if (CanLean())
@@ -718,6 +776,69 @@ void AShooterCharacter::Handle_OnTurningAnimTimelineUpdate(float Value)
 void AShooterCharacter::Handle_OnTurningAnimTimelineFinished()
 {
 	TurningDirection = ETurningDirection::TD_None;
+}
+
+bool AShooterCharacter::Handle_OnRecoilUpdate(float DeltaTime)
+{
+	FRotator RecoilToAdd = CalculateRecoilToAdd(DeltaTime);
+
+	RecoilHorizontalAccumulated += RecoilToAdd.Yaw;
+	RecoilVerticalAccumulated += RecoilToAdd.Pitch;
+
+	if (GetController())
+	{
+		GetController()->SetControlRotation(GetControlRotation().Add(RecoilToAdd.Pitch, RecoilToAdd.Yaw, 0.0f));
+	}
+
+	if (RecoilHorizontalAccumulated == RecoilHorizontal && RecoilVerticalAccumulated == RecoilVertical)
+	{
+		RecoilHorizontal = 0.0f;
+		RecoilVertical = 0.0f;
+		RecoilHorizontalAccumulatedTotal += RecoilHorizontalAccumulated;
+		RecoilVerticalAccumulatedTotal += RecoilVerticalAccumulated;
+		RecoilHorizontalAccumulated = 0.0f;
+		RecoilVerticalAccumulated = 0.0f;
+
+		RecoilRecoveryHorizontalVelocity = RecoilHorizontalAccumulatedTotal / RecoilRecoveryTotalTime;
+		RecoilRecoveryVerticalVelocity = RecoilVerticalAccumulatedTotal / RecoilRecoveryTotalTime;
+
+		StopRecoilUpdate();
+		StartRecoilRecoveryUpdate();
+
+		return false;
+	}
+
+	return true;
+}
+
+bool AShooterCharacter::Handle_OnRecoilRecoveryUpdate(float DeltaTime)
+{
+	FRotator RecoilRecoveryToSubtract = CalculateRecoilRecoveryToSubtract(DeltaTime);
+
+	RecoilHorizontalAccumulatedTotal -= RecoilRecoveryToSubtract.Yaw;
+	RecoilVerticalAccumulatedTotal -= RecoilRecoveryToSubtract.Pitch;
+
+	FRotator DeltaControlRotation = UKismetMathLibrary::NormalizedDeltaRotator(GetControlRotation(), RecoilLastControlRotation);
+
+	RecoilRecoveryToSubtract.Yaw = FMath::Abs(RecoilRecoveryToSubtract.Yaw) > FMath::Abs(DeltaControlRotation.Yaw) ? FMath::Abs(DeltaControlRotation.Yaw) : RecoilRecoveryToSubtract.Yaw;
+	RecoilRecoveryToSubtract.Pitch = FMath::Abs(RecoilRecoveryToSubtract.Pitch) > FMath::Abs(DeltaControlRotation.Pitch) ? FMath::Abs(DeltaControlRotation.Pitch) : RecoilRecoveryToSubtract.Pitch;
+
+	RecoilRecoveryToSubtract.Yaw *= DeltaControlRotation.Yaw > 0.0f ? -1.0f : 1.0f;
+	RecoilRecoveryToSubtract.Pitch *= DeltaControlRotation.Pitch > 0.0f ? -1.0f : 1.0f;
+
+	if (GetController())
+	{
+		GetController()->SetControlRotation(GetControlRotation().Add(RecoilRecoveryToSubtract.Pitch, RecoilRecoveryToSubtract.Yaw, 0.0f));
+	}
+
+	if (RecoilHorizontalAccumulatedTotal == 0.0f && RecoilVerticalAccumulatedTotal == 0.0f)
+	{
+		StopRecoilUpdate();
+
+		return false;
+	}
+	
+	return true;
 }
 
 //void AShooterCharacter::Handle_OnCharacterAnimInstanceIdle()
@@ -919,6 +1040,33 @@ void AShooterCharacter::Handle_OnCharacterInventoryWeaponArrayReplicated()
 		AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
 		CharacterCombat->EquipWeapon(PrimaryWeapon);
 	}
+}
+
+void AShooterCharacter::Handle_OnCharacterCombatWeaponRecoilGenerated(AWeapon* Weapon, float RecoilHorizontalKick, float RecoilVerticalKick)
+{
+	RecoilHorizontal = RecoilHorizontalKick;
+	RecoilVertical = RecoilVerticalKick;
+
+	RecoilHorizontalVelocity = RecoilHorizontal / RecoilKickTotalTime;
+	RecoilVerticalVelocity = RecoilVertical / RecoilKickTotalTime;
+
+	RecoilHorizontalAccumulatedTotal += RecoilHorizontalAccumulated;
+	RecoilVerticalAccumulatedTotal += RecoilVerticalAccumulated;
+	RecoilHorizontalAccumulated = 0.0f;
+	RecoilVerticalAccumulated = 0.0f;
+
+	if (!OnRecoilUpdateHandle.Pin() && !OnRecoilRecoveryUpdateHandle.Pin())
+	{
+		RecoilLastControlRotation = GetControlRotation();
+	}
+
+	if (OnRecoilRecoveryUpdateHandle.Pin())
+	{
+		StopRecoilRecoveryUpdate();
+	}
+
+	StartRecoilUpdate();
+	
 }
 
 void AShooterCharacter::Handle_OnMovementComponentSprint()

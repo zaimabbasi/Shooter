@@ -86,7 +86,16 @@ protected:
 	virtual bool CanAim() const;
 	virtual bool CanLean() const;
 
+	virtual void StartRecoilUpdate();
+	virtual void StopRecoilUpdate();
+
+	virtual void StartRecoilRecoveryUpdate();
+	virtual void StopRecoilRecoveryUpdate();
+
 	virtual FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
+
+	FRotator CalculateRecoilToAdd(float DeltaTime) const;
+	FRotator CalculateRecoilRecoveryToSubtract(float DeltaTime) const;
 
 	virtual void OnCharacterAimAction(const FInputActionValue& Value);
 	virtual void OnCharacterAlterAction(const FInputActionValue& Value);
@@ -151,6 +160,12 @@ protected:
 
 	UFUNCTION()
 	virtual void Handle_OnTurningAnimTimelineFinished();
+
+	UFUNCTION()
+	virtual bool Handle_OnRecoilUpdate(float DeltaTime);
+
+	UFUNCTION()
+	virtual bool Handle_OnRecoilRecoveryUpdate(float DeltaTime);
 
 	/*UFUNCTION()
 	virtual void Handle_OnCharacterAnimInstanceIdle();
@@ -241,6 +256,9 @@ protected:
 
 	UFUNCTION()
 	virtual void Handle_OnCharacterInventoryWeaponArrayReplicated();
+
+	UFUNCTION()
+	virtual void Handle_OnCharacterCombatWeaponRecoilGenerated(AWeapon* Weapon, float RecoilHorizontalKick, float RecoilVerticalKick);
 
 	UFUNCTION()
 	virtual void Handle_OnMovementComponentSprint();
@@ -455,11 +473,40 @@ protected:
 	FOnTimelineFloat OnTurningAnimTimelineUpdate;
 	FOnTimelineEventStatic OnTurningAnimTimelineFinished;
 
+	FTickerDelegate OnRecoilUpdate;
+	FTickerDelegate OnRecoilRecoveryUpdate;
+
+	FTSTicker::FDelegateHandle OnRecoilUpdateHandle;
+	FTSTicker::FDelegateHandle OnRecoilRecoveryUpdateHandle;
+
 	float ProceduralAnimHorizontalMovement;
 	float ProceduralAnimVerticalMovement;
 	float ProceduralAnimRollRotation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "45", ForceUnits = "deg"))
+	float RecoilHorizontal;
+	float RecoilVertical;
+
+	float RecoilHorizontalAccumulated;
+	float RecoilVerticalAccumulated;
+
+	float RecoilHorizontalAccumulatedTotal;
+	float RecoilVerticalAccumulatedTotal;
+
+	float RecoilHorizontalVelocity;
+	float RecoilVerticalVelocity;
+
+	float RecoilRecoveryHorizontalVelocity;
+	float RecoilRecoveryVerticalVelocity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1", Units = "s"))
+	float RecoilKickTotalTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1", Units = "s"))
+	float RecoilRecoveryTotalTime;
+	
+	FRotator RecoilLastControlRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "45", Units = "deg"))
 	float LeaningMaxAngle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "1", ClampMax = "10.0"))
@@ -467,7 +514,7 @@ protected:
 
 	float LeaningTargetAngle;
 
-	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "1.0", ForceUnits = "sec"))
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "1.0", Units = "s"))
 	float LeaningDefaultTransitionDuration;
 
 	float LeaningTransitionDuration;

@@ -18,6 +18,7 @@ class UWeaponDataAsset;
 enum class EWeaponFiremode : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAnimNotifySignature, AWeapon*, Weapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnWeaponRecoilGeneratedSignature, AWeapon*, Weapon, float, RecoilHorizontalKick, float, RecoilVerticalKick);
 
 UCLASS()
 class SHOOTER_API AWeapon : public AActor
@@ -70,6 +71,8 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ProxyEjectShellPortAmmo();
 	virtual void Multicast_ProxyEjectShellPortAmmo_Implementation();
+
+	virtual void GenerateRecoil();
 
 	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstanceActionEnd();
@@ -150,6 +153,8 @@ public:
 	FOnWeaponAnimNotifySignature OnWeaponOutToIdle;
 	FOnWeaponAnimNotifySignature OnWeaponOutToIdleArm;
 	FOnWeaponAnimNotifySignature OnWeaponReloadCharge;
+
+	FOnWeaponRecoilGeneratedSignature OnWeaponRecoilGenerated;
 
 protected:
 	TObjectPtr<AShooterCharacter> ShooterCharacterOwner;

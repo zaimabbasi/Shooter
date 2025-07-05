@@ -11,6 +11,7 @@ class AWeapon;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterCombatCombatActionChangedSignature, ECombatAction, CombatAction);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterCombatEquippedWeaponChangedSignature, AWeapon*, Weapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCharacterCombatWeaponRecoilGeneratedSignature, AWeapon*, Weapon, float, RecoilHorizontalKick, float, RecoilVerticalKick);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SHOOTER_API UCharacterCombatComponent : public UActorComponent
@@ -166,6 +167,9 @@ protected:
 	virtual void Handle_OnWeaponReloadCharge(AWeapon* Weapon);
 
 	UFUNCTION()
+	virtual void Handle_OnWeaponRecoilGenerated(AWeapon* Weapon, float RecoilHorizontalKick, float RecoilVerticalKick);
+
+	UFUNCTION()
 	virtual void OnRep_CombatAction(ECombatAction PrevCombatAction);
 
 	UFUNCTION()
@@ -174,6 +178,7 @@ protected:
 public:
 	FOnCharacterCombatCombatActionChangedSignature OnCharacterCombatCombatActionChanged;
 	FOnCharacterCombatEquippedWeaponChangedSignature OnCharacterCombatEquippedWeaponChanged;
+	FOnCharacterCombatWeaponRecoilGeneratedSignature OnCharacterCombatWeaponRecoilGenerated;
 
 protected:
 	bool bWantsToFire;

@@ -21,6 +21,7 @@
 #include "Mod/SightRear.h"
 #include "Types/ShooterNames.h"
 #include "Types/WeaponTypes.h"
+#include <random>
 
 AWeapon::AWeapon() :
 	FiremodeIndex(0)
@@ -227,6 +228,21 @@ void AWeapon::Multicast_ProxyEjectShellPortAmmo_Implementation()
 	}
 }
 
+void AWeapon::GenerateRecoil()
+{
+	float VerticalKick = WeaponDataAsset.LoadSynchronous() ? WeaponDataAsset->VerticalKick : 0.0f;
+	float HorizontalSpread = WeaponDataAsset.LoadSynchronous() ? WeaponDataAsset->HorizontalSpread : 0.0f;
+	float HorizontalSpreadDirection = WeaponDataAsset.LoadSynchronous() ? WeaponDataAsset->HorizontalSpreadDirection : 0.0f;
+
+	std::random_device rd;
+	std::mt19937 mt19937(rd());
+	std::normal_distribution<float> nd = std::normal_distribution<float>(HorizontalSpread * HorizontalSpreadDirection, HorizontalSpread);
+
+	float HorizontalKick = nd(mt19937);
+
+	OnWeaponRecoilGenerated.Broadcast(this, HorizontalKick, VerticalKick);
+}
+
 void AWeapon::Handle_OnWeaponAnimInstanceActionEnd()
 {
 	OnWeaponActionEnd.Broadcast(this);
@@ -355,6 +371,12 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 				Multicast_ProxySpawnShellPortAmmo(Mag->GetMagDataAsset()->AmmoClass);
 			}
 		}
+	}
+
+	if (HasNetOwner())
+	{
+		LineTrace();
+		GenerateRecoil();
 	}
 
 }

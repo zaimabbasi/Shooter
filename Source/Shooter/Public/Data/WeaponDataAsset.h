@@ -21,8 +21,17 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	bool IsOneHanded;
 
-	UPROPERTY(EditAnywhere, Category = "Weapon")
+	UPROPERTY(EditAnywhere, Category = "Performance", meta = (ForceUnits = "rpm"))
 	uint16 RateOfFire;
+
+	UPROPERTY(EditAnywhere, Category = "Performance|Recoil", meta = (UIMin = "0", UIMax = "15", ClampMin = "0", ClampMax = "15"))
+	float VerticalKick;
+
+	UPROPERTY(EditAnywhere, Category = "Performance|Recoil", meta = (UIMin = "0", UIMax = "5", ClampMin = "0", ClampMax = "5"))
+	float HorizontalSpread;
+
+	UPROPERTY(EditAnywhere, Category = "Performance|Recoil", meta = (UIMin = "-1", UIMax = "1", ClampMin = "-1", ClampMax = "1"))
+	float HorizontalSpreadDirection;
 
 	UPROPERTY(EditAnywhere, Category = "DataAsset")
 	TSoftObjectPtr<UWeaponModDataAsset> WeaponModDataAsset;
