@@ -801,8 +801,8 @@ bool AShooterCharacter::Handle_OnRecoilUpdate(float DeltaTime)
 		RecoilHorizontalAccumulated = 0.0f;
 		RecoilVerticalAccumulated = 0.0f;
 
-		// Uncomment code below to use the minimum recovery rotation, keeping it commented for now
-		/*float RecoilHorizontalDirection = RecoilHorizontalAccumulatedTotal > 0.0f ? 1.0f : -1.0f;
+		// Use delta rotation values for accumulated recoil in case the recoil was controlled by the player
+		float RecoilHorizontalDirection = RecoilHorizontalAccumulatedTotal > 0.0f ? 1.0f : -1.0f;
 		float RecoilVerticalDirection = RecoilVerticalAccumulatedTotal > 0.0f ? 1.0f : -1.0f;
 
 		FRotator DeltaControlRotation = UKismetMathLibrary::NormalizedDeltaRotator(GetControlRotation(), RecoilLastControlRotation);
@@ -814,7 +814,7 @@ bool AShooterCharacter::Handle_OnRecoilUpdate(float DeltaTime)
 		if (FMath::Abs(RecoilVerticalAccumulatedTotal) > FMath::Abs(DeltaControlRotation.Pitch))
 		{
 			RecoilVerticalAccumulatedTotal = FMath::Abs(DeltaControlRotation.Pitch) * RecoilVerticalDirection;
-		}*/
+		}
 
 		RecoilRecoveryHorizontalVelocity = RecoilHorizontalAccumulatedTotal / RecoilRecoveryTotalTime;
 		RecoilRecoveryVerticalVelocity = RecoilVerticalAccumulatedTotal / RecoilRecoveryTotalTime;
