@@ -801,6 +801,7 @@ bool AShooterCharacter::Handle_OnRecoilUpdate(float DeltaTime)
 		RecoilHorizontalAccumulated = 0.0f;
 		RecoilVerticalAccumulated = 0.0f;
 
+		// Uncomment code below to use the minimum recovery rotation, keeping it commented for now
 		RecoilRecoveryHorizontalVelocity = RecoilHorizontalAccumulatedTotal / RecoilRecoveryTotalTime;
 		RecoilRecoveryVerticalVelocity = RecoilVerticalAccumulatedTotal / RecoilRecoveryTotalTime;
 
