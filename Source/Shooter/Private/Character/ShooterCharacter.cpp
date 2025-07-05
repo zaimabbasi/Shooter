@@ -802,6 +802,20 @@ bool AShooterCharacter::Handle_OnRecoilUpdate(float DeltaTime)
 		RecoilVerticalAccumulated = 0.0f;
 
 		// Uncomment code below to use the minimum recovery rotation, keeping it commented for now
+		/*float RecoilHorizontalDirection = RecoilHorizontalAccumulatedTotal > 0.0f ? 1.0f : -1.0f;
+		float RecoilVerticalDirection = RecoilVerticalAccumulatedTotal > 0.0f ? 1.0f : -1.0f;
+
+		FRotator DeltaControlRotation = UKismetMathLibrary::NormalizedDeltaRotator(GetControlRotation(), RecoilLastControlRotation);
+
+		if (FMath::Abs(RecoilHorizontalAccumulatedTotal) > FMath::Abs(DeltaControlRotation.Yaw))
+		{
+			RecoilHorizontalAccumulatedTotal = FMath::Abs(DeltaControlRotation.Yaw) * RecoilHorizontalDirection;
+		}
+		if (FMath::Abs(RecoilVerticalAccumulatedTotal) > FMath::Abs(DeltaControlRotation.Pitch))
+		{
+			RecoilVerticalAccumulatedTotal = FMath::Abs(DeltaControlRotation.Pitch) * RecoilVerticalDirection;
+		}*/
+
 		RecoilRecoveryHorizontalVelocity = RecoilHorizontalAccumulatedTotal / RecoilRecoveryTotalTime;
 		RecoilRecoveryVerticalVelocity = RecoilVerticalAccumulatedTotal / RecoilRecoveryTotalTime;
 
