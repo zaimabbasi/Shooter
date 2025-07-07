@@ -108,6 +108,11 @@ void UWeaponAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 
 }
 
+void UWeaponAnimInstance::SetCombatAction(ECombatAction NewCombatAction)
+{
+	CombatAction = NewCombatAction;
+}
+
 void UWeaponAnimInstance::AnimNotify_ActionEnd() const
 {
 	OnWeaponAnimInstanceActionEnd.Broadcast();
@@ -125,7 +130,10 @@ void UWeaponAnimInstance::AnimNotify_ChamberCheck() const
 
 void UWeaponAnimInstance::AnimNotify_Fire() const
 {
-	OnWeaponAnimInstanceFire.Broadcast();
+	if (CombatAction == ECombatAction::CA_Fire)
+	{
+		OnWeaponAnimInstanceFire.Broadcast();
+	}
 }
 
 void UWeaponAnimInstance::AnimNotify_FireDry() const
@@ -190,7 +198,10 @@ void UWeaponAnimInstance::AnimNotify_ReloadCharge() const
 
 void UWeaponAnimInstance::AnimNotify_PatronInWeapon() const
 {
-	OnWeaponAnimInstancePatronInWeapon.Broadcast();
+	if (CombatAction == ECombatAction::CA_Fire || CombatAction == ECombatAction::CA_OutToIdleArm || CombatAction == ECombatAction::CA_ReloadCharge)
+	{
+		OnWeaponAnimInstancePatronInWeapon.Broadcast();
+	}
 }
 
 void UWeaponAnimInstance::AnimNotify_WeaponSelector() const
@@ -200,12 +211,18 @@ void UWeaponAnimInstance::AnimNotify_WeaponSelector() const
 
 void UWeaponAnimInstance::AnimNotify_WeaponHammer() const
 {
-	OnWeaponAnimInstanceWeaponHammer.Broadcast();
+	if (CombatAction == ECombatAction::CA_Fire)
+	{
+		OnWeaponAnimInstanceWeaponHammer.Broadcast();
+	}
 }
 
 void UWeaponAnimInstance::AnimNotify_ShellPort() const
 {
-	OnWeaponAnimInstanceShellPort.Broadcast();
+	if (CombatAction == ECombatAction::CA_Fire)
+	{
+		OnWeaponAnimInstanceShellPort.Broadcast();
+	}
 }
 
 void UWeaponAnimInstance::AnimNotify_WeaponLHandMarker()

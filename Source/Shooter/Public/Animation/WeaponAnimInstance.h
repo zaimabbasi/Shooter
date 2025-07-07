@@ -23,6 +23,8 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 
+	void SetCombatAction(ECombatAction NewCombatAction);
+
 protected:
 	UFUNCTION()
 	void AnimNotify_ActionEnd() const;

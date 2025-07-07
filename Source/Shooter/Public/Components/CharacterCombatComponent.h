@@ -49,7 +49,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	virtual void SetCombatAction(ECombatAction NewCombatAction);
+	virtual void SetCombatAction(ECombatAction NewCombatAction, bool bUpdateWeaponAnimCombatAction = false);
 	virtual void SetEquippedWeapon(AWeapon* Weapon);
 
 	//virtual void ActionEnd();
@@ -77,6 +77,8 @@ protected:
 	ECombatAction GetWeaponAnimCombatAction() const;
 	ECombatAction GetHandsAnimCombatAction() const;
 	ECombatAction GetRelevantAnimCombatAction() const;
+
+	void UpdateWeaponAnimCombatAction() const;
 
 	UFUNCTION(Server, Reliable)
 	void Server_EquipWeapon(AWeapon* WeaponToEquip);

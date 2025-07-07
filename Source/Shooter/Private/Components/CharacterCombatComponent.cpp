@@ -39,12 +39,18 @@ void UCharacterCombatComponent::BeginPlay()
 
 }
 
-void UCharacterCombatComponent::SetCombatAction(ECombatAction NewCombatAction)
+void UCharacterCombatComponent::SetCombatAction(ECombatAction NewCombatAction, bool bUpdateWeaponAnimCombatAction)
 {
 	if (CombatAction != NewCombatAction)
 	{
 		CombatAction = NewCombatAction;
 		OnCharacterCombatCombatActionChanged.Broadcast(CombatAction);
+
+		// Immidiate CombatAction update in WeaponAnimInstance so we can guard against anim notify broadcasts
+		if (bUpdateWeaponAnimCombatAction)
+		{
+			UpdateWeaponAnimCombatAction();
+		}
 	}
 }
 
@@ -215,6 +221,17 @@ ECombatAction UCharacterCombatComponent::GetHandsAnimCombatAction() const
 ECombatAction UCharacterCombatComponent::GetRelevantAnimCombatAction() const
 {
 	return EquippedWeapon != nullptr ? GetWeaponAnimCombatAction() : GetHandsAnimCombatAction();
+}
+
+void UCharacterCombatComponent::UpdateWeaponAnimCombatAction() const
+{
+	if (EquippedWeapon && EquippedWeapon->GetMesh())
+	{
+		if (UWeaponAnimInstance* WeaponAnimInstance = Cast<UWeaponAnimInstance>(EquippedWeapon->GetMesh()->GetAnimInstance()))
+		{
+			WeaponAnimInstance->SetCombatAction(CombatAction);
+		}
+	}
 }
 
 //void UCharacterCombatComponent::ActionEnd()
@@ -476,11 +493,11 @@ void UCharacterCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
 
 			if ((!bWantsToFire && WeaponFiremode == EWeaponFiremode::WF_FullAuto) || bFiredRoundsLimitReached)
 			{
-				SetCombatAction(ECombatAction::CA_Idle);
+				SetCombatAction(ECombatAction::CA_Idle, true);
 			}
 			else if (Weapon->GetPatronInWeaponAmmo() == nullptr)
 			{
-				SetCombatAction(ECombatAction::CA_FireDry);
+				SetCombatAction(ECombatAction::CA_FireDry, true);
 			}
 		}
 	}
