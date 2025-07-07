@@ -779,19 +779,7 @@ void AShooterCharacter::Handle_OnTurningAnimTimelineFinished()
 }
 
 bool AShooterCharacter::Handle_OnRecoilUpdate(float DeltaTime)
-{
-	FRotator RecoilToAdd = CalculateRecoilToAdd(DeltaTime);
-
-	RecoilHorizontalAccumulated += RecoilToAdd.Yaw;
-	RecoilVerticalAccumulated += RecoilToAdd.Pitch;
-
-	// Setting controller rotation directly is giving unexpected results, so calling LookAction function instead
-	/*if (GetController())
-	{
-		GetController()->SetControlRotation(GetControlRotation().Add(RecoilToAdd.Pitch, RecoilToAdd.Yaw, 0.0f));
-	}*/
-	OnCharacterLookAction(FVector2D(RecoilToAdd.Yaw, RecoilToAdd.Pitch));
-
+{	
 	if (RecoilHorizontalAccumulated == RecoilHorizontal && RecoilVerticalAccumulated == RecoilVertical)
 	{
 		RecoilHorizontal = 0.0f;
@@ -825,11 +813,30 @@ bool AShooterCharacter::Handle_OnRecoilUpdate(float DeltaTime)
 		return false;
 	}
 
+	FRotator RecoilToAdd = CalculateRecoilToAdd(DeltaTime);
+
+	RecoilHorizontalAccumulated += RecoilToAdd.Yaw;
+	RecoilVerticalAccumulated += RecoilToAdd.Pitch;
+
+	// Setting controller rotation directly is giving unexpected results, so calling LookAction function instead
+	/*if (GetController())
+	{
+		GetController()->SetControlRotation(GetControlRotation().Add(RecoilToAdd.Pitch, RecoilToAdd.Yaw, 0.0f));
+	}*/
+	OnCharacterLookAction(FVector2D(RecoilToAdd.Yaw, RecoilToAdd.Pitch));
+
 	return true;
 }
 
 bool AShooterCharacter::Handle_OnRecoilRecoveryUpdate(float DeltaTime)
 {
+	if (RecoilHorizontalAccumulatedTotal == 0.0f && RecoilVerticalAccumulatedTotal == 0.0f)
+	{
+		StopRecoilUpdate();
+
+		return false;
+	}
+
 	FRotator RecoilRecoveryToSubtract = CalculateRecoilRecoveryToSubtract(DeltaTime);
 
 	RecoilHorizontalAccumulatedTotal -= RecoilRecoveryToSubtract.Yaw;
@@ -849,13 +856,6 @@ bool AShooterCharacter::Handle_OnRecoilRecoveryUpdate(float DeltaTime)
 		GetController()->SetControlRotation(GetControlRotation().Add(RecoilRecoveryToSubtract.Pitch, RecoilRecoveryToSubtract.Yaw, 0.0f));
 	}*/
 	OnCharacterLookAction(FVector2D(RecoilRecoveryToSubtract.Yaw, RecoilRecoveryToSubtract.Pitch));
-
-	if (RecoilHorizontalAccumulatedTotal == 0.0f && RecoilVerticalAccumulatedTotal == 0.0f)
-	{
-		StopRecoilUpdate();
-
-		return false;
-	}
 	
 	return true;
 }
