@@ -20,6 +20,8 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 	{
 		FireAnimPlayRate = Weapon->GetRateOfFire() / 60.0f;
 		//FireAnimPlayRate = 1.0f;
+
+		RecoilKickTotalTime = (1.0f / FireAnimPlayRate) / 2.0f;
 	}
 
 	IKAlpha = 0.0f;
@@ -70,9 +72,13 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	ControlRotationLast = ControlRotation;
 	ControlRotation = ShooterCharacter != nullptr ? ShooterCharacter->GetControlRotation() : FRotator::ZeroRotator;
 
+	RecoilRecoveryTotalTime = ShooterCharacter != nullptr ? ShooterCharacter->GetRecoilRecoveryTotalTime() / 2.0f : 1.0f;
+
 	CalculateIKAlpha(DeltaSeconds);
 
 	CalculateSway(DeltaSeconds);
+
+	CalculateRecoil(DeltaSeconds);
 
 	CalculateTransforms();
 
@@ -209,10 +215,13 @@ void UWeaponAnimInstance::AnimNotify_WeaponSelector() const
 	OnWeaponAnimInstanceWeaponSelector.Broadcast();
 }
 
-void UWeaponAnimInstance::AnimNotify_WeaponHammer() const
+void UWeaponAnimInstance::AnimNotify_WeaponHammer()
 {
 	if (CombatAction == ECombatAction::CA_Fire)
 	{
+		bIsRecoilKick = true;
+		bIsRecoilRecovery = false;
+
 		OnWeaponAnimInstanceWeaponHammer.Broadcast();
 	}
 }
@@ -233,6 +242,11 @@ void UWeaponAnimInstance::AnimNotify_WeaponLHandMarker()
 void UWeaponAnimInstance::AnimNotify_WeaponLIKMarker()
 {
 	IKBlendInOutFlag = -1;
+}
+
+bool UWeaponAnimInstance::ShouldCopyCharacterIKSLPalm() const
+{
+	return (bIsCharacterProned && bHasCharacterVelocity) || (bIsCharacterSprinting && (bIsPistol || bIsOneHanded));
 }
 
 void UWeaponAnimInstance::CalculateIKAlpha(float DeltaSeconds)
@@ -279,22 +293,49 @@ void UWeaponAnimInstance::CalculateSway(float DeltaSeconds)
 	SwayRollRotation = FMath::Clamp(SwayRollRotation, -SwayRollRotationLimit, SwayRollRotationLimit);
 }
 
-void UWeaponAnimInstance::CalculateTransforms()
+void UWeaponAnimInstance::CalculateRecoil(float DeltaSeconds)
 {
-	CalculateRootBoneLocation();
+	if (bIsRecoilKick)
+	{
+		float RecoilKickMaxDistance = Weapon != nullptr ? Weapon->GetRecoilKickMaxDistance() : 0.0f;
+		float RecoilKickMaxPitchRotation = Weapon != nullptr ? Weapon->GetRecoilKickMaxPitchRotation() : 0.0f;
 
-	if (!ShouldCopyCharacterIKSLPalm())
-	{
-		CalculateLPalmTransform();
-	}
+		float RecoilKickMovementRemaining = RecoilKickMaxDistance - RecoilKickMovement;
+		float RecoilKickPitchRotationRemainig = RecoilKickMaxPitchRotation - RecoilKickPitchRotation;
 
-	if (bIsCharacterThirdAction)
-	{
-		CalculateThirdActionTransforms();
+		float RecoilKickMovementStep = (RecoilKickMaxDistance / RecoilKickTotalTime) * DeltaSeconds;
+		float RecoilKickPitchRotationStep = (RecoilKickMaxPitchRotation / RecoilKickTotalTime) * DeltaSeconds;
+
+		float RecoilKickMovmentToAdd = RecoilKickMovementStep > RecoilKickMovementRemaining ? RecoilKickMovementRemaining : RecoilKickMovementStep;
+		float RecoilPitchRotationToAdd = RecoilKickPitchRotationStep > RecoilKickPitchRotationRemainig ? RecoilKickPitchRotationRemainig : RecoilKickPitchRotationStep;
+
+		RecoilKickMovement += RecoilKickMovmentToAdd;
+		RecoilKickPitchRotation += RecoilPitchRotationToAdd;
+
+		if (RecoilKickMovement == RecoilKickMaxDistance && RecoilKickPitchRotation == RecoilKickMaxPitchRotation)
+		{
+			bIsRecoilKick = false;
+			bIsRecoilRecovery = true;
+		}
 	}
-	else
+	else if (bIsRecoilRecovery)
 	{
-		CalculateWeaponRootAnimTransform();
+		float RecoilKickMaxDistance = Weapon != nullptr ? Weapon->GetRecoilKickMaxDistance() : 0.0f;
+		float RecoilKickMovementStep = (RecoilKickMaxDistance / RecoilRecoveryTotalTime) * DeltaSeconds;
+
+		float RecoilKickMaxPitchRotation = Weapon != nullptr ? Weapon->GetRecoilKickMaxPitchRotation() : 0.0f;
+		float RecoilKickPitchRotationStep = (RecoilKickMaxPitchRotation / RecoilRecoveryTotalTime) * DeltaSeconds;
+
+		float RecoilKickMovementToSubtract = RecoilKickMovementStep > RecoilKickMovement ? RecoilKickMovement : RecoilKickMovementStep;;
+		float RecoilPitchRotationToSubtract = RecoilKickPitchRotationStep > RecoilKickPitchRotation ? RecoilKickPitchRotation : RecoilKickPitchRotationStep;
+
+		RecoilKickMovement -= RecoilKickMovementToSubtract;
+		RecoilKickPitchRotation -= RecoilPitchRotationToSubtract;
+
+		if (RecoilKickMovement == 0.0f && RecoilKickPitchRotation == 0.0f)
+		{
+			bIsRecoilRecovery = false;
+		}
 	}
 }
 
@@ -356,12 +397,26 @@ void UWeaponAnimInstance::CalculateWeaponRootAnimTransform()
 	float ProceduralAnimVerticalMovement = ShooterCharacter != nullptr ? ShooterCharacter->GetProceduralAnimVerticalMovement() : 0.0f;
 	float ProceduralAnimRollRotation = ShooterCharacter != nullptr ? ShooterCharacter->GetProceduralAnimRollRotation() : 0.0f;
 
-	WeaponRootAnimTransform = FTransform(FRotator(ProceduralAnimRollRotation + SwayRollRotation, 0.0f, 0.0f), FVector(ProceduralAnimHorizontalMovement + SwayHorizontalMovement, 0.0f, ProceduralAnimVerticalMovement + SwayVerticalMovement), FVector::OneVector);
+	WeaponRootAnimTransform = FTransform(FRotator(ProceduralAnimRollRotation + SwayRollRotation, 0.0f, -RecoilKickPitchRotation), FVector(ProceduralAnimHorizontalMovement + SwayHorizontalMovement, -RecoilKickMovement, ProceduralAnimVerticalMovement + SwayVerticalMovement), FVector::OneVector);
 }
 
-bool UWeaponAnimInstance::ShouldCopyCharacterIKSLPalm() const
+void UWeaponAnimInstance::CalculateTransforms()
 {
-	return (bIsCharacterProned && bHasCharacterVelocity) || (bIsCharacterSprinting && (bIsPistol || bIsOneHanded));
+	CalculateRootBoneLocation();
+
+	if (!ShouldCopyCharacterIKSLPalm())
+	{
+		CalculateLPalmTransform();
+	}
+
+	if (bIsCharacterThirdAction)
+	{
+		CalculateThirdActionTransforms();
+	}
+	else
+	{
+		CalculateWeaponRootAnimTransform();
+	}
 }
 
 //float UWeaponAnimInstance::CalculateVelocityYawOffsetAlpha(float VelocityYawOffset)

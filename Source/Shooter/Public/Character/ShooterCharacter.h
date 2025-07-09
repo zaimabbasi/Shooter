@@ -597,5 +597,6 @@ public:
 	FORCEINLINE float GetProceduralAnimHorizontalMovement() const { return ProceduralAnimHorizontalMovement; }
 	FORCEINLINE float GetProceduralAnimVerticalMovement() const { return ProceduralAnimVerticalMovement; }
 	FORCEINLINE float GetProceduralAnimRollRotation() const { return ProceduralAnimRollRotation; }
+	FORCEINLINE float GetRecoilRecoveryTotalTime() const { return RecoilRecoveryTotalTime; }
 
 };

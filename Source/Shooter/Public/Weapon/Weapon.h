@@ -165,6 +165,12 @@ protected:
 	TObjectPtr<AAmmo> PatronInWeaponAmmo;
 	TObjectPtr<AAmmo> ShellPortAmmo;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", UIMax = "5", ClampMin = "0", ClampMax = "5", Units = "cm"))
+	float RecoilKickMaxDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "5", ClampMin = "0", ClampMax = "5", Units = "deg"))
+	float RecoilKickMaxPitchRotation;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UWeaponDataAsset> WeaponDataAsset;
 
@@ -182,5 +188,7 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	FORCEINLINE AShooterCharacter* GetShooterCharacterOwner() const { return ShooterCharacterOwner; }
 	FORCEINLINE AAmmo* GetPatronInWeaponAmmo() const { return PatronInWeaponAmmo; }
+	FORCEINLINE float GetRecoilKickMaxDistance() const { return RecoilKickMaxDistance; }
+	FORCEINLINE float GetRecoilKickMaxPitchRotation() const { return RecoilKickMaxPitchRotation; }
 
 };

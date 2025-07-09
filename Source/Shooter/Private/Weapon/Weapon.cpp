@@ -37,6 +37,9 @@ AWeapon::AWeapon() :
 
 	WeaponModComponent = CreateDefaultSubobject<UWeaponModComponent>(TEXT("ModComponent"));
 	WeaponModComponent->SetIsReplicated(true);
+
+	RecoilKickMaxDistance = 2.0f;
+	RecoilKickMaxPitchRotation = 0.5f;
 	
 }
 

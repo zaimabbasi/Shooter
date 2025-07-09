@@ -81,7 +81,7 @@ protected:
 	void AnimNotify_WeaponSelector() const;
 
 	UFUNCTION()
-	void AnimNotify_WeaponHammer() const;
+	void AnimNotify_WeaponHammer();
 
 	UFUNCTION()
 	void AnimNotify_ShellPort() const;
@@ -93,14 +93,15 @@ protected:
 	void AnimNotify_WeaponLIKMarker();
 
 private:
+	bool ShouldCopyCharacterIKSLPalm() const;
 	void CalculateIKAlpha(float DeltaSeconds);
 	void CalculateSway(float DeltaSeconds);
-	void CalculateTransforms();
+	void CalculateRecoil(float DeltaSeconds);
 	void CalculateRootBoneLocation();
 	void CalculateLPalmTransform();
 	void CalculateThirdActionTransforms();
 	void CalculateWeaponRootAnimTransform();
-	bool ShouldCopyCharacterIKSLPalm() const;
+	void CalculateTransforms();
 	//float CalculateVelocityYawOffsetAlpha(float VelocityYawOffset);
 
 public:
@@ -141,6 +142,13 @@ private:
 	float SwayVerticalMovement;
 	float SwayRollRotation;
 	float SwayInterpSpeed;
+
+	bool bIsRecoilKick;
+	bool bIsRecoilRecovery;
+	float RecoilKickTotalTime;
+	float RecoilRecoveryTotalTime;
+	float RecoilKickMovement;
+	float RecoilKickPitchRotation;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> CharacterMesh;
