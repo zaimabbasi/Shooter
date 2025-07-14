@@ -26,9 +26,9 @@ void UCharacterCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (ShooterCharacter && ShooterCharacter->GetHandsMesh())
+	if (ShooterCharacter)
 	{
-		if (UHandsAnimInstance* HandsAnimInstance = Cast<UHandsAnimInstance>(ShooterCharacter->GetHandsMesh()->GetAnimInstance()))
+		if (UHandsAnimInstance* HandsAnimInstance = Cast<UHandsAnimInstance>(ShooterCharacter->GetHandsAnimInstance()))
 		{
 			HandsAnimInstance->OnHandsAnimInstanceIdle.AddDynamic(this, &UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceIdle);
 			HandsAnimInstance->OnHandsAnimInstanceIdleToOut.AddDynamic(this, &UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceIdleToOut);
@@ -196,26 +196,12 @@ void UCharacterCombatComponent::CheckWeaponMag()
 
 ECombatAction UCharacterCombatComponent::GetWeaponAnimCombatAction() const
 {
-	if (EquippedWeapon && EquippedWeapon->GetMesh())
-	{
-		if (UWeaponAnimInstance* WeaponAnimInstance = Cast<UWeaponAnimInstance>(EquippedWeapon->GetMesh()->GetAnimInstance()))
-		{
-			return WeaponAnimInstance->GetCombatAction();
-		}
-	}
-	return ECombatAction::CA_None;
+	return EquippedWeapon != nullptr ? EquippedWeapon->GetWeaponAnimCombatAction() : ECombatAction::CA_None;
 }
 
 ECombatAction UCharacterCombatComponent::GetHandsAnimCombatAction() const
 {
-	if (ShooterCharacter && ShooterCharacter->GetHandsMesh())
-	{
-		if (UHandsAnimInstance* HandsAnimInstance = Cast<UHandsAnimInstance>(ShooterCharacter->GetHandsMesh()->GetAnimInstance()))
-		{
-			return HandsAnimInstance->GetCombatAction();
-		}
-	}
-	return ECombatAction::CA_None;
+	return ShooterCharacter != nullptr ? ShooterCharacter->GetHandsAnimCombatAction() : ECombatAction::CA_None;
 }
 
 ECombatAction UCharacterCombatComponent::GetRelevantAnimCombatAction() const
@@ -225,12 +211,9 @@ ECombatAction UCharacterCombatComponent::GetRelevantAnimCombatAction() const
 
 void UCharacterCombatComponent::UpdateWeaponAnimCombatAction() const
 {
-	if (EquippedWeapon && EquippedWeapon->GetMesh())
+	if (EquippedWeapon)
 	{
-		if (UWeaponAnimInstance* WeaponAnimInstance = Cast<UWeaponAnimInstance>(EquippedWeapon->GetMesh()->GetAnimInstance()))
-		{
-			WeaponAnimInstance->SetCombatAction(CombatAction);
-		}
+		EquippedWeapon->SetWeaponAnimCombatAction(CombatAction);
 	}
 }
 
@@ -258,6 +241,8 @@ void UCharacterCombatComponent::Fire()
 		else
 		{
 			SetCombatAction(ECombatAction::CA_FireDry);
+
+			EquippedWeapon->TriggerFireDrySound();
 		}
 	}
 }
@@ -345,6 +330,7 @@ void UCharacterCombatComponent::AddDelegates(AWeapon* Weapon)
 		Weapon->OnWeaponOutToIdle.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponOutToIdle);
 		Weapon->OnWeaponOutToIdleArm.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponOutToIdleArm);
 		Weapon->OnWeaponReloadCharge.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponReloadCharge);
+		Weapon->OnWeaponWeaponHammer.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponWeaponHammer);
 		Weapon->OnWeaponRecoilGenerated.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponRecoilGenerated);
 	}
 }
@@ -369,13 +355,14 @@ void UCharacterCombatComponent::RemoveDelegates(AWeapon* Weapon)
 		Weapon->OnWeaponOutToIdle.RemoveAll(this);
 		Weapon->OnWeaponOutToIdleArm.RemoveAll(this);
 		Weapon->OnWeaponReloadCharge.RemoveAll(this);
+		Weapon->OnWeaponWeaponHammer.RemoveAll(this);
 		Weapon->OnWeaponRecoilGenerated.RemoveAll(this);
 	}
 }
 
 UAnimInstance* UCharacterCombatComponent::GetRelevantAnimInstance() const
 {
-	return EquippedWeapon && EquippedWeapon->GetMesh() ? EquippedWeapon->GetMesh()->GetAnimInstance() : ShooterCharacter && ShooterCharacter->GetHandsMesh() ? ShooterCharacter->GetHandsMesh()->GetAnimInstance() : nullptr;;
+	return EquippedWeapon != nullptr ? EquippedWeapon->GetAnimInstance() : ShooterCharacter != nullptr ? ShooterCharacter->GetHandsAnimInstance() : nullptr;
 }
 
 void UCharacterCombatComponent::Server_EquipWeapon_Implementation(AWeapon* WeaponToEquip)
@@ -494,10 +481,14 @@ void UCharacterCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
 			if ((!bWantsToFire && WeaponFiremode == EWeaponFiremode::WF_FullAuto) || bFiredRoundsLimitReached)
 			{
 				SetCombatAction(ECombatAction::CA_Idle, true);
+
+				Weapon->StopFireSound();
 			}
 			else if (Weapon->GetPatronInWeaponAmmo() == nullptr)
 			{
 				SetCombatAction(ECombatAction::CA_FireDry, true);
+
+				Weapon->TriggerFireDrySound();
 			}
 		}
 	}
@@ -589,6 +580,14 @@ void UCharacterCombatComponent::Handle_OnWeaponOutToIdleArm(AWeapon* Weapon)
 void UCharacterCombatComponent::Handle_OnWeaponReloadCharge(AWeapon* Weapon)
 {
 	SetCombatAction(ECombatAction::CA_Idle);
+}
+
+void UCharacterCombatComponent::Handle_OnWeaponWeaponHammer(AWeapon* Weapon)
+{
+	if (NumRoundsFired == 0)
+	{
+		Weapon->TriggerFireSound();
+	}
 }
 
 void UCharacterCombatComponent::Handle_OnWeaponRecoilGenerated(AWeapon* Weapon, float RecoilHorizontalKick, float RecoilVerticalKick)

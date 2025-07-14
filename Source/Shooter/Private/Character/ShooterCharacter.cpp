@@ -348,6 +348,20 @@ AWeapon* AShooterCharacter::GetEquippedWeapon() const
 	return CharacterCombat != nullptr ? CharacterCombat->GetEquippedWeapon() : nullptr;
 }
 
+UAnimInstance* AShooterCharacter::GetHandsAnimInstance() const
+{
+	return HandsMesh != nullptr ? HandsMesh->GetAnimInstance() : nullptr;;
+}
+
+ECombatAction AShooterCharacter::GetHandsAnimCombatAction() const
+{
+	if (UHandsAnimInstance* HandsAnimInstance = Cast<UHandsAnimInstance>(GetHandsAnimInstance()))
+	{
+		return HandsAnimInstance->GetCombatAction();
+	}
+	return ECombatAction::CA_None;
+}
+
 float AShooterCharacter::GetAllowedAO_Yaw() const
 {
 	return (!bIsCrouched && !bIsProned) || bIsCrouched ? 90.0f : 45.0f;

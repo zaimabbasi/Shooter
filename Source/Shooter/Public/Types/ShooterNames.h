@@ -55,3 +55,9 @@
 #define WEAPON_R_HAND_MARKER_SOCKET_NAME					(TEXT("weapon_R_hand_marker"))	// Sticks (sometimes not) with the palm in animations
 #define WEAPON_R_IK_MARKER_SOCKET_NAME						(TEXT("weapon_R_IK_marker"))	// Sticks with the palm in animations
 #define SHELL_PORT_SOCKET_NAME								(TEXT("shellport"))
+
+// Weapon MetaSound Trigger Types
+#define FIRE_TRIGGER_NAME									(TEXT("Fire"))
+#define FIRE_STOP_TRIGGER_NAME								(TEXT("FireStop"))
+#define HAMMER_TRIGGER_NAME									(TEXT("Hammer"))
+#define TRIGGER_TRIGGER_NAME								(TEXT("Trigger"))

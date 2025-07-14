@@ -14,7 +14,7 @@ class AShooterCharacter;
 class UBoxComponent;
 class UWeaponModComponent;
 class UWeaponDataAsset;
-
+enum class ECombatAction : uint8;
 enum class EWeaponFiremode : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAnimNotifySignature, AWeapon*, Weapon);
@@ -57,6 +57,16 @@ public:
 	AMag* GetMag() const;
 	USkeletalMeshComponent* GetForegripHandguardMesh() const;
 	USkeletalMeshComponent* GetScopeSightMesh() const;
+
+	UAnimInstance* GetAnimInstance() const;
+	ECombatAction GetWeaponAnimCombatAction() const;
+	void SetWeaponAnimCombatAction(ECombatAction CombatAction) const;
+
+	virtual void PlayAudio() const;
+	virtual void StopAudio() const;
+	virtual void TriggerFireSound() const;
+	virtual void StopFireSound() const;
+	virtual void TriggerFireDrySound() const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -153,6 +163,7 @@ public:
 	FOnWeaponAnimNotifySignature OnWeaponOutToIdle;
 	FOnWeaponAnimNotifySignature OnWeaponOutToIdleArm;
 	FOnWeaponAnimNotifySignature OnWeaponReloadCharge;
+	FOnWeaponAnimNotifySignature OnWeaponWeaponHammer;
 
 	FOnWeaponRecoilGeneratedSignature OnWeaponRecoilGenerated;
 
@@ -164,6 +175,8 @@ protected:
 
 	TObjectPtr<AAmmo> PatronInWeaponAmmo;
 	TObjectPtr<AAmmo> ShellPortAmmo;
+
+	bool bIsArmed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", UIMax = "5", ClampMin = "0", ClampMax = "5", Units = "cm"))
 	float RecoilKickMaxDistance;
@@ -177,6 +190,9 @@ protected:
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> Mesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAudioComponent> AudioComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWeaponModComponent> WeaponModComponent;

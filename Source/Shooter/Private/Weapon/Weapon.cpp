@@ -2,6 +2,7 @@
 
 
 #include "Weapon/Weapon.h"
+#include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -19,6 +20,7 @@
 #include "Mod/Mod.h"
 #include "Mod/Scope.h"
 #include "Mod/SightRear.h"
+#include "Types/CombatTypes.h"
 #include "Types/ShooterNames.h"
 #include "Types/WeaponTypes.h"
 #include <random>
@@ -31,6 +33,9 @@ AWeapon::AWeapon() :
 
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
+
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->SetComponentTickEnabled(false);
 
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
 	BoxComponent->SetupAttachment(GetRootComponent());
@@ -180,6 +185,68 @@ USkeletalMeshComponent* AWeapon::GetScopeSightMesh() const
 	return ModScope != nullptr ? ModScope->GetMesh() : ModSightRear != nullptr ? ModSightRear->GetMesh() : nullptr;
 }
 
+UAnimInstance* AWeapon::GetAnimInstance() const
+{
+	return Mesh != nullptr ? Mesh->GetAnimInstance() : nullptr;
+}
+
+ECombatAction AWeapon::GetWeaponAnimCombatAction() const
+{
+	if (UWeaponAnimInstance* WeaponAnimInstance = Cast<UWeaponAnimInstance>(GetAnimInstance()))
+	{
+		return WeaponAnimInstance->GetCombatAction();
+	}
+	return ECombatAction::CA_None;
+}
+
+void AWeapon::SetWeaponAnimCombatAction(ECombatAction CombatAction) const
+{
+	if (UWeaponAnimInstance* WeaponAnimInstance = Cast<UWeaponAnimInstance>(GetAnimInstance()))
+	{
+		WeaponAnimInstance->SetCombatAction(CombatAction);
+	}
+}
+
+void AWeapon::PlayAudio() const
+{
+	if (AudioComponent)
+	{
+		AudioComponent->Play();
+	}
+}
+
+void AWeapon::StopAudio() const
+{
+	if (AudioComponent)
+	{
+		AudioComponent->Stop();
+	}
+}
+
+void AWeapon::TriggerFireSound() const
+{
+	if (AudioComponent)
+	{
+		AudioComponent->SetTriggerParameter(FIRE_TRIGGER_NAME);
+	}
+}
+
+void AWeapon::StopFireSound() const
+{
+	if (AudioComponent)
+	{
+		AudioComponent->SetTriggerParameter(FIRE_STOP_TRIGGER_NAME);
+	}
+}
+
+void AWeapon::TriggerFireDrySound() const
+{
+	if (AudioComponent)
+	{
+		AudioComponent->SetTriggerParameter(bIsArmed ? HAMMER_TRIGGER_NAME : TRIGGER_TRIGGER_NAME);
+	}
+}
+
 void AWeapon::SpawnShellPortAmmo(TSubclassOf<AAmmo> AmmoClass)
 {
 	if (UWorld* World = GetWorld())
@@ -268,6 +335,8 @@ void AWeapon::Handle_OnWeaponAnimInstanceFire()
 
 void AWeapon::Handle_OnWeaponAnimInstanceFireDry()
 {
+	bIsArmed = false;
+
 	OnWeaponFireDry.Broadcast(this);
 }
 
@@ -331,6 +400,8 @@ void AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon()
 			MagAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, PATRON_IN_WEAPON_SOCKET_NAME);
 
 			PatronInWeaponAmmo = MagAmmo;
+
+			bIsArmed = true;
 		}
 	}
 }
@@ -381,6 +452,8 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 		LineTrace();
 		GenerateRecoil();
 	}
+
+	OnWeaponWeaponHammer.Broadcast(this);
 
 }
 
