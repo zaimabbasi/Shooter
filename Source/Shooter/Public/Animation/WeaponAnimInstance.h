@@ -87,14 +87,25 @@ protected:
 	void AnimNotify_ShellPort() const;
 
 	UFUNCTION()
-	void AnimNotify_WeaponLHandMarker();
+	void AnimNotify_LHandIn();
 
 	UFUNCTION()
-	void AnimNotify_WeaponLIKMarker();
+	void AnimNotify_LHandOut();
+
+	UFUNCTION()
+	virtual bool Handle_OnLHandInUpdate(float DeltaSeconds);
+
+	UFUNCTION()
+	virtual bool Handle_OnLHandOutUpdate(float DeltaSeconds);
+
+	void StartLHandInUpdate();
+	void StopLHandInUpdate();
+	void StartLHandOutUpdate();
+	void StopLHandOutUpdate();
 
 private:
 	bool ShouldCopyCharacterIKSLPalm() const;
-	void CalculateIKAlpha(float DeltaSeconds);
+	void CalculateLHandMarkerAlpha();
 	void CalculateSway(float DeltaSeconds);
 	void CalculateRecoil(float DeltaSeconds);
 	void CalculateRootBoneLocation();
@@ -126,15 +137,15 @@ public:
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponHammer;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceShellPort;
 
-private:
+protected:
 	TObjectPtr<AWeapon> Weapon;
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
 	FRotator ControlRotation;
 	FRotator ControlRotationLast;
-	int8 IKBlendInOutFlag;
+	bool bIsCharacterThirdActionLast;
 	float IKBlendDuration;
-	float IKBlendDurationCounter;
+	float WeaponLHandMarkerAlphaLast;
 	//float ProceduralAnimHorizontalMovement;
 	//float ProceduralAnimVerticalMovement;
 	//float ProceduralAnimRollRotation;
@@ -150,6 +161,13 @@ private:
 	float RecoilKickMovement;
 	float RecoilKickPitchRotation;
 
+	FTickerDelegate OnLHandInUpdate;
+	FTickerDelegate OnLHandOutUpdate;
+
+	FTSTicker::FDelegateHandle OnLHandInUpdateHandle;
+	FTSTicker::FDelegateHandle OnLHandOutUpdateHandle;
+
+private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> CharacterMesh;
 
@@ -223,7 +241,7 @@ private:
 	bool bIsCharacterThirdAction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float IKAlpha;
+	float WeaponLHandMarkerAlpha;
 
 public:
 	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }

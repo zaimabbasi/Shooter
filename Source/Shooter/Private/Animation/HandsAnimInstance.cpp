@@ -5,7 +5,6 @@
 #include "Character/ShooterCharacter.h"
 #include "Types/ShooterNames.h"
 #include "Utility/ShooterUtility.h"
-#include "Weapon/Weapon.h"
 
 void UHandsAnimInstance::NativeInitializeAnimation()
 {
@@ -37,16 +36,12 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	AO_Yaw = ShooterCharacter->GetAO_Yaw();
 	CombatAction = ShooterCharacter->GetCombatAction();
 
-	AWeapon* EquippedWeapon = ShooterCharacter->GetEquippedWeapon();
-	WeaponMesh = EquippedWeapon != nullptr ? EquippedWeapon->GetMesh() : nullptr;
-	bIsWeaponEquipped = EquippedWeapon != nullptr;
-
 	bHasVelocity = ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
 
 	bool bIsTransition = ShooterCharacter->GetIsTransition();
 	bIsThirdAction = bIsTransition || bIsSprinting || (bIsProned && bHasVelocity);
-
-	IKAlpha = bIsThirdAction && !bIsWeaponEquipped ? 1.0f : 0.0f;
+	
+	WeaponLHandMarkerAlpha = WeaponRHandMarkerAlpha = bIsThirdAction ? 1.0f : 0.0f;
 
 	float LeaningTargetAngle = ShooterCharacter->GetLeaningTargetAngle();
 	float LeaningInterpSpeed = ShooterCharacter->GetLeaningInterpSpeed();
@@ -79,7 +74,7 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		FTransform CharacterRibcageTransform = CharacterMesh->GetSocketTransform(BASE_HUMAN_RIBCAGE_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		RootBoneLocation = FShooterUtility::TransformToBoneSpace(CharacterMesh, ROOT_JOINT_SOCKET_NAME, CharacterRibcageTransform).GetLocation();
 
-		if (HandsMesh && bIsThirdAction && !bIsWeaponEquipped)
+		if (HandsMesh && bIsThirdAction)
 		{
 			/*LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 			LCollarboneTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, BASE_HUMAN_RIBCAGE_SOCKET_NAME, LCollarboneTransform);*/

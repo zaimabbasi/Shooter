@@ -7,7 +7,6 @@
 #include "HandsAnimInstance.generated.h"
 
 class AShooterCharacter;
-class AWeapon;
 enum class ECombatAction : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHandsAnimInstanceAnimNotifySignature);
@@ -41,15 +40,13 @@ public:
 	FOnHandsAnimInstanceAnimNotifySignature OnHandsAnimInstanceOut;
 	FOnHandsAnimInstanceAnimNotifySignature OnHandsAnimInstanceOutToIdle;
 
-private:
+protected:
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
 	TObjectPtr<USkeletalMeshComponent> HandsMesh;
 
+private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> CharacterMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsAiming;
@@ -67,9 +64,6 @@ private:
 	bool bIsThirdAction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	bool bIsWeaponEquipped;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float AO_Pitch;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -79,7 +73,10 @@ private:
 	float LeaningAngle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float IKAlpha;
+	float WeaponLHandMarkerAlpha;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WeaponRHandMarkerAlpha;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	ECombatAction CombatAction;

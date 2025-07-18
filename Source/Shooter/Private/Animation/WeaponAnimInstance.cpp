@@ -24,10 +24,10 @@ void UWeaponAnimInstance::NativeInitializeAnimation()
 		RecoilKickTotalTime = (1.0f / FireAnimPlayRate) / 2.0f;
 	}
 
-	IKAlpha = 0.0f;
-	IKBlendInOutFlag = 0;
+	OnLHandInUpdate.BindUFunction(this, TEXT("Handle_OnLHandInUpdate"));
+	OnLHandOutUpdate.BindUFunction(this, TEXT("Handle_OnLHandOutUpdate"));
+
 	IKBlendDuration = 0.3f;
-	IKBlendDurationCounter = 0.0f;
 
 	SwayInterpSpeed = 5.0f;
 	
@@ -60,6 +60,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bHasCharacterVelocity = ShooterCharacter && ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
 
 	bool bIsCharacterTransition = ShooterCharacter && ShooterCharacter->GetIsTransition();
+	bIsCharacterThirdActionLast = bIsCharacterThirdAction;
 	bIsCharacterThirdAction = bIsCharacterTransition || bIsCharacterSprinting || (bIsCharacterProned && bHasCharacterVelocity);
 
 	AWeapon* CharacterEquippedWeapon = ShooterCharacter != nullptr ? ShooterCharacter->GetEquippedWeapon() : nullptr;
@@ -74,7 +75,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	RecoilRecoveryTotalTime = ShooterCharacter != nullptr ? ShooterCharacter->GetRecoilRecoveryTotalTime() / 2.0f : 1.0f;
 
-	CalculateIKAlpha(DeltaSeconds);
+	CalculateLHandMarkerAlpha();
 
 	CalculateSway(DeltaSeconds);
 
@@ -234,14 +235,84 @@ void UWeaponAnimInstance::AnimNotify_ShellPort() const
 	}
 }
 
-void UWeaponAnimInstance::AnimNotify_WeaponLHandMarker()
+void UWeaponAnimInstance::AnimNotify_LHandIn()
 {
-	IKBlendInOutFlag = 1;
+	if (OnLHandOutUpdateHandle.Pin())
+	{
+		StopLHandOutUpdate();
+	}
+	StartLHandInUpdate();
 }
 
-void UWeaponAnimInstance::AnimNotify_WeaponLIKMarker()
+void UWeaponAnimInstance::AnimNotify_LHandOut()
 {
-	IKBlendInOutFlag = -1;
+	if (OnLHandInUpdateHandle.Pin())
+	{
+		StopLHandInUpdate();
+	}
+	StartLHandOutUpdate();
+}
+
+bool UWeaponAnimInstance::Handle_OnLHandInUpdate(float DeltaSeconds)
+{
+	float WeaponLHandMarkerAlphaRemaining = 1.0f - WeaponLHandMarkerAlpha;
+	float WeaponLHandMarkerAlphaStep = (1.0f / IKBlendDuration) * DeltaSeconds;
+	float WeaponLHandMarkerAlphaToAdd = WeaponLHandMarkerAlphaStep > WeaponLHandMarkerAlphaRemaining ? WeaponLHandMarkerAlphaRemaining : WeaponLHandMarkerAlphaStep;
+
+	WeaponLHandMarkerAlpha += WeaponLHandMarkerAlphaToAdd;
+
+	if (WeaponLHandMarkerAlpha == 1.0f)
+	{
+		StopLHandInUpdate();
+
+		return false;
+	}
+
+	return true;
+}
+
+bool UWeaponAnimInstance::Handle_OnLHandOutUpdate(float DeltaSeconds)
+{
+	float WeaponLHandMarkerAlphaRemaining = 0.0f - WeaponLHandMarkerAlpha;
+	float WeaponLHandMarkerAlphaStep = (1.0f / IKBlendDuration) * DeltaSeconds * -1.0f;
+	float WeaponLHandMarkerAlphaToAdd = FMath::Abs(WeaponLHandMarkerAlphaStep) > FMath::Abs(WeaponLHandMarkerAlphaRemaining) ? WeaponLHandMarkerAlphaRemaining : WeaponLHandMarkerAlphaStep;
+
+	WeaponLHandMarkerAlpha += WeaponLHandMarkerAlphaToAdd;
+
+	if (WeaponLHandMarkerAlpha == 0.0f)
+	{
+		StartLHandOutUpdate();
+
+		return false;
+	}
+
+	return true;
+}
+
+void UWeaponAnimInstance::StartLHandInUpdate()
+{
+	if (!OnLHandInUpdateHandle.Pin())
+	{
+		OnLHandInUpdateHandle = FTSTicker::GetCoreTicker().AddTicker(OnLHandInUpdate);
+	}
+}
+
+void UWeaponAnimInstance::StopLHandInUpdate()
+{
+	FTSTicker::GetCoreTicker().RemoveTicker(OnLHandInUpdateHandle);
+}
+
+void UWeaponAnimInstance::StartLHandOutUpdate()
+{
+	if (!OnLHandOutUpdateHandle.Pin())
+	{
+		OnLHandOutUpdateHandle = FTSTicker::GetCoreTicker().AddTicker(OnLHandOutUpdate);
+	}
+}
+
+void UWeaponAnimInstance::StopLHandOutUpdate()
+{
+	FTSTicker::GetCoreTicker().RemoveTicker(OnLHandOutUpdateHandle);
 }
 
 bool UWeaponAnimInstance::ShouldCopyCharacterIKSLPalm() const
@@ -249,24 +320,16 @@ bool UWeaponAnimInstance::ShouldCopyCharacterIKSLPalm() const
 	return (bIsCharacterProned && bHasCharacterVelocity) || (bIsCharacterSprinting && (bIsPistol || bIsOneHanded));
 }
 
-void UWeaponAnimInstance::CalculateIKAlpha(float DeltaSeconds)
+void UWeaponAnimInstance::CalculateLHandMarkerAlpha()
 {
-	if (bIsCharacterThirdAction)
+	if (bIsCharacterThirdAction && !bIsCharacterThirdActionLast)
 	{
-		IKAlpha = 1.0f;
+		WeaponLHandMarkerAlphaLast = WeaponLHandMarkerAlpha;
+		WeaponLHandMarkerAlpha = 1.0f;
 	}
-	else
+	else if (!bIsCharacterThirdAction && bIsCharacterThirdActionLast)
 	{
-		if (bHasForegripHandguardMesh)
-		{
-			IKBlendDurationCounter += IKBlendInOutFlag * DeltaSeconds;
-			IKBlendDurationCounter = FMath::Clamp(IKBlendDurationCounter, 0.0f, IKBlendDuration);
-			IKAlpha = IKBlendDurationCounter / IKBlendDuration;
-		}
-		else
-		{
-			IKAlpha = CombatAction == ECombatAction::CA_Idle ? 1.0f : 0.0f;
-		}
+		WeaponLHandMarkerAlpha = WeaponLHandMarkerAlphaLast;
 	}
 }
 
