@@ -321,6 +321,10 @@ void UCharacterCombatComponent::AddDelegates(AWeapon* Weapon)
 		Weapon->OnWeaponFireDry.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponFireDry);
 		Weapon->OnWeaponFiremode.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponFiremode);
 		Weapon->OnWeaponFiremodeCheck.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponFiremodeCheck);
+		Weapon->OnWeaponHandsInHalf1.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponHandsInHalf1);
+		Weapon->OnWeaponHandsInHalf2.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponHandsInHalf2);
+		Weapon->OnWeaponHandsOutHalf1.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponHandsOutHalf1);
+		Weapon->OnWeaponHandsOutHalf2.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponHandsOutHalf2);
 		Weapon->OnWeaponIdle.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponIdle);
 		Weapon->OnWeaponIdleToOut.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponIdleToOut);
 		Weapon->OnWeaponMagCheck.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponMagCheck);
@@ -342,6 +346,10 @@ void UCharacterCombatComponent::RemoveDelegates(AWeapon* Weapon)
 		Weapon->OnWeaponActionEnd.RemoveAll(this);
 		Weapon->OnWeaponActionStart.RemoveAll(this);
 		Weapon->OnWeaponChamberCheck.RemoveAll(this);
+		Weapon->OnWeaponHandsInHalf1.RemoveAll(this);
+		Weapon->OnWeaponHandsInHalf2.RemoveAll(this);
+		Weapon->OnWeaponHandsOutHalf1.RemoveAll(this);
+		Weapon->OnWeaponHandsOutHalf2.RemoveAll(this);
 		Weapon->OnWeaponFire.RemoveAll(this);
 		Weapon->OnWeaponFireDry.RemoveAll(this);
 		Weapon->OnWeaponFiremode.RemoveAll(this);
@@ -453,7 +461,6 @@ void UCharacterCombatComponent::Handle_OnCharacterHandsAnimInstanceOutToIdle()
 
 void UCharacterCombatComponent::Handle_OnWeaponActionEnd(AWeapon* Weapon)
 {
-	SetCombatAction(ECombatAction::CA_Idle);
 }
 
 void UCharacterCombatComponent::Handle_OnWeaponActionStart(AWeapon* Weapon)
@@ -463,6 +470,23 @@ void UCharacterCombatComponent::Handle_OnWeaponActionStart(AWeapon* Weapon)
 void UCharacterCombatComponent::Handle_OnWeaponChamberCheck(AWeapon* Weapon)
 {
 	SetCombatAction(ECombatAction::CA_Idle);
+}
+
+void UCharacterCombatComponent::Handle_OnWeaponHandsInHalf1(AWeapon* Weapon)
+{
+}
+
+void UCharacterCombatComponent::Handle_OnWeaponHandsInHalf2(AWeapon* Weapon)
+{
+	SetCombatAction(ECombatAction::CA_Idle);
+}
+
+void UCharacterCombatComponent::Handle_OnWeaponHandsOutHalf1(AWeapon* Weapon)
+{
+}
+
+void UCharacterCombatComponent::Handle_OnWeaponHandsOutHalf2(AWeapon* Weapon)
+{
 }
 
 void UCharacterCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
@@ -539,7 +563,7 @@ void UCharacterCombatComponent::Handle_OnWeaponMagIn(AWeapon* Weapon)
 		}
 		else
 		{
-			SetCombatAction(ECombatAction::CA_ActionEnd);
+			SetCombatAction(ECombatAction::CA_HandsInHalf2);
 		}
 	}
 }

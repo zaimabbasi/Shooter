@@ -130,6 +130,18 @@ protected:
 	virtual void Handle_OnWeaponChamberCheck(AWeapon* Weapon);
 
 	UFUNCTION()
+	virtual void Handle_OnWeaponHandsInHalf1(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponHandsInHalf2(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponHandsOutHalf1(AWeapon* Weapon);
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponHandsOutHalf2(AWeapon* Weapon);
+
+	UFUNCTION()
 	virtual void Handle_OnWeaponFire(AWeapon* Weapon);
 
 	UFUNCTION()

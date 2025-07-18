@@ -48,6 +48,18 @@ protected:
 	void AnimNotify_FiremodeCheck() const;
 
 	UFUNCTION()
+	void AnimNotify_HandsInHalf1() const;
+
+	UFUNCTION()
+	void AnimNotify_HandsInHalf2() const;
+
+	UFUNCTION()
+	void AnimNotify_HandsOutHalf1() const;
+
+	UFUNCTION()
+	void AnimNotify_HandsOutHalf2() const;
+
+	UFUNCTION()
 	void AnimNotify_Idle() const;
 
 	UFUNCTION()
@@ -123,6 +135,10 @@ public:
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFireDry;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFiremode;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceFiremodeCheck;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceHandsInHalf1;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceHandsInHalf2;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceHandsOutHalf1;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceHandsOutHalf2;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdle;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdleToOut;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceMagCheck;

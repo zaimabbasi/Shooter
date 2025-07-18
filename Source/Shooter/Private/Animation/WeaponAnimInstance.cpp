@@ -158,6 +158,26 @@ void UWeaponAnimInstance::AnimNotify_FiremodeCheck() const
 	OnWeaponAnimInstanceFiremodeCheck.Broadcast();
 }
 
+void UWeaponAnimInstance::AnimNotify_HandsInHalf1() const
+{
+	OnWeaponAnimInstanceHandsInHalf1.Broadcast();
+}
+
+void UWeaponAnimInstance::AnimNotify_HandsInHalf2() const
+{
+	OnWeaponAnimInstanceHandsInHalf2.Broadcast();
+}
+
+void UWeaponAnimInstance::AnimNotify_HandsOutHalf1() const
+{
+	OnWeaponAnimInstanceHandsOutHalf1.Broadcast();
+}
+
+void UWeaponAnimInstance::AnimNotify_HandsOutHalf2() const
+{
+	OnWeaponAnimInstanceHandsOutHalf2.Broadcast();
+}
+
 void UWeaponAnimInstance::AnimNotify_Idle() const
 {
 	OnWeaponAnimInstanceIdle.Broadcast();

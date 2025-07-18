@@ -106,6 +106,18 @@ protected:
 	virtual void Handle_OnWeaponAnimInstanceFiremodeCheck();
 
 	UFUNCTION()
+	virtual void Handle_OnWeaponAnimInstanceHandsInHalf1();
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponAnimInstanceHandsInHalf2();
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponAnimInstanceHandsOutHalf1();
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponAnimInstanceHandsOutHalf2();
+
+	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstanceIdle();
 
 	UFUNCTION()
@@ -154,6 +166,10 @@ public:
 	FOnWeaponAnimNotifySignature OnWeaponFireDry;
 	FOnWeaponAnimNotifySignature OnWeaponFiremode;
 	FOnWeaponAnimNotifySignature OnWeaponFiremodeCheck;
+	FOnWeaponAnimNotifySignature OnWeaponHandsInHalf1;
+	FOnWeaponAnimNotifySignature OnWeaponHandsInHalf2;
+	FOnWeaponAnimNotifySignature OnWeaponHandsOutHalf1;
+	FOnWeaponAnimNotifySignature OnWeaponHandsOutHalf2;
 	FOnWeaponAnimNotifySignature OnWeaponIdle;
 	FOnWeaponAnimNotifySignature OnWeaponIdleToOut;
 	FOnWeaponAnimNotifySignature OnWeaponMagCheck;

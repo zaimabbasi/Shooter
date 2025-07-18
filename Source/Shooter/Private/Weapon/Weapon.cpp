@@ -63,6 +63,10 @@ void AWeapon::PostInitializeComponents()
 			WeaponAnimInstance->OnWeaponAnimInstanceFireDry.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceFireDry);
 			WeaponAnimInstance->OnWeaponAnimInstanceFiremode.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceFiremode);
 			WeaponAnimInstance->OnWeaponAnimInstanceFiremodeCheck.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceFiremodeCheck);
+			WeaponAnimInstance->OnWeaponAnimInstanceHandsInHalf1.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceHandsInHalf1);
+			WeaponAnimInstance->OnWeaponAnimInstanceHandsInHalf2.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceHandsInHalf2);
+			WeaponAnimInstance->OnWeaponAnimInstanceHandsOutHalf1.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceHandsOutHalf1);
+			WeaponAnimInstance->OnWeaponAnimInstanceHandsOutHalf2.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceHandsOutHalf2);
 			WeaponAnimInstance->OnWeaponAnimInstanceIdle.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceIdle);
 			WeaponAnimInstance->OnWeaponAnimInstanceIdleToOut.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceIdleToOut);
 			WeaponAnimInstance->OnWeaponAnimInstanceMagCheck.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceMagCheck);
@@ -348,6 +352,26 @@ void AWeapon::Handle_OnWeaponAnimInstanceFiremode()
 void AWeapon::Handle_OnWeaponAnimInstanceFiremodeCheck()
 {
 	OnWeaponFiremodeCheck.Broadcast(this);
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceHandsInHalf1()
+{
+	OnWeaponHandsInHalf1.Broadcast(this);
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceHandsInHalf2()
+{
+	OnWeaponHandsInHalf2.Broadcast(this);
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceHandsOutHalf1()
+{
+	OnWeaponHandsOutHalf1.Broadcast(this);
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceHandsOutHalf2()
+{
+	OnWeaponHandsOutHalf2.Broadcast(this);
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceIdle()
