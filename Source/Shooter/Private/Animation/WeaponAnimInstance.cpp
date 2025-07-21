@@ -47,6 +47,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	Firemode = Weapon->GetFiremode();
+	bIsArmed = Weapon->GetIsArmed();
 	//bIsHolster = Weapon->GetIsHolster();
 	bIsPistol = Weapon->IsPistol();
 	bIsOneHanded = Weapon->GetIsOneHanded();

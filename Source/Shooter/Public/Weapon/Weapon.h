@@ -220,6 +220,7 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	FORCEINLINE AShooterCharacter* GetShooterCharacterOwner() const { return ShooterCharacterOwner; }
 	FORCEINLINE AAmmo* GetPatronInWeaponAmmo() const { return PatronInWeaponAmmo; }
+	FORCEINLINE bool GetIsArmed() const { return bIsArmed; }
 	FORCEINLINE float GetRecoilKickMaxDistance() const { return RecoilKickMaxDistance; }
 	FORCEINLINE float GetRecoilKickMaxPitchRotation() const { return RecoilKickMaxPitchRotation; }
 
