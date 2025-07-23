@@ -51,6 +51,7 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	//bIsHolster = Weapon->GetIsHolster();
 	bIsPistol = Weapon->IsPistol();
 	bIsOneHanded = Weapon->GetIsOneHanded();
+	bIsBoltCatched = Weapon->GetIsBoltCatched();
 	ForegripHandguardMesh = Weapon->GetForegripHandguardMesh();
 	bHasForegripHandguardMesh = ForegripHandguardMesh != nullptr;
 
@@ -144,13 +145,17 @@ void UWeaponAnimInstance::AnimNotify_Fire() const
 	}
 }
 
-void UWeaponAnimInstance::AnimNotify_FireDry() const
+void UWeaponAnimInstance::AnimNotify_FireDry()
 {
+	SnapshotPose(PoseSnapshot);
+
 	OnWeaponAnimInstanceFireDry.Broadcast();
 }
 
-void UWeaponAnimInstance::AnimNotify_Firemode() const
+void UWeaponAnimInstance::AnimNotify_Firemode()
 {
+	SnapshotPose(PoseSnapshot);
+
 	OnWeaponAnimInstanceFiremode.Broadcast();
 }
 
@@ -214,26 +219,52 @@ void UWeaponAnimInstance::AnimNotify_OutToIdle() const
 	OnWeaponAnimInstanceOutToIdle.Broadcast();
 }
 
-void UWeaponAnimInstance::AnimNotify_OutToIdleArm() const
+void UWeaponAnimInstance::AnimNotify_OutToIdleArm()
 {
+	SnapshotPose(PoseSnapshot);
+
 	OnWeaponAnimInstanceOutToIdleArm.Broadcast();
 }
 
-void UWeaponAnimInstance::AnimNotify_ReloadCharge() const
+void UWeaponAnimInstance::AnimNotify_ReloadCatch()
 {
+	SnapshotPose(PoseSnapshot);
+
+	OnWeaponAnimInstanceReloadCatch.Broadcast();
+}
+
+void UWeaponAnimInstance::AnimNotify_ReloadCharge()
+{
+	SnapshotPose(PoseSnapshot);
+
 	OnWeaponAnimInstanceReloadCharge.Broadcast();
+}
+
+void UWeaponAnimInstance::AnimNotify_BoltCatch()
+{
+	if (CombatAction == ECombatAction::CA_Fire)
+	{
+		OnWeaponAnimInstanceBoltCatch.Broadcast();
+
+		if (Weapon && Weapon->GetIsBoltCatched())
+		{
+			SnapshotPose(PoseSnapshot);
+		}
+	}
 }
 
 void UWeaponAnimInstance::AnimNotify_PatronInWeapon() const
 {
-	if (CombatAction == ECombatAction::CA_Fire || CombatAction == ECombatAction::CA_OutToIdleArm || CombatAction == ECombatAction::CA_ReloadCharge)
+	if (CombatAction == ECombatAction::CA_Fire || CombatAction == ECombatAction::CA_OutToIdleArm || CombatAction == ECombatAction::CA_ReloadCatch || CombatAction == ECombatAction::CA_ReloadCharge)
 	{
 		OnWeaponAnimInstancePatronInWeapon.Broadcast();
 	}
 }
 
-void UWeaponAnimInstance::AnimNotify_WeaponSelector() const
+void UWeaponAnimInstance::AnimNotify_WeaponSelector()
 {
+	SnapshotPose(PoseSnapshot);
+
 	OnWeaponAnimInstanceWeaponSelector.Broadcast();
 }
 

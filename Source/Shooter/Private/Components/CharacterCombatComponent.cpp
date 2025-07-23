@@ -333,6 +333,7 @@ void UCharacterCombatComponent::AddDelegates(AWeapon* Weapon)
 		Weapon->OnWeaponOut.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponOut);
 		Weapon->OnWeaponOutToIdle.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponOutToIdle);
 		Weapon->OnWeaponOutToIdleArm.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponOutToIdleArm);
+		Weapon->OnWeaponReloadCatch.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponReloadCatch);
 		Weapon->OnWeaponReloadCharge.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponReloadCharge);
 		Weapon->OnWeaponWeaponHammer.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponWeaponHammer);
 		Weapon->OnWeaponRecoilGenerated.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponRecoilGenerated);
@@ -362,6 +363,7 @@ void UCharacterCombatComponent::RemoveDelegates(AWeapon* Weapon)
 		Weapon->OnWeaponOut.RemoveAll(this);
 		Weapon->OnWeaponOutToIdle.RemoveAll(this);
 		Weapon->OnWeaponOutToIdleArm.RemoveAll(this);
+		Weapon->OnWeaponReloadCatch.RemoveAll(this);
 		Weapon->OnWeaponReloadCharge.RemoveAll(this);
 		Weapon->OnWeaponWeaponHammer.RemoveAll(this);
 		Weapon->OnWeaponRecoilGenerated.RemoveAll(this);
@@ -559,7 +561,8 @@ void UCharacterCombatComponent::Handle_OnWeaponMagIn(AWeapon* Weapon)
 		bool bHasPatronInWeaponAmmo = Weapon && Weapon->GetPatronInWeaponAmmo() != nullptr;
 		if (bHasMagAmmo && !bHasPatronInWeaponAmmo)
 		{
-			SetCombatAction(ECombatAction::CA_ReloadCharge);
+			bool bIsBoltCatched = Weapon && Weapon->GetIsBoltCatched();
+			SetCombatAction(bIsBoltCatched ? ECombatAction::CA_ReloadCatch : ECombatAction::CA_ReloadCharge);
 		}
 		else
 		{
@@ -597,6 +600,11 @@ void UCharacterCombatComponent::Handle_OnWeaponOutToIdle(AWeapon* Weapon)
 }
 
 void UCharacterCombatComponent::Handle_OnWeaponOutToIdleArm(AWeapon* Weapon)
+{
+	SetCombatAction(ECombatAction::CA_Idle);
+}
+
+void UCharacterCombatComponent::Handle_OnWeaponReloadCatch(AWeapon* Weapon)
 {
 	SetCombatAction(ECombatAction::CA_Idle);
 }

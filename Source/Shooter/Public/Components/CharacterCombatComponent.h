@@ -178,6 +178,9 @@ protected:
 	virtual void Handle_OnWeaponOutToIdleArm(AWeapon* Weapon);
 
 	UFUNCTION()
+	virtual void Handle_OnWeaponReloadCatch(AWeapon* Weapon);
+
+	UFUNCTION()
 	virtual void Handle_OnWeaponReloadCharge(AWeapon* Weapon);
 
 	UFUNCTION()

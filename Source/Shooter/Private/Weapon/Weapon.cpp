@@ -75,7 +75,9 @@ void AWeapon::PostInitializeComponents()
 			WeaponAnimInstance->OnWeaponAnimInstanceOut.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOut);
 			WeaponAnimInstance->OnWeaponAnimInstanceOutToIdle.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOutToIdle);
 			WeaponAnimInstance->OnWeaponAnimInstanceOutToIdleArm.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceOutToIdleArm);
+			WeaponAnimInstance->OnWeaponAnimInstanceReloadCatch.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceReloadCatch);
 			WeaponAnimInstance->OnWeaponAnimInstanceReloadCharge.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceReloadCharge);
+			WeaponAnimInstance->OnWeaponAnimInstanceBoltCatch.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceBoltCatch);
 			WeaponAnimInstance->OnWeaponAnimInstancePatronInWeapon.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon);
 			WeaponAnimInstance->OnWeaponAnimInstanceWeaponSelector.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector);
 			WeaponAnimInstance->OnWeaponAnimInstanceWeaponHammer.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer);
@@ -414,6 +416,29 @@ void AWeapon::Handle_OnWeaponAnimInstanceOutToIdleArm()
 	OnWeaponOutToIdleArm.Broadcast(this);
 }
 
+void AWeapon::Handle_OnWeaponAnimInstanceReloadCatch()
+{
+	bIsBoltCatched = false;
+
+	OnWeaponReloadCatch.Broadcast(this);
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceReloadCharge()
+{
+	OnWeaponReloadCharge.Broadcast(this);
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceBoltCatch()
+{
+	if (AMag* Mag = GetMag())
+	{
+		if (Mag->GetAmmoCount() == 0)
+		{
+			bIsBoltCatched = true;
+		}
+	}
+}
+
 void AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon()
 {
 	if (AMag* Mag = GetMag())
@@ -428,11 +453,6 @@ void AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon()
 			bIsArmed = true;
 		}
 	}
-}
-
-void AWeapon::Handle_OnWeaponAnimInstanceReloadCharge()
-{
-	OnWeaponReloadCharge.Broadcast(this);
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceShellPort()

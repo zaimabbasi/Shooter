@@ -39,10 +39,10 @@ protected:
 	void AnimNotify_Fire() const;
 
 	UFUNCTION()
-	void AnimNotify_FireDry() const;
+	void AnimNotify_FireDry();
 
 	UFUNCTION()
-	void AnimNotify_Firemode() const;
+	void AnimNotify_Firemode();
 
 	UFUNCTION()
 	void AnimNotify_FiremodeCheck() const;
@@ -81,16 +81,22 @@ protected:
 	void AnimNotify_OutToIdle() const;
 
 	UFUNCTION()
-	void AnimNotify_OutToIdleArm() const;
+	void AnimNotify_OutToIdleArm();
 
 	UFUNCTION()
-	void AnimNotify_ReloadCharge() const;
+	void AnimNotify_ReloadCatch();
+
+	UFUNCTION()
+	void AnimNotify_ReloadCharge();
+
+	UFUNCTION()
+	void AnimNotify_BoltCatch();
 
 	UFUNCTION()
 	void AnimNotify_PatronInWeapon() const;
 
 	UFUNCTION()
-	void AnimNotify_WeaponSelector() const;
+	void AnimNotify_WeaponSelector();
 
 	UFUNCTION()
 	void AnimNotify_WeaponHammer();
@@ -147,7 +153,9 @@ public:
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOut;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOutToIdle;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceOutToIdleArm;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceReloadCatch;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceReloadCharge;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceBoltCatch;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstancePatronInWeapon;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponSelector;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponHammer;
@@ -200,6 +208,9 @@ private:
 	bool bIsHolster;*/
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FPoseSnapshot PoseSnapshot;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsArmed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -210,6 +221,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsOneHanded;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	bool bIsBoltCatched;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float FireAnimPlayRate;

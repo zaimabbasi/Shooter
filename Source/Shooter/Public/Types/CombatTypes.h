@@ -25,6 +25,7 @@ enum class ECombatAction :uint8
 	CA_Out UMETA(DisplayName = "Out"),
 	CA_OutToIdle UMETA(DisplayName = "OutToIdle"),
 	CA_OutToIdleArm UMETA(DisplayName = "OutToIdleArm"),
+	CA_ReloadCatch UMETA(DisplayName = "ReloadCatch"),
 	CA_ReloadCharge UMETA(DisplayName = "ReloadCharge"),
 	Default_MAX UMETA(Hidden)
 };

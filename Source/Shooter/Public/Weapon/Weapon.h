@@ -142,10 +142,16 @@ protected:
 	virtual void Handle_OnWeaponAnimInstanceOutToIdleArm();
 
 	UFUNCTION()
-	virtual void Handle_OnWeaponAnimInstancePatronInWeapon();
+	virtual void Handle_OnWeaponAnimInstanceReloadCatch();
 
 	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstanceReloadCharge();
+	
+	UFUNCTION()
+	virtual void Handle_OnWeaponAnimInstanceBoltCatch();
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponAnimInstancePatronInWeapon();
 
 	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstanceShellPort();
@@ -178,6 +184,7 @@ public:
 	FOnWeaponAnimNotifySignature OnWeaponOut;
 	FOnWeaponAnimNotifySignature OnWeaponOutToIdle;
 	FOnWeaponAnimNotifySignature OnWeaponOutToIdleArm;
+	FOnWeaponAnimNotifySignature OnWeaponReloadCatch;
 	FOnWeaponAnimNotifySignature OnWeaponReloadCharge;
 	FOnWeaponAnimNotifySignature OnWeaponWeaponHammer;
 
@@ -193,6 +200,7 @@ protected:
 	TObjectPtr<AAmmo> ShellPortAmmo;
 
 	bool bIsArmed;
+	bool bIsBoltCatched;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", UIMax = "5", ClampMin = "0", ClampMax = "5", Units = "cm"))
 	float RecoilKickMaxDistance;
@@ -221,6 +229,7 @@ public:
 	FORCEINLINE AShooterCharacter* GetShooterCharacterOwner() const { return ShooterCharacterOwner; }
 	FORCEINLINE AAmmo* GetPatronInWeaponAmmo() const { return PatronInWeaponAmmo; }
 	FORCEINLINE bool GetIsArmed() const { return bIsArmed; }
+	FORCEINLINE bool GetIsBoltCatched() const { return bIsBoltCatched; }
 	FORCEINLINE float GetRecoilKickMaxDistance() const { return RecoilKickMaxDistance; }
 	FORCEINLINE float GetRecoilKickMaxPitchRotation() const { return RecoilKickMaxPitchRotation; }
 
