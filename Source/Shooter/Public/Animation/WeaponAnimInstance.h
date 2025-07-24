@@ -93,6 +93,9 @@ protected:
 	void AnimNotify_BoltCatch();
 
 	UFUNCTION()
+	void AnimNotify_IdleStart() const;
+
+	UFUNCTION()
 	void AnimNotify_PatronInWeapon() const;
 
 	UFUNCTION()
@@ -103,6 +106,9 @@ protected:
 
 	UFUNCTION()
 	void AnimNotify_ShellPort() const;
+
+	UFUNCTION()
+	void AnimNotify_SoundDryFire() const;
 
 	UFUNCTION()
 	void AnimNotify_LHandIn();
@@ -156,10 +162,12 @@ public:
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceReloadCatch;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceReloadCharge;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceBoltCatch;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdleStart;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstancePatronInWeapon;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponSelector;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponHammer;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceShellPort;
+	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceSoundDryFire;
 
 protected:
 	TObjectPtr<AWeapon> Weapon;

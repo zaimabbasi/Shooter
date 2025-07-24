@@ -57,6 +57,7 @@
 #define SHELL_PORT_SOCKET_NAME								(TEXT("shellport"))
 
 // Weapon MetaSound Trigger Types
+#define CATCH_TRIGGER_NAME									(TEXT("Catch"))
 #define FIRE_TRIGGER_NAME									(TEXT("Fire"))
 #define FIRE_STOP_TRIGGER_NAME								(TEXT("FireStop"))
 #define HAMMER_TRIGGER_NAME									(TEXT("Hammer"))

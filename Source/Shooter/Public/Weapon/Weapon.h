@@ -67,6 +67,7 @@ public:
 	virtual void TriggerFireSound() const;
 	virtual void StopFireSound() const;
 	virtual void TriggerFireDrySound() const;
+	virtual void TriggerCatchSound() const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -151,10 +152,16 @@ protected:
 	virtual void Handle_OnWeaponAnimInstanceBoltCatch();
 
 	UFUNCTION()
+	virtual void Handle_OnWeaponAnimInstanceIdleStart();
+
+	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstancePatronInWeapon();
 
 	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstanceShellPort();
+
+	UFUNCTION()
+	virtual void Handle_OnWeaponAnimInstanceSoundDryFire();
 
 	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstanceWeaponHammer();
@@ -186,7 +193,6 @@ public:
 	FOnWeaponAnimNotifySignature OnWeaponOutToIdleArm;
 	FOnWeaponAnimNotifySignature OnWeaponReloadCatch;
 	FOnWeaponAnimNotifySignature OnWeaponReloadCharge;
-	FOnWeaponAnimNotifySignature OnWeaponWeaponHammer;
 
 	FOnWeaponRecoilGeneratedSignature OnWeaponRecoilGenerated;
 

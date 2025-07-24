@@ -78,10 +78,12 @@ void AWeapon::PostInitializeComponents()
 			WeaponAnimInstance->OnWeaponAnimInstanceReloadCatch.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceReloadCatch);
 			WeaponAnimInstance->OnWeaponAnimInstanceReloadCharge.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceReloadCharge);
 			WeaponAnimInstance->OnWeaponAnimInstanceBoltCatch.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceBoltCatch);
+			WeaponAnimInstance->OnWeaponAnimInstanceIdleStart.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceIdleStart);
 			WeaponAnimInstance->OnWeaponAnimInstancePatronInWeapon.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon);
 			WeaponAnimInstance->OnWeaponAnimInstanceWeaponSelector.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector);
 			WeaponAnimInstance->OnWeaponAnimInstanceWeaponHammer.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer);
 			WeaponAnimInstance->OnWeaponAnimInstanceShellPort.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceShellPort);
+			WeaponAnimInstance->OnWeaponAnimInstanceSoundDryFire.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceSoundDryFire);
 		}
 	}
 
@@ -250,6 +252,14 @@ void AWeapon::TriggerFireDrySound() const
 	if (AudioComponent)
 	{
 		AudioComponent->SetTriggerParameter(bIsArmed ? HAMMER_TRIGGER_NAME : TRIGGER_TRIGGER_NAME);
+	}
+}
+
+void AWeapon::TriggerCatchSound() const
+{
+	if (AudioComponent)
+	{
+		AudioComponent->SetTriggerParameter(CATCH_TRIGGER_NAME);
 	}
 }
 
@@ -435,8 +445,15 @@ void AWeapon::Handle_OnWeaponAnimInstanceBoltCatch()
 		if (Mag->GetAmmoCount() == 0)
 		{
 			bIsBoltCatched = true;
+
+			TriggerCatchSound();
 		}
 	}
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceIdleStart()
+{
+	StopFireSound();
 }
 
 void AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon()
@@ -465,6 +482,11 @@ void AWeapon::Handle_OnWeaponAnimInstanceShellPort()
 	{
 		Multicast_ProxyEjectShellPortAmmo();
 	}
+}
+
+void AWeapon::Handle_OnWeaponAnimInstanceSoundDryFire()
+{
+	TriggerFireDrySound();
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
@@ -497,7 +519,7 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 		GenerateRecoil();
 	}
 
-	OnWeaponWeaponHammer.Broadcast(this);
+	TriggerFireSound();
 
 }
 
