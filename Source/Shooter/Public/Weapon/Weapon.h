@@ -69,6 +69,8 @@ public:
 	virtual void TriggerFireDrySound() const;
 	virtual void TriggerCatchSound() const;
 
+	virtual void ResetNumRoundsFired();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -190,7 +192,6 @@ public:
 	FOnWeaponAnimNotifySignature OnWeaponOutToIdleArm;
 	FOnWeaponAnimNotifySignature OnWeaponReloadCatch;
 	FOnWeaponAnimNotifySignature OnWeaponReloadCharge;
-	FOnWeaponAnimNotifySignature OnWeaponWeaponHammer;
 
 	FOnWeaponRecoilGeneratedSignature OnWeaponRecoilGenerated;
 
@@ -199,6 +200,8 @@ protected:
 
 	UPROPERTY(Replicated)
 	uint8 FiremodeIndex;
+
+	uint8 NumRoundsFired;
 
 	TObjectPtr<AAmmo> PatronInWeaponAmmo;
 	TObjectPtr<AAmmo> ShellPortAmmo;
@@ -231,6 +234,7 @@ private:
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	FORCEINLINE AShooterCharacter* GetShooterCharacterOwner() const { return ShooterCharacterOwner; }
+	FORCEINLINE uint8 GetNumRoundsFired() const { return NumRoundsFired; }
 	FORCEINLINE AAmmo* GetPatronInWeaponAmmo() const { return PatronInWeaponAmmo; }
 	FORCEINLINE bool GetIsArmed() const { return bIsArmed; }
 	FORCEINLINE bool GetIsBoltCatched() const { return bIsBoltCatched; }

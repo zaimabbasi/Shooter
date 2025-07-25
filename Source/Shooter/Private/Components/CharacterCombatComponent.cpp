@@ -235,7 +235,8 @@ void UCharacterCombatComponent::Fire()
 	{
 		if (EquippedWeapon->GetPatronInWeaponAmmo() != nullptr)
 		{
-			NumRoundsFired = 0;
+			EquippedWeapon->ResetNumRoundsFired();
+
 			SetCombatAction(ECombatAction::CA_Fire);
 		}
 		else
@@ -333,7 +334,6 @@ void UCharacterCombatComponent::AddDelegates(AWeapon* Weapon)
 		Weapon->OnWeaponOutToIdleArm.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponOutToIdleArm);
 		Weapon->OnWeaponReloadCatch.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponReloadCatch);
 		Weapon->OnWeaponReloadCharge.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponReloadCharge);
-		Weapon->OnWeaponWeaponHammer.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponWeaponHammer);
 		Weapon->OnWeaponRecoilGenerated.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponRecoilGenerated);
 	}
 }
@@ -363,7 +363,6 @@ void UCharacterCombatComponent::RemoveDelegates(AWeapon* Weapon)
 		Weapon->OnWeaponOutToIdleArm.RemoveAll(this);
 		Weapon->OnWeaponReloadCatch.RemoveAll(this);
 		Weapon->OnWeaponReloadCharge.RemoveAll(this);
-		Weapon->OnWeaponWeaponHammer.RemoveAll(this);
 		Weapon->OnWeaponRecoilGenerated.RemoveAll(this);
 	}
 }
@@ -495,8 +494,7 @@ void UCharacterCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
 	{
 		if (Weapon)
 		{
-			++NumRoundsFired;
-
+			uint8 NumRoundsFired = Weapon->GetNumRoundsFired();
 			EWeaponFiremode WeaponFiremode = Weapon->GetFiremode();
 			bool bFiredRoundsLimitReached = (WeaponFiremode == EWeaponFiremode::WF_SingleShot && NumRoundsFired == 1) ||
 				(WeaponFiremode == EWeaponFiremode::WF_2RoundsBurst && NumRoundsFired == 2) ||
@@ -608,14 +606,6 @@ void UCharacterCombatComponent::Handle_OnWeaponReloadCatch(AWeapon* Weapon)
 void UCharacterCombatComponent::Handle_OnWeaponReloadCharge(AWeapon* Weapon)
 {
 	SetCombatAction(ECombatAction::CA_Idle);
-}
-
-void UCharacterCombatComponent::Handle_OnWeaponWeaponHammer(AWeapon* Weapon)
-{
-	if (Weapon && NumRoundsFired == 0)
-	{
-		Weapon->TriggerFireSound();
-	}
 }
 
 void UCharacterCombatComponent::Handle_OnWeaponRecoilGenerated(AWeapon* Weapon, float RecoilHorizontalKick, float RecoilVerticalKick)

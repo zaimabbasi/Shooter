@@ -184,9 +184,6 @@ protected:
 	virtual void Handle_OnWeaponReloadCharge(AWeapon* Weapon);
 
 	UFUNCTION()
-	virtual void Handle_OnWeaponWeaponHammer(AWeapon* Weapon);
-
-	UFUNCTION()
 	virtual void Handle_OnWeaponRecoilGenerated(AWeapon* Weapon, float RecoilHorizontalKick, float RecoilVerticalKick);
 
 	UFUNCTION()
@@ -202,7 +199,6 @@ public:
 
 protected:
 	bool bWantsToFire;
-	uint8 NumRoundsFired;
 
 	TObjectPtr<AWeapon> NextWeapon;
 

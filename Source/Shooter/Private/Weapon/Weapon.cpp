@@ -262,6 +262,11 @@ void AWeapon::TriggerCatchSound() const
 	}
 }
 
+void AWeapon::ResetNumRoundsFired()
+{
+	NumRoundsFired = 0;
+}
+
 void AWeapon::SpawnShellPortAmmo(TSubclassOf<AAmmo> AmmoClass)
 {
 	if (UWorld* World = GetWorld())
@@ -513,7 +518,13 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 		GenerateRecoil();
 	}
 
-	OnWeaponWeaponHammer.Broadcast(this);
+	if (NumRoundsFired == 0)
+	{
+		TriggerFireSound();
+	}
+
+	++NumRoundsFired;
+
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector()
