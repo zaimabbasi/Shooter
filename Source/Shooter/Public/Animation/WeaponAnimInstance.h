@@ -93,9 +93,6 @@ protected:
 	void AnimNotify_BoltCatch();
 
 	UFUNCTION()
-	void AnimNotify_IdleStart() const;
-
-	UFUNCTION()
 	void AnimNotify_PatronInWeapon() const;
 
 	UFUNCTION()
@@ -162,7 +159,6 @@ public:
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceReloadCatch;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceReloadCharge;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceBoltCatch;
-	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceIdleStart;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstancePatronInWeapon;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponSelector;
 	FOnWeaponAnimInstanceAnimNotifySignature OnWeaponAnimInstanceWeaponHammer;

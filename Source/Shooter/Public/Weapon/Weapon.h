@@ -152,9 +152,6 @@ protected:
 	virtual void Handle_OnWeaponAnimInstanceBoltCatch();
 
 	UFUNCTION()
-	virtual void Handle_OnWeaponAnimInstanceIdleStart();
-
-	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstancePatronInWeapon();
 
 	UFUNCTION()

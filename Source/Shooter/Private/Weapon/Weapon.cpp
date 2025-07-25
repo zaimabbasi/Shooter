@@ -78,7 +78,6 @@ void AWeapon::PostInitializeComponents()
 			WeaponAnimInstance->OnWeaponAnimInstanceReloadCatch.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceReloadCatch);
 			WeaponAnimInstance->OnWeaponAnimInstanceReloadCharge.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceReloadCharge);
 			WeaponAnimInstance->OnWeaponAnimInstanceBoltCatch.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceBoltCatch);
-			WeaponAnimInstance->OnWeaponAnimInstanceIdleStart.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceIdleStart);
 			WeaponAnimInstance->OnWeaponAnimInstancePatronInWeapon.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon);
 			WeaponAnimInstance->OnWeaponAnimInstanceWeaponSelector.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector);
 			WeaponAnimInstance->OnWeaponAnimInstanceWeaponHammer.AddDynamic(this, &AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer);
@@ -449,11 +448,6 @@ void AWeapon::Handle_OnWeaponAnimInstanceBoltCatch()
 			TriggerCatchSound();
 		}
 	}
-}
-
-void AWeapon::Handle_OnWeaponAnimInstanceIdleStart()
-{
-	StopFireSound();
 }
 
 void AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon()

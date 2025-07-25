@@ -253,11 +253,6 @@ void UWeaponAnimInstance::AnimNotify_BoltCatch()
 	}
 }
 
-void UWeaponAnimInstance::AnimNotify_IdleStart() const
-{
-	OnWeaponAnimInstanceIdleStart.Broadcast();
-}
-
 void UWeaponAnimInstance::AnimNotify_PatronInWeapon() const
 {
 	if (CombatAction == ECombatAction::CA_Fire || CombatAction == ECombatAction::CA_OutToIdleArm || CombatAction == ECombatAction::CA_ReloadCatch || CombatAction == ECombatAction::CA_ReloadCharge)
