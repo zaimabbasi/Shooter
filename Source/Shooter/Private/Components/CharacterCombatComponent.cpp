@@ -333,6 +333,7 @@ void UCharacterCombatComponent::AddDelegates(AWeapon* Weapon)
 		Weapon->OnWeaponOutToIdleArm.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponOutToIdleArm);
 		Weapon->OnWeaponReloadCatch.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponReloadCatch);
 		Weapon->OnWeaponReloadCharge.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponReloadCharge);
+		Weapon->OnWeaponWeaponHammer.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponWeaponHammer);
 		Weapon->OnWeaponRecoilGenerated.AddDynamic(this, &UCharacterCombatComponent::Handle_OnWeaponRecoilGenerated);
 	}
 }
@@ -362,6 +363,7 @@ void UCharacterCombatComponent::RemoveDelegates(AWeapon* Weapon)
 		Weapon->OnWeaponOutToIdleArm.RemoveAll(this);
 		Weapon->OnWeaponReloadCatch.RemoveAll(this);
 		Weapon->OnWeaponReloadCharge.RemoveAll(this);
+		Weapon->OnWeaponWeaponHammer.RemoveAll(this);
 		Weapon->OnWeaponRecoilGenerated.RemoveAll(this);
 	}
 }
@@ -606,6 +608,14 @@ void UCharacterCombatComponent::Handle_OnWeaponReloadCatch(AWeapon* Weapon)
 void UCharacterCombatComponent::Handle_OnWeaponReloadCharge(AWeapon* Weapon)
 {
 	SetCombatAction(ECombatAction::CA_Idle);
+}
+
+void UCharacterCombatComponent::Handle_OnWeaponWeaponHammer(AWeapon* Weapon)
+{
+	if (Weapon && NumRoundsFired == 0)
+	{
+		Weapon->TriggerFireSound();
+	}
 }
 
 void UCharacterCombatComponent::Handle_OnWeaponRecoilGenerated(AWeapon* Weapon, float RecoilHorizontalKick, float RecoilVerticalKick)

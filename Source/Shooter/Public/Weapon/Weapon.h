@@ -62,8 +62,8 @@ public:
 	ECombatAction GetWeaponAnimCombatAction() const;
 	void SetWeaponAnimCombatAction(ECombatAction CombatAction) const;
 
-	virtual void PlayAudio() const;
-	virtual void StopAudio() const;
+	//virtual void PlayAudio() const;
+	//virtual void StopAudio() const;
 	virtual void TriggerFireSound() const;
 	virtual void StopFireSound() const;
 	virtual void TriggerFireDrySound() const;
@@ -190,6 +190,7 @@ public:
 	FOnWeaponAnimNotifySignature OnWeaponOutToIdleArm;
 	FOnWeaponAnimNotifySignature OnWeaponReloadCatch;
 	FOnWeaponAnimNotifySignature OnWeaponReloadCharge;
+	FOnWeaponAnimNotifySignature OnWeaponWeaponHammer;
 
 	FOnWeaponRecoilGeneratedSignature OnWeaponRecoilGenerated;
 

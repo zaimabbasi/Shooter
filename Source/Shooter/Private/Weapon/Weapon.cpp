@@ -214,21 +214,21 @@ void AWeapon::SetWeaponAnimCombatAction(ECombatAction CombatAction) const
 	}
 }
 
-void AWeapon::PlayAudio() const
-{
-	if (AudioComponent)
-	{
-		AudioComponent->Play();
-	}
-}
+//void AWeapon::PlayAudio() const
+//{
+//	if (AudioComponent)
+//	{
+//		AudioComponent->Play();
+//	}
+//}
 
-void AWeapon::StopAudio() const
-{
-	if (AudioComponent)
-	{
-		AudioComponent->Stop();
-	}
-}
+//void AWeapon::StopAudio() const
+//{
+//	if (AudioComponent)
+//	{
+//		AudioComponent->Stop();
+//	}
+//}
 
 void AWeapon::TriggerFireSound() const
 {
@@ -513,8 +513,7 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 		GenerateRecoil();
 	}
 
-	TriggerFireSound();
-
+	OnWeaponWeaponHammer.Broadcast(this);
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector()
