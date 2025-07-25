@@ -502,6 +502,8 @@ void UCharacterCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
 
 			if ((!bWantsToFire && WeaponFiremode == EWeaponFiremode::WF_FullAuto) || bFiredRoundsLimitReached)
 			{
+				Weapon->StopFireSound();
+
 				SetCombatAction(ECombatAction::CA_Idle, true);
 			}
 			else if (Weapon->GetPatronInWeaponAmmo() == nullptr)
