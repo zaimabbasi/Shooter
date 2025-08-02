@@ -6,6 +6,9 @@
 #include "Mod/Mod.h"
 #include "Muzzle.generated.h"
 
+class UNiagaraComponent;
+class UNiagaraSystem;
+
 UCLASS()
 class SHOOTER_API AMuzzle : public AMod
 {
@@ -14,5 +17,7 @@ class SHOOTER_API AMuzzle : public AMod
 public:	
 	AMuzzle();
 	virtual FName GetDefaultAttachParentSocketName() const override;
+	virtual void SpawnMuzzleFlashEffect(UNiagaraSystem* MuzzleFlashSystem) const;
+	//virtual UNiagaraComponent* SpawnMuzzleSmokeEffect(UNiagaraSystem* MuzzleSmokeSystem) const;
 
 };

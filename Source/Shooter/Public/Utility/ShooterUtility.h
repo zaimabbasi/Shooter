@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "NiagaraFunctionLibrary.h"
 #include "ShooterUtility.generated.h"
 
 USTRUCT()
@@ -23,5 +24,16 @@ public:
 		WorldTransform.SetRotation(FQuat(BoneSpaceOutRotation));
 
 		return WorldTransform;
+	}
+
+	static UNiagaraComponent* SpawnNiagaraSystemAttached(UNiagaraSystem* SystemTemplate, USceneComponent* AttachToComponent, FName AttachPointName, bool bAutoDestroy)
+	{
+		return UNiagaraFunctionLibrary::SpawnSystemAttached(SystemTemplate,
+			AttachToComponent,
+			AttachPointName,
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::KeepRelativeOffset,
+			bAutoDestroy);
 	}
 };

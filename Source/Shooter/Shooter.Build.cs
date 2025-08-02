@@ -8,7 +8,7 @@ public class Shooter : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "CommonUI", "Core", "CoreUObject", "Engine", "EnhancedInput", "InputCore", "SkeletalMerging", "UMG" });
+		PublicDependencyModuleNames.AddRange(new string[] { "CommonUI", "Core", "CoreUObject", "Engine", "EnhancedInput", "InputCore", "Niagara", "SkeletalMerging", "UMG" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

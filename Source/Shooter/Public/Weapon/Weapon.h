@@ -10,8 +10,11 @@ class AAmmo;
 //class AForegrip;
 //class AHandguard;
 class AMag;
+class AMuzzle;
 class AShooterCharacter;
 class UBoxComponent;
+class UNiagaraComponent;
+class UNiagaraSystem;
 class UWeaponModComponent;
 class UWeaponDataAsset;
 enum class ECombatAction : uint8;
@@ -55,6 +58,7 @@ public:
 	//AHandguard* GetHandguard() const;
 
 	AMag* GetMag() const;
+	AMuzzle* GetMuzzle() const;
 	USkeletalMeshComponent* GetForegripHandguardMesh() const;
 	USkeletalMeshComponent* GetScopeSightMesh() const;
 
@@ -68,6 +72,9 @@ public:
 	virtual void StopFireSound() const;
 	virtual void TriggerFireDrySound() const;
 	virtual void TriggerCatchSound() const;
+
+	//virtual void SpawnMuzzleSmokeEffect();
+	//virtual void DeactivateMuzzleSmokeEffect() const;
 
 	virtual void ResetNumRoundsFired();
 
@@ -86,6 +93,9 @@ protected:
 	virtual void Multicast_ProxyEjectShellPortAmmo_Implementation();
 
 	virtual void GenerateRecoil();
+
+	virtual void SpawnMuzzleFlashEffect() const;
+	virtual void SpawnFireSmokeEffect() const;
 
 	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstanceActionEnd();
@@ -214,6 +224,17 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "5", ClampMin = "0", ClampMax = "5", Units = "deg"))
 	float RecoilKickMaxPitchRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Niagara", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UNiagaraSystem> MuzzleFlashSystem;
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Niagara", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UNiagaraSystem> MuzzleSmokeSystem;*/
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Niagara", meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UNiagaraSystem> FireSmokeSystem;
+
+	//TObjectPtr<UNiagaraComponent> MuzzleSmokeComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UWeaponDataAsset> WeaponDataAsset;

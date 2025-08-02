@@ -44,17 +44,23 @@
 #define MOD_STOCK_SOCKET_NAME								(TEXT("mod_stock"))
 #define PATRON_SOCKET_NAME(Index)							(*FString::Printf(TEXT("patron_%03d"), Index))
 
+// Muzzle Types
+#define MUZZLEFLASH_SOCKET_NAME(Index)						(*FString::Printf(TEXT("muzzleflash_%03d"), Index))
+#define MUZZLEFLASH_NAME									(TEXT("muzzleflash"))
+
 // Weapon Types
 #define AIM_CAMERA_SOCKET_NAME								(TEXT("aim_camera"))
+#define FIREPORT_SOCKET_NAME								(TEXT("fireport"))
+#define PATRON_IN_WEAPON_SOCKET_NAME						(TEXT("patron_in_weapon"))
+#define SHELLPORT_SOCKET_NAME								(TEXT("shellport"))
+#define SMOKEPORT_SOCKET_NAME								(TEXT("smokeport"))
 #define WEAPON_SOCKET_NAME									(TEXT("weapon"))
 #define WEAPON_L_COLLARBONE_MARKER_SOCKET_NAME				(TEXT("weapon_LCollarbone_marker"))
 #define WEAPON_L_HAND_MARKER_SOCKET_NAME					(TEXT("weapon_L_hand_marker"))	// Sticks (sometimes not) with the palm in animations
 #define WEAPON_L_IK_MARKER_SOCKET_NAME						(TEXT("weapon_L_IK_marker"))	// Sticks with the palm in animations
-#define PATRON_IN_WEAPON_SOCKET_NAME						(TEXT("patron_in_weapon"))
 #define WEAPON_R_COLLARBONE_MARKER_SOCKET_NAME				(TEXT("weapon_RCollarbone_marker"))
 #define WEAPON_R_HAND_MARKER_SOCKET_NAME					(TEXT("weapon_R_hand_marker"))	// Sticks (sometimes not) with the palm in animations
 #define WEAPON_R_IK_MARKER_SOCKET_NAME						(TEXT("weapon_R_IK_marker"))	// Sticks with the palm in animations
-#define SHELL_PORT_SOCKET_NAME								(TEXT("shellport"))
 
 // Weapon MetaSound Trigger Types
 #define CATCH_TRIGGER_NAME									(TEXT("Catch"))
@@ -62,3 +68,6 @@
 #define FIRE_STOP_TRIGGER_NAME								(TEXT("FireStop"))
 #define HAMMER_TRIGGER_NAME									(TEXT("Hammer"))
 #define TRIGGER_TRIGGER_NAME								(TEXT("Trigger"))
+
+// Weapon NiagaraSystem Parameter Types
+#define ENABLE_FLASH_PARAM_NAME							(TEXT("bEnableFlash"))

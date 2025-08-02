@@ -4,6 +4,7 @@
 #include "Weapon/Weapon.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
+#include "NiagaraComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
@@ -18,11 +19,13 @@
 #include "Mod/Handguard.h"
 #include "Mod/Mag.h"
 #include "Mod/Mod.h"
+#include "Mod/Muzzle.h"
 #include "Mod/Scope.h"
 #include "Mod/SightRear.h"
 #include "Types/CombatTypes.h"
 #include "Types/ShooterNames.h"
 #include "Types/WeaponTypes.h"
+#include "Utility/ShooterUtility.h"
 #include <random>
 
 AWeapon::AWeapon() :
@@ -170,6 +173,11 @@ AMag* AWeapon::GetMag() const
 	return WeaponModComponent->GetMod<AMag>();
 }
 
+AMuzzle* AWeapon::GetMuzzle() const
+{
+	return WeaponModComponent != nullptr ? WeaponModComponent->GetMod<AMuzzle>() : nullptr;
+}
+
 USkeletalMeshComponent* AWeapon::GetForegripHandguardMesh() const
 {
 	if (WeaponModComponent == nullptr)
@@ -262,6 +270,29 @@ void AWeapon::TriggerCatchSound() const
 	}
 }
 
+//void AWeapon::SpawnMuzzleSmokeEffect()
+//{
+//	if (UKismetMathLibrary::RandomBoolWithWeight(1.0f))
+//	{
+//		if (AMuzzle* Muzzle = GetMuzzle())
+//		{
+//			MuzzleSmokeComponent = Muzzle->SpawnMuzzleSmokeEffect(MuzzleSmokeSystem.LoadSynchronous());
+//		}
+//		else
+//		{
+//			MuzzleSmokeComponent = FShooterUtility::SpawnNiagaraSystemAttached(MuzzleSmokeSystem.LoadSynchronous(), Mesh, FIREPORT_SOCKET_NAME, true);
+//		}
+//	}
+//}
+
+//void AWeapon::DeactivateMuzzleSmokeEffect() const
+//{
+//	if (MuzzleSmokeComponent && MuzzleSmokeComponent->IsActive())
+//	{
+//		MuzzleSmokeComponent->Deactivate();
+//	}
+//}
+
 void AWeapon::ResetNumRoundsFired()
 {
 	NumRoundsFired = 0;
@@ -276,7 +307,7 @@ void AWeapon::SpawnShellPortAmmo(TSubclassOf<AAmmo> AmmoClass)
 			SpawnedAmmo->SetOwner(this);
 			SpawnedAmmo->SetReplicates(false);
 			SpawnedAmmo->SetIsEmpty(true);
-			SpawnedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, SHELL_PORT_SOCKET_NAME);
+			SpawnedAmmo->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform, SHELLPORT_SOCKET_NAME);
 			SpawnedAmmo->SetLifeSpan(2.0f);
 
 			ShellPortAmmo = SpawnedAmmo;
@@ -331,6 +362,23 @@ void AWeapon::GenerateRecoil()
 	float HorizontalKick = nd(mt19937);
 
 	OnWeaponRecoilGenerated.Broadcast(this, HorizontalKick, VerticalKick);
+}
+
+void AWeapon::SpawnMuzzleFlashEffect() const
+{
+	if (AMuzzle* Muzzle = GetMuzzle())
+	{
+		Muzzle->SpawnMuzzleFlashEffect(MuzzleFlashSystem.LoadSynchronous());
+	}
+	else
+	{
+		FShooterUtility::SpawnNiagaraSystemAttached(MuzzleFlashSystem.LoadSynchronous(), Mesh, FIREPORT_SOCKET_NAME, true);
+	}
+}
+
+void AWeapon::SpawnFireSmokeEffect() const
+{
+	FShooterUtility::SpawnNiagaraSystemAttached(FireSmokeSystem.LoadSynchronous(), Mesh, SMOKEPORT_SOCKET_NAME, true);
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceActionEnd()
@@ -514,9 +562,12 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 
 	if (HasNetOwner())
 	{
-		LineTrace();
+		//LineTrace();
 		GenerateRecoil();
 	}
+
+	SpawnMuzzleFlashEffect();
+	SpawnFireSmokeEffect();
 
 	if (NumRoundsFired == 0)
 	{

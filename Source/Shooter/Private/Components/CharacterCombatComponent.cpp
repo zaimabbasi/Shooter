@@ -490,26 +490,22 @@ void UCharacterCombatComponent::Handle_OnWeaponHandsOutHalf2(AWeapon* Weapon)
 
 void UCharacterCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
 {
-	//if (GetOwnerRole() == ROLE_Authority)
+	if (Weapon)
 	{
-		if (Weapon)
+		uint8 NumRoundsFired = Weapon->GetNumRoundsFired();
+		EWeaponFiremode WeaponFiremode = Weapon->GetFiremode();
+		bool bFiredRoundsLimitReached = (WeaponFiremode == EWeaponFiremode::WF_SingleShot && NumRoundsFired == 1) ||
+			(WeaponFiremode == EWeaponFiremode::WF_2RoundsBurst && NumRoundsFired == 2) ||
+			(WeaponFiremode == EWeaponFiremode::WF_3RoundsBurst && NumRoundsFired == 3);
+
+		if ((!bWantsToFire && WeaponFiremode == EWeaponFiremode::WF_FullAuto) || bFiredRoundsLimitReached)
 		{
-			uint8 NumRoundsFired = Weapon->GetNumRoundsFired();
-			EWeaponFiremode WeaponFiremode = Weapon->GetFiremode();
-			bool bFiredRoundsLimitReached = (WeaponFiremode == EWeaponFiremode::WF_SingleShot && NumRoundsFired == 1) ||
-				(WeaponFiremode == EWeaponFiremode::WF_2RoundsBurst && NumRoundsFired == 2) ||
-				(WeaponFiremode == EWeaponFiremode::WF_3RoundsBurst && NumRoundsFired == 3);
-
-			if ((!bWantsToFire && WeaponFiremode == EWeaponFiremode::WF_FullAuto) || bFiredRoundsLimitReached)
-			{
-				Weapon->StopFireSound();
-
-				SetCombatAction(ECombatAction::CA_Idle, true);
-			}
-			else if (Weapon->GetPatronInWeaponAmmo() == nullptr)
-			{
-				SetCombatAction(ECombatAction::CA_FireDry, true);
-			}
+			Weapon->StopFireSound();
+			SetCombatAction(ECombatAction::CA_Idle, true);
+		}
+		else if (Weapon->GetPatronInWeaponAmmo() == nullptr)
+		{
+			SetCombatAction(ECombatAction::CA_FireDry, true);
 		}
 	}
 }
