@@ -88,6 +88,7 @@ protected:
 	virtual void Aim();
 	virtual void UnAim();
 	virtual bool CanAim() const;
+	virtual bool CanAimInCombatAction(ECombatAction CombatAction) const;
 	virtual bool CanLean() const;
 
 	virtual void StartRecoilUpdate();

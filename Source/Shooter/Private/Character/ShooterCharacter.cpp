@@ -636,7 +636,14 @@ void AShooterCharacter::UnSprint()
 bool AShooterCharacter::CanAim() const
 {
 	bool bIsAccelerating = GetCharacterMovement() && GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f;
-	return !bIsAiming && !(bIsProned && GetVelocity().SizeSquared2D() > 0.0f && bIsAccelerating);
+	bool bIsCrawling = bIsProned && GetVelocity().SizeSquared2D() > 0.0f && bIsAccelerating;
+
+	return !bIsAiming && !bIsCrawling && CanAimInCombatAction(GetCombatAction());
+}
+
+bool AShooterCharacter::CanAimInCombatAction(ECombatAction CombatAction) const
+{
+	return CombatAction == ECombatAction::CA_Fire || CombatAction == ECombatAction::CA_FireDry || CombatAction == ECombatAction::CA_Firemode || CombatAction == ECombatAction::CA_Idle;
 }
 
 void AShooterCharacter::Aim()
@@ -1034,6 +1041,11 @@ void AShooterCharacter::Handle_OnCharacterCombatCombatActionChanged(ECombatActio
 {
 	if (GetEquippedWeapon() != nullptr)
 	{
+		if (!CanAimInCombatAction(CombatAction))
+		{
+			UnAim();
+		}
+
 		if (CombatAction == ECombatAction::CA_Idle)
 		{
 			if (IdleWalkAnimResetTimeline && !IdleWalkAnimResetTimeline->IsPlaying())
