@@ -7,6 +7,7 @@
 #include "NiagaraComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Ammo/Ammo.h"
 #include "Animation/WeaponAnimInstance.h"
@@ -15,6 +16,7 @@
 #include "Data/MagDataAsset.h"
 #include "Data/WeaponModDataAsset.h"
 #include "Data/WeaponDataAsset.h"
+#include "Interface/Impactable.h"
 #include "Mod/Foregrip.h"
 #include "Mod/Handguard.h"
 #include "Mod/Mag.h"
@@ -38,6 +40,7 @@ AWeapon::AWeapon() :
 	SetRootComponent(Mesh);
 
 	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->SetupAttachment(GetRootComponent());
 	AudioComponent->SetComponentTickEnabled(false);
 
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
@@ -222,54 +225,6 @@ void AWeapon::SetWeaponAnimCombatAction(ECombatAction CombatAction) const
 	}
 }
 
-//void AWeapon::PlayAudio() const
-//{
-//	if (AudioComponent)
-//	{
-//		AudioComponent->Play();
-//	}
-//}
-
-//void AWeapon::StopAudio() const
-//{
-//	if (AudioComponent)
-//	{
-//		AudioComponent->Stop();
-//	}
-//}
-
-void AWeapon::TriggerFireSound() const
-{
-	if (AudioComponent)
-	{
-		AudioComponent->SetTriggerParameter(FIRE_TRIGGER_NAME);
-	}
-}
-
-void AWeapon::StopFireSound() const
-{
-	if (AudioComponent)
-	{
-		AudioComponent->SetTriggerParameter(FIRE_STOP_TRIGGER_NAME);
-	}
-}
-
-void AWeapon::TriggerFireDrySound() const
-{
-	if (AudioComponent)
-	{
-		AudioComponent->SetTriggerParameter(bIsArmed ? HAMMER_TRIGGER_NAME : TRIGGER_TRIGGER_NAME);
-	}
-}
-
-void AWeapon::TriggerCatchSound() const
-{
-	if (AudioComponent)
-	{
-		AudioComponent->SetTriggerParameter(CATCH_TRIGGER_NAME);
-	}
-}
-
 //void AWeapon::SpawnMuzzleSmokeEffect()
 //{
 //	if (UKismetMathLibrary::RandomBoolWithWeight(1.0f))
@@ -296,6 +251,19 @@ void AWeapon::TriggerCatchSound() const
 void AWeapon::ResetNumRoundsFired()
 {
 	NumRoundsFired = 0;
+}
+
+void AWeapon::OnFireEnd()
+{
+	if (AudioComponent)
+	{
+		AudioComponent->SetTriggerParameter(FIRE_STOP_TRIGGER_NAME);
+	}
+
+	if (HasAuthority())
+	{
+		Multicast_ProxyOnFireEnd();
+	}
 }
 
 void AWeapon::SpawnShellPortAmmo(TSubclassOf<AAmmo> AmmoClass)
@@ -333,22 +301,6 @@ void AWeapon::EjectShellPortAmmo()
 	}
 }
 
-void AWeapon::Multicast_ProxySpawnShellPortAmmo_Implementation(TSubclassOf<AAmmo> AmmoClass)
-{
-	if (!HasNetOwner())
-	{
-		SpawnShellPortAmmo(AmmoClass);
-	}
-}
-
-void AWeapon::Multicast_ProxyEjectShellPortAmmo_Implementation()
-{
-	if (!HasNetOwner())
-	{
-		EjectShellPortAmmo();
-	}
-}
-
 void AWeapon::GenerateRecoil()
 {
 	float VerticalKick = WeaponDataAsset.LoadSynchronous() ? WeaponDataAsset->VerticalKick : 0.0f;
@@ -364,21 +316,87 @@ void AWeapon::GenerateRecoil()
 	OnWeaponRecoilGenerated.Broadcast(this, HorizontalKick, VerticalKick);
 }
 
-void AWeapon::SpawnMuzzleFlashEffect() const
+bool AWeapon::PerformLineTrace(FHitResult& OutHit)
 {
-	if (AMuzzle* Muzzle = GetMuzzle())
+	if (UWorld* const World = GetWorld())
 	{
-		Muzzle->SpawnMuzzleFlashEffect(MuzzleFlashSystem.LoadSynchronous());
+		FTransform FireportTransform = Mesh != nullptr ? Mesh->GetSocketTransform(FIREPORT_SOCKET_NAME, ERelativeTransformSpace::RTS_World) : FTransform();
+		FVector Start = FireportTransform.GetLocation();
+		FVector End = Start + (UKismetMathLibrary::GetRightVector(FireportTransform.Rotator()) * 2000.0f);
+
+		FCollisionQueryParams CollisionQueryParams = FCollisionQueryParams::DefaultQueryParam;
+		CollisionQueryParams.AddIgnoredActor(this);
+		CollisionQueryParams.bReturnPhysicalMaterial = true;
+
+		//DrawDebugLine(World, Start, End, FColor::Green, false, 1, 0, 1);
+
+		return World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionQueryParams);
 	}
-	else
+
+	return false;
+}
+
+void AWeapon::Multicast_ProxyOnFireEnd_Implementation()
+{
+	if (!HasNetOwner() && AudioComponent)
 	{
-		FShooterUtility::SpawnNiagaraSystemAttached(MuzzleFlashSystem.LoadSynchronous(), Mesh, FIREPORT_SOCKET_NAME, true);
+		AudioComponent->SetTriggerParameter(FIRE_STOP_TRIGGER_NAME);
 	}
 }
 
-void AWeapon::SpawnFireSmokeEffect() const
+void AWeapon::Multicast_ProxyHandle_OnWeaponAnimInstanceBoltCatch_Implementation(bool bTriggerCatchSound)
 {
-	FShooterUtility::SpawnNiagaraSystemAttached(FireSmokeSystem.LoadSynchronous(), Mesh, SMOKEPORT_SOCKET_NAME, true);
+	if (!HasNetOwner() && AudioComponent && bTriggerCatchSound)
+	{
+		AudioComponent->SetTriggerParameter(CATCH_TRIGGER_NAME);
+	}
+}
+
+void AWeapon::Multicast_ProxyHandle_OnWeaponAnimInstanceShellPort_Implementation()
+{
+	if (!HasNetOwner())
+	{
+		EjectShellPortAmmo();
+	}
+}
+
+void AWeapon::Multicast_ProxyHandle_OnWeaponAnimInstanceSoundDryFire_Implementation(bool bArmed)
+{
+	if (!HasNetOwner() && AudioComponent)
+	{
+		AudioComponent->SetTriggerParameter(bArmed ? HAMMER_TRIGGER_NAME : TRIGGER_TRIGGER_NAME);
+	}
+}
+
+void AWeapon::Multicast_ProxyHandle_OnWeaponAnimInstanceWeaponHammer_Implementation(const AMuzzle* Muzzle, TSubclassOf<AAmmo> AmmoClass, const FHitResult& HitResult, bool bBlockingHit, bool bTriggerFireSound)
+{
+	if (!HasNetOwner())
+	{
+		SpawnShellPortAmmo(AmmoClass);
+
+		if (bBlockingHit)
+		{
+			if (UKismetSystemLibrary::DoesImplementInterface(HitResult.PhysMaterial.Get(), UImpactable::StaticClass()))
+			{
+				IImpactable::Execute_HandleBulletImpact(HitResult.PhysMaterial.Get(), HitResult);
+			}
+		}
+
+		if (Muzzle)
+		{
+			Muzzle->SpawnMuzzleFlashEffect(MuzzleFlashSystem.LoadSynchronous());
+		}
+		else
+		{
+			FShooterUtility::SpawnNiagaraSystemAttached(MuzzleFlashSystem.LoadSynchronous(), Mesh, FIREPORT_SOCKET_NAME, true);
+		}
+		FShooterUtility::SpawnNiagaraSystemAttached(FireSmokeSystem.LoadSynchronous(), Mesh, SMOKEPORT_SOCKET_NAME, true);
+
+		if (bTriggerFireSound && AudioComponent)
+		{
+			AudioComponent->SetTriggerParameter(FIRE_TRIGGER_NAME);
+		}
+	}
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceActionEnd()
@@ -398,6 +416,8 @@ void AWeapon::Handle_OnWeaponAnimInstanceChamberCheck()
 
 void AWeapon::Handle_OnWeaponAnimInstanceFire()
 {
+	++NumRoundsFired;
+
 	OnWeaponFire.Broadcast(this);
 }
 
@@ -497,9 +517,17 @@ void AWeapon::Handle_OnWeaponAnimInstanceBoltCatch()
 		if (Mag->GetAmmoCount() == 0)
 		{
 			bIsBoltCatched = true;
-
-			TriggerCatchSound();
+			
+			if (AudioComponent)
+			{
+				AudioComponent->SetTriggerParameter(CATCH_TRIGGER_NAME);
+			}
 		}
+	}
+
+	if (HasAuthority() && bIsBoltCatched)
+	{
+		Multicast_ProxyHandle_OnWeaponAnimInstanceBoltCatch(true);
 	}
 }
 
@@ -521,24 +549,32 @@ void AWeapon::Handle_OnWeaponAnimInstancePatronInWeapon()
 
 void AWeapon::Handle_OnWeaponAnimInstanceShellPort()
 {
-	if (HasNetOwner())
-	{
-		EjectShellPortAmmo();
-	}
+	EjectShellPortAmmo();
+
 	if (HasAuthority())
 	{
-		Multicast_ProxyEjectShellPortAmmo();
+		Multicast_ProxyHandle_OnWeaponAnimInstanceShellPort();
 	}
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceSoundDryFire()
 {
-	TriggerFireDrySound();
+	if (AudioComponent)
+	{
+		AudioComponent->SetTriggerParameter(bIsArmed ? HAMMER_TRIGGER_NAME : TRIGGER_TRIGGER_NAME);
+	}
+
+	if (HasAuthority())
+	{
+		Multicast_ProxyHandle_OnWeaponAnimInstanceSoundDryFire(bIsArmed);
+	}
 }
 
 void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 {
-	if (AMag* Mag = GetMag())
+	AMag* Mag = GetMag();
+	TSubclassOf<AAmmo> AmmoClass;
+	if (Mag)
 	{
 		if (PatronInWeaponAmmo)
 		{
@@ -546,35 +582,51 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 			PatronInWeaponAmmo->SetActorHiddenInGame(true);
 			PatronInWeaponAmmo = nullptr;
 		}
-
+	
 		if (Mag->GetMagDataAsset().LoadSynchronous())
 		{
-			if (HasNetOwner())
-			{
-				SpawnShellPortAmmo(Mag->GetMagDataAsset()->AmmoClass);
-			}
-			if (HasAuthority())
-			{
-				Multicast_ProxySpawnShellPortAmmo(Mag->GetMagDataAsset()->AmmoClass);
-			}
+			AmmoClass = Mag->GetMagDataAsset()->AmmoClass;
+			SpawnShellPortAmmo(AmmoClass);
 		}
 	}
 
-	if (HasNetOwner())
+	FHitResult OutHit;
+	bool bBlockingHit = PerformLineTrace(OutHit);
+	if (bBlockingHit)
 	{
-		//LineTrace();
-		GenerateRecoil();
+		/*UE_LOG(LogTemp, Warning, TEXT("Single Trace Object Name: %s"), *OutHit.HitObjectHandle.GetName());
+
+		FString ActorDisplayName = UKismetSystemLibrary::GetDisplayName(OutHit.GetActor());
+		UE_LOG(LogTemp, Warning, TEXT("Profile Trace OutHit Display Name: %s"), *ActorDisplayName);*/
+
+		if (UKismetSystemLibrary::DoesImplementInterface(OutHit.PhysMaterial.Get(), UImpactable::StaticClass()))
+		{
+			IImpactable::Execute_HandleBulletImpact(OutHit.PhysMaterial.Get(), OutHit);
+		}
+	}
+	
+	GenerateRecoil();
+
+	AMuzzle* Muzzle = GetMuzzle();
+	if (Muzzle)
+	{
+		Muzzle->SpawnMuzzleFlashEffect(MuzzleFlashSystem.LoadSynchronous());
+	}
+	else
+	{
+		FShooterUtility::SpawnNiagaraSystemAttached(MuzzleFlashSystem.LoadSynchronous(), Mesh, FIREPORT_SOCKET_NAME, true);
+	}
+	FShooterUtility::SpawnNiagaraSystemAttached(FireSmokeSystem.LoadSynchronous(), Mesh, SMOKEPORT_SOCKET_NAME, true);
+
+	if (NumRoundsFired == 0 && AudioComponent)
+	{
+		AudioComponent->SetTriggerParameter(FIRE_TRIGGER_NAME);
 	}
 
-	SpawnMuzzleFlashEffect();
-	SpawnFireSmokeEffect();
-
-	if (NumRoundsFired == 0)
+	if (HasAuthority())
 	{
-		TriggerFireSound();
+		Multicast_ProxyHandle_OnWeaponAnimInstanceWeaponHammer(Muzzle, AmmoClass, OutHit, bBlockingHit, NumRoundsFired == 0);
 	}
-
-	++NumRoundsFired;
 
 }
 
@@ -583,31 +635,5 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponSelector()
 	if (HasAuthority())
 	{
 		FiremodeIndex = FMath::Modulo<uint8>(FiremodeIndex + 1, GetNumFiremodes());
-	}
-}
-
-void AWeapon::LineTrace()
-{
-	UWorld* const World = GetWorld();
-	FTransform FireportTransform = Mesh != nullptr ? Mesh->GetSocketTransform(TEXT("fireport"), ERelativeTransformSpace::RTS_World) : FTransform();
-	FVector Start = FireportTransform.GetLocation();
-	FVector End = Start + (UKismetMathLibrary::GetRightVector(FireportTransform.Rotator()) * 2000.0f);
-	
-	TArray<AActor*> ActorsToIgnore;
-	ActorsToIgnore.Add(this);
-	FHitResult OutHit;
-
-	bool bHit = false;
-
-	bHit = World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
-
-	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
-
-	if (bHit)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Single Trace Object Name: %s"), *OutHit.HitObjectHandle.GetName());
-
-		//FString ActorDisplayName = UKismetSystemLibrary::GetDisplayName(OutHit.GetActor());
-		//UE_LOG(LogTemp, Warning, TEXT("Profile Trace OutHit Display Name: %s"), *ActorDisplayName);
 	}
 }

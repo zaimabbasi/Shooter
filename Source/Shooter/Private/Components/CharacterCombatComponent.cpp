@@ -492,22 +492,24 @@ void UCharacterCombatComponent::Handle_OnWeaponFire(AWeapon* Weapon)
 {
 	if (Weapon)
 	{
-		uint8 NumRoundsFired = Weapon->GetNumRoundsFired();
 		EWeaponFiremode WeaponFiremode = Weapon->GetFiremode();
-		bool bFiredRoundsLimitReached = (WeaponFiremode == EWeaponFiremode::WF_SingleShot && NumRoundsFired == 1) ||
-			(WeaponFiremode == EWeaponFiremode::WF_2RoundsBurst && NumRoundsFired == 2) ||
-			(WeaponFiremode == EWeaponFiremode::WF_3RoundsBurst && NumRoundsFired == 3);
+		bool bFiredRoundsLimitReached = (WeaponFiremode != EWeaponFiremode::WF_FullAuto && WeaponFiremode == EWeaponFiremode(Weapon->GetNumRoundsFired()));
 
 		if ((!bWantsToFire && WeaponFiremode == EWeaponFiremode::WF_FullAuto) || bFiredRoundsLimitReached)
 		{
-			Weapon->StopFireSound();
 			SetCombatAction(ECombatAction::CA_Idle, true);
 		}
 		else if (Weapon->GetPatronInWeaponAmmo() == nullptr)
 		{
 			SetCombatAction(ECombatAction::CA_FireDry, true);
 		}
+
+		if (CombatAction != ECombatAction::CA_Fire)
+		{
+			Weapon->OnFireEnd();
+		}
 	}
+	
 }
 
 void UCharacterCombatComponent::Handle_OnWeaponFireDry(AWeapon* Weapon)

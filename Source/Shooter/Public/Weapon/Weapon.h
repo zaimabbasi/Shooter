@@ -66,17 +66,12 @@ public:
 	ECombatAction GetWeaponAnimCombatAction() const;
 	void SetWeaponAnimCombatAction(ECombatAction CombatAction) const;
 
-	//virtual void PlayAudio() const;
-	//virtual void StopAudio() const;
-	virtual void TriggerFireSound() const;
-	virtual void StopFireSound() const;
-	virtual void TriggerFireDrySound() const;
-	virtual void TriggerCatchSound() const;
-
 	//virtual void SpawnMuzzleSmokeEffect();
 	//virtual void DeactivateMuzzleSmokeEffect() const;
 
 	virtual void ResetNumRoundsFired();
+	
+	virtual void OnFireEnd();
 
 protected:
 	virtual void BeginPlay() override;
@@ -84,18 +79,29 @@ protected:
 	virtual void SpawnShellPortAmmo(TSubclassOf<AAmmo> AmmoClass);
 	virtual void EjectShellPortAmmo();
 
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_ProxySpawnShellPortAmmo(TSubclassOf<AAmmo> AmmoClass);
-	virtual void Multicast_ProxySpawnShellPortAmmo_Implementation(TSubclassOf<AAmmo> AmmoClass);
-
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_ProxyEjectShellPortAmmo();
-	virtual void Multicast_ProxyEjectShellPortAmmo_Implementation();
-
 	virtual void GenerateRecoil();
 
-	virtual void SpawnMuzzleFlashEffect() const;
-	virtual void SpawnFireSmokeEffect() const;
+	virtual bool PerformLineTrace(FHitResult& OutHit);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ProxyOnFireEnd();
+	virtual void Multicast_ProxyOnFireEnd_Implementation();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ProxyHandle_OnWeaponAnimInstanceBoltCatch(bool bTriggerCatchSound);
+	virtual void Multicast_ProxyHandle_OnWeaponAnimInstanceBoltCatch_Implementation(bool bTriggerCatchSound);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ProxyHandle_OnWeaponAnimInstanceShellPort();
+	virtual void Multicast_ProxyHandle_OnWeaponAnimInstanceShellPort_Implementation();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ProxyHandle_OnWeaponAnimInstanceSoundDryFire(bool bArmed);
+	virtual void Multicast_ProxyHandle_OnWeaponAnimInstanceSoundDryFire_Implementation(bool bArmed);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ProxyHandle_OnWeaponAnimInstanceWeaponHammer(const AMuzzle* Muzzle, TSubclassOf<AAmmo> AmmoClass, const FHitResult &HitResult, bool bBlockingHit, bool bTriggerFireSound);
+	virtual void Multicast_ProxyHandle_OnWeaponAnimInstanceWeaponHammer_Implementation(const AMuzzle* Muzzle, TSubclassOf<AAmmo> AmmoClass, const FHitResult& HitResult, bool bBlockingHit, bool bTriggerFireSound);
 
 	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstanceActionEnd();
@@ -177,8 +183,6 @@ protected:
 
 	UFUNCTION()
 	virtual void Handle_OnWeaponAnimInstanceWeaponSelector();
-
-	virtual void LineTrace();
 
 public:
 	FOnWeaponAnimNotifySignature OnWeaponActionEnd;
