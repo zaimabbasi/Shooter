@@ -6,6 +6,7 @@
 #include "Components/BoxComponent.h"
 #include "NiagaraComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Net/UnrealNetwork.h"
@@ -23,6 +24,7 @@
 #include "Mod/Mod.h"
 #include "Mod/Muzzle.h"
 #include "Mod/Scope.h"
+#include "Mod/SightFront.h"
 #include "Mod/SightRear.h"
 #include "Types/CombatTypes.h"
 #include "Types/ShooterNames.h"
@@ -139,41 +141,39 @@ bool AWeapon::GetIsOneHanded() const
 	return LoadedWeaponDataAsset && LoadedWeaponDataAsset->IsOneHanded;
 }
 
+float AWeapon::GetMuzzleVelocity() const
+{
+	return WeaponDataAsset.LoadSynchronous() ? WeaponDataAsset->MuzzleVelocity : 0.0f;
+}
+
 uint16 AWeapon::GetRateOfFire() const
 {
-	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
-	return LoadedWeaponDataAsset ? LoadedWeaponDataAsset->RateOfFire : 0;
+	return WeaponDataAsset.LoadSynchronous() ? WeaponDataAsset->RateOfFire : 0;
 }
 
 uint8 AWeapon::GetNumFiremodes() const
 {
-	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
-	return LoadedWeaponDataAsset ? LoadedWeaponDataAsset->Firemodes.Num() : 0;
+	return WeaponDataAsset.LoadSynchronous() ? WeaponDataAsset->Firemodes.Num() : 0;
 }
 
 EWeaponFiremode AWeapon::GetFiremode() const
 {
-	const UWeaponDataAsset* LoadedWeaponDataAsset = WeaponDataAsset.LoadSynchronous();
-	return LoadedWeaponDataAsset && LoadedWeaponDataAsset->Firemodes.IsValidIndex(FiremodeIndex) ? LoadedWeaponDataAsset->Firemodes[FiremodeIndex] : EWeaponFiremode::WF_None;
+	return WeaponDataAsset.LoadSynchronous() && WeaponDataAsset->Firemodes.IsValidIndex(FiremodeIndex) ? WeaponDataAsset->Firemodes[FiremodeIndex] : EWeaponFiremode::WF_None;
 }
 
-//AForegrip* AWeapon::GetForegrip() const
-//{
-//	return GetAttachedActor<AForegrip>();
-//}
+AForegrip* AWeapon::GetForegrip() const
+{
+	return WeaponModComponent != nullptr ? WeaponModComponent->GetMod<AForegrip>() : nullptr;
+}
 
-//AHandguard* AWeapon::GetHandguard() const
-//{
-//	return GetAttachedActor<AHandguard>();
-//}
+AHandguard* AWeapon::GetHandguard() const
+{
+	return WeaponModComponent != nullptr ? WeaponModComponent->GetMod<AHandguard>() : nullptr;
+}
 
 AMag* AWeapon::GetMag() const
 {
-	if (WeaponModComponent == nullptr)
-	{
-		return nullptr;
-	}
-	return WeaponModComponent->GetMod<AMag>();
+	return WeaponModComponent != nullptr ? WeaponModComponent->GetMod<AMag>() : nullptr;
 }
 
 AMuzzle* AWeapon::GetMuzzle() const
@@ -181,26 +181,19 @@ AMuzzle* AWeapon::GetMuzzle() const
 	return WeaponModComponent != nullptr ? WeaponModComponent->GetMod<AMuzzle>() : nullptr;
 }
 
-USkeletalMeshComponent* AWeapon::GetForegripHandguardMesh() const
+AScope* AWeapon::GetScope() const
 {
-	if (WeaponModComponent == nullptr)
-	{
-		return nullptr;
-	}
-	AMod* ModForegrip = WeaponModComponent->GetMod<AForegrip>();
-	AMod* ModHandguard = WeaponModComponent->GetMod<AHandguard>();
-	return ModForegrip != nullptr ? ModForegrip->GetMesh() : ModHandguard != nullptr ? ModHandguard->GetMesh() : nullptr;
+	return WeaponModComponent != nullptr ? WeaponModComponent->GetMod<AScope>() : nullptr;
 }
 
-USkeletalMeshComponent* AWeapon::GetScopeSightMesh() const
+ASightFront* AWeapon::GetSightFront() const
 {
-	if (WeaponModComponent == nullptr)
-	{
-		return nullptr;
-	}
-	AMod* ModScope = WeaponModComponent->GetMod<AScope>();
-	AMod* ModSightRear = WeaponModComponent->GetMod<ASightRear>();
-	return ModScope != nullptr ? ModScope->GetMesh() : ModSightRear != nullptr ? ModSightRear->GetMesh() : nullptr;
+	return WeaponModComponent != nullptr ? WeaponModComponent->GetMod<ASightFront>() : nullptr;
+}
+
+ASightRear* AWeapon::GetSightRear() const
+{
+	return WeaponModComponent != nullptr ? WeaponModComponent->GetMod<ASightRear>() : nullptr;
 }
 
 UAnimInstance* AWeapon::GetAnimInstance() const
@@ -266,6 +259,16 @@ void AWeapon::OnFireEnd()
 	}
 }
 
+FTransform AWeapon::GetFireportSocketTransform() const
+{
+	FTransform FireportSocketTransform;
+	if (Mesh)
+	{
+		FireportSocketTransform = Mesh->GetSocketTransform(FIREPORT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+	}
+	return FireportSocketTransform;
+}
+
 void AWeapon::SpawnShellPortAmmo(TSubclassOf<AAmmo> AmmoClass)
 {
 	if (UWorld* World = GetWorld())
@@ -316,14 +319,10 @@ void AWeapon::GenerateRecoil()
 	OnWeaponRecoilGenerated.Broadcast(this, HorizontalKick, VerticalKick);
 }
 
-bool AWeapon::PerformLineTrace(FHitResult& OutHit)
+bool AWeapon::PerformLineTrace(FVector& Start, FVector& End, FHitResult& OutHit) const
 {
 	if (UWorld* const World = GetWorld())
 	{
-		FTransform FireportTransform = Mesh != nullptr ? Mesh->GetSocketTransform(FIREPORT_SOCKET_NAME, ERelativeTransformSpace::RTS_World) : FTransform();
-		FVector Start = FireportTransform.GetLocation();
-		FVector End = Start + (UKismetMathLibrary::GetRightVector(FireportTransform.Rotator()) * 2000.0f);
-
 		FCollisionQueryParams CollisionQueryParams = FCollisionQueryParams::DefaultQueryParam;
 		CollisionQueryParams.AddIgnoredActor(this);
 		CollisionQueryParams.bReturnPhysicalMaterial = true;
@@ -331,6 +330,26 @@ bool AWeapon::PerformLineTrace(FHitResult& OutHit)
 		//DrawDebugLine(World, Start, End, FColor::Green, false, 1, 0, 1);
 
 		return World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, CollisionQueryParams);
+	}
+
+	return false;
+}
+
+bool AWeapon::PredictProjectilePath(FVector InStartLocation, FVector InLaunchVelocity, FHitResult& OutHit) const
+{
+	if (UWorld* const World = GetWorld())
+	{
+		FPredictProjectilePathResult PredictResult;
+		FPredictProjectilePathParams PredictParams = FPredictProjectilePathParams(0.0f, InStartLocation, InLaunchVelocity, 1.0f, ECC_Visibility);
+		PredictParams.SimFrequency = 1.0f;
+		PredictParams.DrawDebugType = EDrawDebugTrace::ForDuration;
+		PredictParams.bTraceComplex = true;
+
+		if (UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult))
+		{
+			OutHit = PredictResult.HitResult;
+			return true;
+		}
 	}
 
 	return false;
@@ -374,14 +393,6 @@ void AWeapon::Multicast_ProxyHandle_OnWeaponAnimInstanceWeaponHammer_Implementat
 	{
 		SpawnShellPortAmmo(AmmoClass);
 
-		if (bBlockingHit)
-		{
-			if (UKismetSystemLibrary::DoesImplementInterface(HitResult.PhysMaterial.Get(), UImpactable::StaticClass()))
-			{
-				IImpactable::Execute_HandleBulletImpact(HitResult.PhysMaterial.Get(), HitResult);
-			}
-		}
-
 		if (Muzzle)
 		{
 			Muzzle->SpawnMuzzleFlashEffect(MuzzleFlashSystem.LoadSynchronous());
@@ -395,6 +406,25 @@ void AWeapon::Multicast_ProxyHandle_OnWeaponAnimInstanceWeaponHammer_Implementat
 		if (bTriggerFireSound && AudioComponent)
 		{
 			AudioComponent->SetTriggerParameter(FIRE_TRIGGER_NAME);
+		}
+
+		if (bBlockingHit)
+		{
+			if (UKismetSystemLibrary::DoesImplementInterface(HitResult.PhysMaterial.Get(), UImpactable::StaticClass()))
+			{
+				IImpactable::Execute_HandleBulletImpact(HitResult.PhysMaterial.Get(), HitResult);
+			}
+
+			/*UPhysicalMaterial* PhysicalMaterial = HitResult.PhysMaterial.Get();
+			if (PhysicalMaterial == nullptr)
+			{
+				PhysicalMaterial = HitResult.GetComponent()->BodyInstance.GetPhysMaterialOverride();
+			}
+
+			if (UKismetSystemLibrary::DoesImplementInterface(PhysicalMaterial, UImpactable::StaticClass()))
+			{
+				IImpactable::Execute_HandleBulletImpact(PhysicalMaterial, HitResult);
+			}*/
 		}
 	}
 }
@@ -589,24 +619,7 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 			SpawnShellPortAmmo(AmmoClass);
 		}
 	}
-
-	FHitResult OutHit;
-	bool bBlockingHit = PerformLineTrace(OutHit);
-	if (bBlockingHit)
-	{
-		/*UE_LOG(LogTemp, Warning, TEXT("Single Trace Object Name: %s"), *OutHit.HitObjectHandle.GetName());
-
-		FString ActorDisplayName = UKismetSystemLibrary::GetDisplayName(OutHit.GetActor());
-		UE_LOG(LogTemp, Warning, TEXT("Profile Trace OutHit Display Name: %s"), *ActorDisplayName);*/
-
-		if (UKismetSystemLibrary::DoesImplementInterface(OutHit.PhysMaterial.Get(), UImpactable::StaticClass()))
-		{
-			IImpactable::Execute_HandleBulletImpact(OutHit.PhysMaterial.Get(), OutHit);
-		}
-	}
 	
-	GenerateRecoil();
-
 	AMuzzle* Muzzle = GetMuzzle();
 	if (Muzzle)
 	{
@@ -622,6 +635,41 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 	{
 		AudioComponent->SetTriggerParameter(FIRE_TRIGGER_NAME);
 	}
+
+	FTransform StartTransform = Muzzle != nullptr ? Muzzle->GetMuzzleFlashSocketTransform() : GetFireportSocketTransform();
+	FVector Start = StartTransform.GetLocation();
+	FVector End = Start + (UKismetMathLibrary::GetRightVector(StartTransform.Rotator()) * 2000.0f);
+	//FVector MuzzleVelocity = UKismetMathLibrary::GetRightVector(StartTransform.Rotator()) * GetMuzzleVelocity() * 100.0f;
+
+	FHitResult OutHit;
+	bool bBlockingHit = PerformLineTrace(Start, End, OutHit);
+	//bool bBlockingHit = PredictProjectilePath(Start, MuzzleVelocity, OutHit);
+	if (bBlockingHit)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Single Trace Object Name: %s"), *OutHit.HitObjectHandle.GetName());
+
+		/*FString ActorDisplayName = UKismetSystemLibrary::GetDisplayName(OutHit.GetActor());
+		UE_LOG(LogTemp, Warning, TEXT("Profile Trace OutHit Display Name: %s"), *ActorDisplayName);*/
+
+		if (UKismetSystemLibrary::DoesImplementInterface(OutHit.PhysMaterial.Get(), UImpactable::StaticClass()))
+		{
+			IImpactable::Execute_HandleBulletImpact(OutHit.PhysMaterial.Get(), OutHit);
+		}
+
+		/*UPhysicalMaterial* PhysicalMaterial = OutHit.PhysMaterial.Get();
+		if (PhysicalMaterial == nullptr)
+		{
+			PhysicalMaterial = OutHit.GetComponent()->BodyInstance.GetPhysMaterialOverride();
+		}
+		
+		if (UKismetSystemLibrary::DoesImplementInterface(PhysicalMaterial, UImpactable::StaticClass()))
+		{
+			IImpactable::Execute_HandleBulletImpact(PhysicalMaterial, OutHit);
+		}*/
+		
+	}
+
+	GenerateRecoil();
 
 	if (HasAuthority())
 	{

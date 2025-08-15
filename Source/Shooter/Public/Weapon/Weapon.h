@@ -7,10 +7,13 @@
 #include "Weapon.generated.h"
 
 class AAmmo;
-//class AForegrip;
-//class AHandguard;
+class AForegrip;
+class AHandguard;
 class AMag;
 class AMuzzle;
+class AScope;
+class ASightFront;
+class ASightRear;
 class AShooterCharacter;
 class UBoxComponent;
 class UNiagaraComponent;
@@ -39,6 +42,7 @@ public:
 	virtual bool IsPistol() const { return false; }
 	
 	bool GetIsOneHanded() const;
+	float GetMuzzleVelocity() const;
 	uint16 GetRateOfFire() const;
 	uint8 GetNumFiremodes() const;
 
@@ -54,13 +58,13 @@ public:
 
 	EWeaponFiremode GetFiremode() const;
 
-	//AForegrip* GetForegrip() const;
-	//AHandguard* GetHandguard() const;
-
+	AForegrip* GetForegrip() const;
+	AHandguard* GetHandguard() const;
 	AMag* GetMag() const;
 	AMuzzle* GetMuzzle() const;
-	USkeletalMeshComponent* GetForegripHandguardMesh() const;
-	USkeletalMeshComponent* GetScopeSightMesh() const;
+	AScope* GetScope() const;
+	ASightFront* GetSightFront() const;
+	ASightRear* GetSightRear() const;
 
 	UAnimInstance* GetAnimInstance() const;
 	ECombatAction GetWeaponAnimCombatAction() const;
@@ -76,12 +80,15 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	FTransform GetFireportSocketTransform() const;
+
 	virtual void SpawnShellPortAmmo(TSubclassOf<AAmmo> AmmoClass);
 	virtual void EjectShellPortAmmo();
 
 	virtual void GenerateRecoil();
 
-	virtual bool PerformLineTrace(FHitResult& OutHit);
+	virtual bool PerformLineTrace(FVector& Start, FVector& End, FHitResult& OutHit) const;
+	virtual bool PredictProjectilePath(FVector InStartLocation, FVector InLaunchVelocity, FHitResult& OutHit) const;
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ProxyOnFireEnd();
