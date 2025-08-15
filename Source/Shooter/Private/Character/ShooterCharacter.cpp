@@ -17,6 +17,8 @@
 #include "Data/CharacterDataAsset.h"
 #include "GameFramework/ShooterCharacterMovementComponent.h"
 #include "Mod/Mag.h"
+#include "Mod/Scope.h"
+#include "Mod/SightRear.h"
 #include "Types/CharacterTypes.h"
 #include "Types/CombatTypes.h"
 #include "Types/ShooterNames.h"
@@ -1430,15 +1432,19 @@ void AShooterCharacter::OnWeaponReloadAction(const FInputActionValue& Value)
 void AShooterCharacter::CalculateADSCameraTargetLocation()
 {
 	FTransform AimCameraTransform;
-	if (AWeapon* EquippedWeapon = CharacterCombat ? CharacterCombat->GetEquippedWeapon() : nullptr)
+	if (AWeapon* EquippedWeapon = GetEquippedWeapon())
 	{
-		if (USkeletalMeshComponent* WeaponScopeSightMesh = EquippedWeapon->GetScopeSightMesh())
+		AScope* WeaponScope = EquippedWeapon->GetScope();
+		ASightRear* WeaponSightRear = EquippedWeapon->GetSightRear();
+		USkeletalMeshComponent* WeaponScopeSightMesh = WeaponScope != nullptr ? WeaponScope->GetMesh() : WeaponSightRear != nullptr ? WeaponSightRear->GetMesh() : nullptr;
+		
+		if (WeaponScopeSightMesh)
 		{
 			AimCameraTransform = WeaponScopeSightMesh->GetSocketTransform(MOD_AIM_CAMERA_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		}
-		else if (USkeletalMeshComponent* WeaponMesh = EquippedWeapon->GetMesh())
+		else if (EquippedWeapon->GetMesh())
 		{
-			AimCameraTransform = WeaponMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+			AimCameraTransform = EquippedWeapon->GetMesh()->GetSocketTransform(AIM_CAMERA_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		}
 	}
 	else if (HandsMesh)
@@ -1452,10 +1458,8 @@ void AShooterCharacter::CalculateADSCameraTargetLocation()
 
 		FTransform HandsAimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
 		HandsAimCameraTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, HandsAimCameraTransform);
-		if (ADSCameraTargetLocation.Y > HandsAimCameraTransform.GetLocation().Y)
-		{
-			ADSCameraTargetLocation.Y = HandsAimCameraTransform.GetLocation().Y;
-		}
+
+		ADSCameraTargetLocation.Y = HandsAimCameraTransform.GetLocation().Y;
 	}
 }
 
