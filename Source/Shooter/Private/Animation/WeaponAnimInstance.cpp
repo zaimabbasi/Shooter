@@ -4,6 +4,8 @@
 #include "Animation/WeaponAnimInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Character/ShooterCharacter.h"
+#include "Mod/Foregrip.h"
+#include "Mod/Handguard.h"
 #include "Types/CombatTypes.h"
 #include "Types/ShooterNames.h"
 #include "Utility/ShooterUtility.h"
@@ -52,7 +54,10 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsPistol = Weapon->IsPistol();
 	bIsOneHanded = Weapon->GetIsOneHanded();
 	bIsBoltCatched = Weapon->GetIsBoltCatched();
-	ForegripHandguardMesh = Weapon->GetForegripHandguardMesh();
+
+	AForegrip* Foregrip = Weapon->GetForegrip();
+	AHandguard* Handguard = Weapon->GetHandguard();
+	ForegripHandguardMesh = Foregrip != nullptr ? Foregrip->GetMesh() : Handguard != nullptr ? Handguard->GetMesh() : nullptr;
 	bHasForegripHandguardMesh = ForegripHandguardMesh != nullptr;
 
 	ShooterCharacter = Weapon->GetShooterCharacterOwner();
