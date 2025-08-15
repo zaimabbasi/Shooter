@@ -35,6 +35,16 @@ void AMuzzle::SpawnMuzzleFlashEffect(UNiagaraSystem* MuzzleFlashSystem) const
 	}*/
 }
 
+FTransform AMuzzle::GetMuzzleFlashSocketTransform() const
+{
+	FTransform MuzzleFlashSocketTransform;
+	if (GetMesh())
+	{
+		MuzzleFlashSocketTransform = GetMesh()->GetSocketTransform(MUZZLEFLASH_SOCKET_NAME(0));
+	}
+	return MuzzleFlashSocketTransform;
+}
+
 //UNiagaraComponent* AMuzzle::SpawnMuzzleSmokeEffect(UNiagaraSystem* MuzzleSmokeSystem) const
 //{
 //	return FShooterUtility::SpawnNiagaraSystemAttached(MuzzleSmokeSystem, GetMesh(), MUZZLEFLASH_SOCKET_NAME(0), true);

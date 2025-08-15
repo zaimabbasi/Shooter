@@ -19,5 +19,6 @@ public:
 	virtual FName GetDefaultAttachParentSocketName() const override;
 	virtual void SpawnMuzzleFlashEffect(UNiagaraSystem* MuzzleFlashSystem) const;
 	//virtual UNiagaraComponent* SpawnMuzzleSmokeEffect(UNiagaraSystem* MuzzleSmokeSystem) const;
+	FTransform GetMuzzleFlashSocketTransform() const;
 
 };
