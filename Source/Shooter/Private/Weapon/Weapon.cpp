@@ -638,7 +638,7 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 
 	FTransform StartTransform = Muzzle != nullptr ? Muzzle->GetMuzzleFlashSocketTransform() : GetFireportSocketTransform();
 	FVector Start = StartTransform.GetLocation();
-	FVector End = Start + (UKismetMathLibrary::GetRightVector(StartTransform.Rotator()) * 2000.0f);
+	FVector End = Start + (UKismetMathLibrary::GetRightVector(StartTransform.Rotator()) * 50000.0f);
 	//FVector MuzzleVelocity = UKismetMathLibrary::GetRightVector(StartTransform.Rotator()) * GetMuzzleVelocity() * 100.0f;
 
 	FHitResult OutHit;
