@@ -21,6 +21,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	bool IsOneHanded;
 
+	UPROPERTY(EditAnywhere, Category = "Performance", meta = (UIMin = "0", ClampMin = "0", ForceUnits = "m/s"))
+	float MuzzleVelocity;
+
 	UPROPERTY(EditAnywhere, Category = "Performance", meta = (ForceUnits = "rpm"))
 	uint16 RateOfFire;
 
