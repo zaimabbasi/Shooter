@@ -102,6 +102,12 @@ protected:
 	FRotator CalculateRecoilToAdd(float DeltaTime) const;
 	FRotator CalculateRecoilRecoveryToSubtract(float DeltaTime) const;
 
+	void StartProceduralAnim(bool bHasVelocity) const;
+	void StopProceduralAnim() const;
+	void StartResetProceduralAnim(float PlayRate = 1.0f) const;
+
+	float GetProceduralAnimScaleValue() const;
+
 	virtual void OnCharacterAimAction(const FInputActionValue& Value);
 	virtual void OnCharacterAlterAction(const FInputActionValue& Value);
 	virtual void OnCharacterCrouchAction(const FInputActionValue& Value);
@@ -487,6 +493,9 @@ protected:
 	float ProceduralAnimHorizontalMovement;
 	float ProceduralAnimVerticalMovement;
 	float ProceduralAnimRollRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1"))
+	float ProceduralAnimAimingScale;
 
 	float RecoilHorizontal;
 	float RecoilVertical;
