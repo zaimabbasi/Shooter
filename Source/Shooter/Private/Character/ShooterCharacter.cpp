@@ -104,7 +104,7 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	SwayVerticalMovementSensitivity = 0.025;
 	SwayRollRotationSensitivity = 0.075;
 
-	ProceduralAnimAimingScale = 0.25f;
+	ProceduralAnimAimingScale = 0.2f;
 
 	RecoilKickTotalTime = 0.15f;
 	RecoilRecoveryTotalTime = 0.45f;
