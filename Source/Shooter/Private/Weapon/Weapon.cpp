@@ -342,12 +342,24 @@ bool AWeapon::PredictProjectilePath(FVector InStartLocation, FVector InLaunchVel
 		FPredictProjectilePathResult PredictResult;
 		FPredictProjectilePathParams PredictParams = FPredictProjectilePathParams(0.0f, InStartLocation, InLaunchVelocity, 1.0f, ECC_Visibility);
 		PredictParams.SimFrequency = 1.0f;
-		PredictParams.DrawDebugType = EDrawDebugTrace::ForDuration;
+		//PredictParams.DrawDebugType = EDrawDebugTrace::ForDuration;
 		PredictParams.bTraceComplex = true;
 
 		if (UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult))
 		{
 			OutHit = PredictResult.HitResult;
+
+			FHitResult OutHitTrace;
+			FPredictProjectilePathPointData HitPointData = PredictResult.PathData.Last();
+			FVector VelocityNormal = HitPointData.Velocity.GetUnsafeNormal();
+			FVector Start = HitPointData.Location - (VelocityNormal * 0.5f);
+			FVector End = Start + VelocityNormal;
+
+			if (PerformLineTrace(Start, End, OutHitTrace))
+			{
+				OutHit.PhysMaterial = OutHitTrace.PhysMaterial;
+			}
+
 			return true;
 		}
 	}
@@ -414,17 +426,6 @@ void AWeapon::Multicast_ProxyHandle_OnWeaponAnimInstanceWeaponHammer_Implementat
 			{
 				IImpactable::Execute_HandleBulletImpact(HitResult.PhysMaterial.Get(), HitResult);
 			}
-
-			/*UPhysicalMaterial* PhysicalMaterial = HitResult.PhysMaterial.Get();
-			if (PhysicalMaterial == nullptr)
-			{
-				PhysicalMaterial = HitResult.GetComponent()->BodyInstance.GetPhysMaterialOverride();
-			}
-
-			if (UKismetSystemLibrary::DoesImplementInterface(PhysicalMaterial, UImpactable::StaticClass()))
-			{
-				IImpactable::Execute_HandleBulletImpact(PhysicalMaterial, HitResult);
-			}*/
 		}
 	}
 }
@@ -655,18 +656,6 @@ void AWeapon::Handle_OnWeaponAnimInstanceWeaponHammer()
 		{
 			IImpactable::Execute_HandleBulletImpact(OutHit.PhysMaterial.Get(), OutHit);
 		}
-
-		/*UPhysicalMaterial* PhysicalMaterial = OutHit.PhysMaterial.Get();
-		if (PhysicalMaterial == nullptr)
-		{
-			PhysicalMaterial = OutHit.GetComponent()->BodyInstance.GetPhysMaterialOverride();
-		}
-		
-		if (UKismetSystemLibrary::DoesImplementInterface(PhysicalMaterial, UImpactable::StaticClass()))
-		{
-			IImpactable::Execute_HandleBulletImpact(PhysicalMaterial, OutHit);
-		}*/
-		
 	}
 
 	GenerateRecoil();
