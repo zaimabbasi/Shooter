@@ -109,7 +109,7 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	RecoilKickTotalTime = 0.1f;
 	RecoilRecoveryTotalTime = 0.5f;
 
-	LeaningMaxAngle = 15.0f;
+	LeaningMaxAngle = 10.0f;
 	LeaningInterpSpeed = 5.0f;
 	LeaningDefaultTransitionDuration = 0.25f;
 
