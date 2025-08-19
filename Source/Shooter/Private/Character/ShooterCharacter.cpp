@@ -106,8 +106,8 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 
 	ProceduralAnimAimingScale = 0.25f;
 
-	RecoilKickTotalTime = 0.15f;
-	RecoilRecoveryTotalTime = 0.45f;
+	RecoilKickTotalTime = 0.1f;
+	RecoilRecoveryTotalTime = 0.5f;
 
 	LeaningMaxAngle = 15.0f;
 	LeaningInterpSpeed = 5.0f;
