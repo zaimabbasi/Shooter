@@ -82,6 +82,10 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	RecoilRecoveryTotalTime = ShooterCharacter != nullptr ? ShooterCharacter->GetRecoilRecoveryTotalTime() / 2.0f : 1.0f;
 
+	float LeaningTargetAngle = ShooterCharacter != nullptr ? ShooterCharacter->GetLeaningTargetAngle() : 0.0f;
+	float LeaningInterpSpeed = ShooterCharacter != nullptr ? ShooterCharacter->GetLeaningInterpSpeed() : 0.0f;
+	LeaningAngle = FMath::FInterpTo(LeaningAngle, LeaningTargetAngle, DeltaSeconds, LeaningInterpSpeed);
+
 	CalculateLHandMarkerAlpha();
 
 	CalculateSway(DeltaSeconds);
