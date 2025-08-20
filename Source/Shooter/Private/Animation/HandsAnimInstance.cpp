@@ -34,6 +34,7 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsSprinting = ShooterCharacter->bIsSprinting;
 	AO_Pitch = ShooterCharacter->GetAO_Pitch();
 	AO_Yaw = ShooterCharacter->GetAO_Yaw();
+	LeaningAngle = ShooterCharacter->GetLeaningAngle();
 	CombatAction = ShooterCharacter->GetCombatAction();
 
 	bHasVelocity = ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
@@ -42,10 +43,6 @@ void UHandsAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsThirdAction = bIsTransition || bIsSprinting || (bIsProned && bHasVelocity);
 	
 	WeaponLHandMarkerAlpha = WeaponRHandMarkerAlpha = bIsThirdAction ? 1.0f : 0.0f;
-
-	float LeaningTargetAngle = ShooterCharacter->GetLeaningTargetAngle();
-	float LeaningInterpSpeed = ShooterCharacter->GetLeaningInterpSpeed();
-	LeaningAngle = FMath::FInterpTo(LeaningAngle, LeaningTargetAngle, DeltaSeconds, LeaningInterpSpeed);
 
 	// Old
 	/*if (CharacterMesh)

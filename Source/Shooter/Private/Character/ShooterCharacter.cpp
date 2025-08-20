@@ -82,6 +82,8 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	OnRecoilUpdate.BindUFunction(this, TEXT("Handle_OnRecoilUpdate"));
 	OnRecoilRecoveryUpdate.BindUFunction(this, TEXT("Handle_OnRecoilRecoveryUpdate"));
 
+	OnLeaningUpdate.BindUFunction(this, TEXT("Handle_OnLeaningUpdate"));
+
 	IdleAnimMaxHorizontalMovement = 0.1f;
 	IdleAnimMinHorizontalMovement = -0.1f;
 	IdleAnimMaxVerticalMovement = 0.35f;
@@ -109,8 +111,8 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	RecoilKickTotalTime = 0.1f;
 	RecoilRecoveryTotalTime = 0.5f;
 
-	LeaningMaxAngle = 10.0f;
-	LeaningInterpSpeed = 5.0f;
+	LeaningMaxAngle = 15.0f;
+	LeaningInterpSpeed = 7.0f;
 	LeaningDefaultTransitionDuration = 0.25f;
 
 }
@@ -729,6 +731,19 @@ void AShooterCharacter::StopRecoilRecoveryUpdate()
 	FTSTicker::GetCoreTicker().RemoveTicker(OnRecoilRecoveryUpdateHandle);
 }
 
+void AShooterCharacter::StartLeaningUpdate()
+{
+	if (!OnLeaningUpdateHandle.Pin())
+	{
+		OnLeaningUpdateHandle = FTSTicker::GetCoreTicker().AddTicker(OnLeaningUpdate);
+	}
+}
+
+void AShooterCharacter::StopLeaningUpdate()
+{
+	FTSTicker::GetCoreTicker().RemoveTicker(OnLeaningUpdateHandle);
+}
+
 void AShooterCharacter::Server_Lean_Implementation(ELeaningDirection NewLeaningDirection)
 {
 	if (CanLean())
@@ -738,6 +753,8 @@ void AShooterCharacter::Server_Lean_Implementation(ELeaningDirection NewLeaningD
 
 		CalculateLeaningTargetAngle();
 		CalculateLeaningTransitionDuration(OldLeaningDirection);
+
+		StartLeaningUpdate();
 	}
 }
 
@@ -900,6 +917,27 @@ bool AShooterCharacter::Handle_OnRecoilRecoveryUpdate(float DeltaTime)
 	}*/
 	OnCharacterLookAction(FVector2D(RecoilRecoveryToSubtract.Yaw, RecoilRecoveryToSubtract.Pitch));
 	
+	return true;
+}
+
+bool AShooterCharacter::Handle_OnLeaningUpdate(float DeltaTime)
+{
+	LeaningAngle = FMath::FInterpTo(LeaningAngle, LeaningTargetAngle, DeltaTime, LeaningInterpSpeed);
+
+	if (FirstPersonCamera)
+	{
+		FRotator CameraRotation = FirstPersonCamera->GetRelativeRotation();
+		CameraRotation.Roll = LeaningAngle * -0.6f;
+		FirstPersonCamera->SetRelativeRotation(CameraRotation);
+	}
+
+	if (LeaningAngle == LeaningTargetAngle)
+	{
+		StopLeaningUpdate();
+
+		return false;
+	}
+
 	return true;
 }
 
@@ -1139,6 +1177,8 @@ void AShooterCharacter::OnRep_LeaningDirection(ELeaningDirection OldLeaningDirec
 {
 	CalculateLeaningTargetAngle();
 	CalculateLeaningTransitionDuration(OldLeaningDirection);
+
+	StartLeaningUpdate();
 }
 
 void AShooterCharacter::OnCharacterAimAction(const FInputActionValue& Value)

@@ -97,6 +97,9 @@ protected:
 	virtual void StartRecoilRecoveryUpdate();
 	virtual void StopRecoilRecoveryUpdate();
 
+	virtual void StartLeaningUpdate();
+	virtual void StopLeaningUpdate();
+
 	virtual FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
 
 	FRotator CalculateRecoilToAdd(float DeltaTime) const;
@@ -177,6 +180,9 @@ protected:
 
 	UFUNCTION()
 	virtual bool Handle_OnRecoilRecoveryUpdate(float DeltaTime);
+
+	UFUNCTION()
+	virtual bool Handle_OnLeaningUpdate(float DeltaTime);
 
 	/*UFUNCTION()
 	virtual void Handle_OnCharacterAnimInstanceIdle();
@@ -490,6 +496,9 @@ protected:
 	FTSTicker::FDelegateHandle OnRecoilUpdateHandle;
 	FTSTicker::FDelegateHandle OnRecoilRecoveryUpdateHandle;
 
+	FTickerDelegate OnLeaningUpdate;
+	FTSTicker::FDelegateHandle OnLeaningUpdateHandle;
+
 	float ProceduralAnimHorizontalMovement;
 	float ProceduralAnimVerticalMovement;
 	float ProceduralAnimRollRotation;
@@ -552,6 +561,8 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_LeaningDirection)
 	ELeaningDirection LeaningDirection;
 
+	float LeaningAngle;
+
 	UPROPERTY(Replicated)
 	ETurningDirection TurningDirection;
 
@@ -597,6 +608,7 @@ public:
 	FORCEINLINE ETurningDirection GetTurningDirection() const { return TurningDirection; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
+	FORCEINLINE float GetLeaningAngle() const { return LeaningAngle; }
 	FORCEINLINE float GetRootBoneYaw() const { return RootBoneYaw; }
 	FORCEINLINE float GetVelocityYawOffset() const { return VelocityYawOffset; }
 	FORCEINLINE float GetLeaningInterpSpeed() const { return LeaningInterpSpeed; }
