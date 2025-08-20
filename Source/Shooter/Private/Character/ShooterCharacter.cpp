@@ -667,7 +667,7 @@ bool AShooterCharacter::CanAim() const
 
 bool AShooterCharacter::CanAimInCombatAction(ECombatAction CombatAction) const
 {
-	return CombatAction == ECombatAction::CA_Fire || CombatAction == ECombatAction::CA_FireDry || CombatAction == ECombatAction::CA_Firemode || CombatAction == ECombatAction::CA_Idle;
+	return CombatAction == ECombatAction::CA_Fire || CombatAction == ECombatAction::CA_FireDry || (bIsAiming && CombatAction == ECombatAction::CA_Firemode) || CombatAction == ECombatAction::CA_Idle;
 }
 
 void AShooterCharacter::Aim()
