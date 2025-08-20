@@ -1485,22 +1485,26 @@ void AShooterCharacter::CalculateADSCameraTargetLocation()
 		AWeapon* EquippedWeapon = GetEquippedWeapon();
 		AScope* WeaponScope = EquippedWeapon != nullptr ? EquippedWeapon->GetScope() : nullptr;
 		ASightRear* WeaponSightRear = EquippedWeapon != nullptr ? EquippedWeapon->GetSightRear() : nullptr;
-		USkeletalMeshComponent* AimCameraMesh = WeaponScope != nullptr ? WeaponScope->GetMesh() : WeaponSightRear != nullptr ? WeaponSightRear->GetMesh() : EquippedWeapon != nullptr ? EquippedWeapon->GetMesh() : GetHandsMesh();
-		FName AimCameraSocketName = WeaponScope != nullptr || WeaponSightRear != nullptr ? MOD_AIM_CAMERA_SOCKET_NAME : AIM_CAMERA_SOCKET_NAME;
+		USkeletalMeshComponent* ScopeSightMesh = WeaponScope != nullptr ? WeaponScope->GetMesh() : WeaponSightRear != nullptr ? WeaponSightRear->GetMesh() : nullptr;
+		
+		FTransform AimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME);
+		FTransform ModAimCameraTransform = ScopeSightMesh != nullptr ? ScopeSightMesh->GetSocketTransform(MOD_AIM_CAMERA_SOCKET_NAME) : FTransform::Identity;
 
-		if (AimCameraMesh)
+		ADSCameraTargetLocation = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, ScopeSightMesh != nullptr ? ModAimCameraTransform : AimCameraTransform).GetLocation();
+
+		if (ScopeSightMesh != nullptr)
 		{
-			FTransform AimCameraTransform = AimCameraMesh->GetSocketTransform(AimCameraSocketName, ERelativeTransformSpace::RTS_World);
-			ADSCameraTargetLocation = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, AimCameraTransform).GetLocation();
-
-			if (WeaponScope != nullptr || WeaponSightRear != nullptr)
-			{
-				AimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-				AimCameraTransform = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, AimCameraTransform);
-
-				ADSCameraTargetLocation.Y = AimCameraTransform.GetLocation().Y;
-			}
+			FVector DefaultADSCameraTargetLocation = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, AimCameraTransform).GetLocation();
+			ADSCameraTargetLocation.Y = DefaultADSCameraTargetLocation.Y;
 		}
+
+		AimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME);
+		FVector AimCameraLocationInWeaponRoot = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_ROOT_SOCKET_NAME, AimCameraTransform).GetLocation();
+
+		AimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME);
+		FVector AimCameraLocationInWeapon = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_SOCKET_NAME, AimCameraTransform).GetLocation();
+
+		ADSCameraTargetLocation += AimCameraLocationInWeapon - AimCameraLocationInWeaponRoot;
 	}
 }
 
