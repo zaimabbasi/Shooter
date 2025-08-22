@@ -106,8 +106,6 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	SwayVerticalMovementSensitivity = 0.025;
 	SwayRollRotationSensitivity = 0.075;
 
-	ProceduralAnimAimingScale = 0.25f;
-
 	RecoilKickTotalTime = 0.1f;
 	RecoilRecoveryTotalTime = 0.5f;
 
@@ -503,7 +501,12 @@ void AShooterCharacter::StartResetProceduralAnim(float PlayRate) const
 
 float AShooterCharacter::GetProceduralAnimScaleValue() const
 {
-	return bIsAiming ? ProceduralAnimAimingScale : 1.0f;
+	return bIsAiming ? 0.25 : 1.0f;
+}
+
+float AShooterCharacter::GetControllerInputScaleValue() const
+{
+	return bIsAiming ? 0.5f : 1.0f;
 }
 
 void AShooterCharacter::OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
@@ -883,7 +886,9 @@ bool AShooterCharacter::Handle_OnRecoilUpdate(float DeltaTime)
 	{
 		GetController()->SetControlRotation(GetControlRotation().Add(RecoilToAdd.Pitch, RecoilToAdd.Yaw, 0.0f));
 	}*/
-	OnCharacterLookAction(FVector2D(RecoilToAdd.Yaw, RecoilToAdd.Pitch));
+	
+	AddControllerYawInput(RecoilToAdd.Yaw);
+	AddControllerPitchInput(RecoilToAdd.Pitch);
 
 	return true;
 }
@@ -915,7 +920,9 @@ bool AShooterCharacter::Handle_OnRecoilRecoveryUpdate(float DeltaTime)
 	{
 		GetController()->SetControlRotation(GetControlRotation().Add(RecoilRecoveryToSubtract.Pitch, RecoilRecoveryToSubtract.Yaw, 0.0f));
 	}*/
-	OnCharacterLookAction(FVector2D(RecoilRecoveryToSubtract.Yaw, RecoilRecoveryToSubtract.Pitch));
+	
+	AddControllerYawInput(RecoilRecoveryToSubtract.Yaw);
+	AddControllerPitchInput(RecoilRecoveryToSubtract.Pitch);
 	
 	return true;
 }
@@ -1268,6 +1275,8 @@ void AShooterCharacter::OnCharacterLeanRightAction(const FInputActionValue& Valu
 void AShooterCharacter::OnCharacterLookAction(const FInputActionValue& Value)
 {
 	FVector2D CurrentValue = Value.Get<FVector2D>();
+
+	CurrentValue *= GetControllerInputScaleValue();
 
 	AddControllerYawInput(CurrentValue.X);
 	AddControllerPitchInput(CurrentValue.Y);

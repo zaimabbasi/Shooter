@@ -110,6 +110,7 @@ protected:
 	void StartResetProceduralAnim(float PlayRate = 1.0f) const;
 
 	float GetProceduralAnimScaleValue() const;
+	float GetControllerInputScaleValue() const;
 
 	virtual void OnCharacterAimAction(const FInputActionValue& Value);
 	virtual void OnCharacterAlterAction(const FInputActionValue& Value);
@@ -503,9 +504,6 @@ protected:
 	float ProceduralAnimVerticalMovement;
 	float ProceduralAnimRollRotation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1"))
-	float ProceduralAnimAimingScale;
-
 	float RecoilHorizontal;
 	float RecoilVertical;
 
@@ -547,6 +545,9 @@ protected:
 	FVector ADSCameraTargetLocation;
 
 	bool bIsAiming;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1"))
+	float ControllerInputAimingScale;
 
 	bool bIsAlterAction;
 
