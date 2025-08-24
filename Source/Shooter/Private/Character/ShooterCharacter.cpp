@@ -441,29 +441,109 @@ FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) co
 	return WeaponHolsterSocketName;
 }
 
-FRotator AShooterCharacter::CalculateRecoilToAdd(float DeltaTime) const
+FRotator AShooterCharacter::CalculateRecoilStep(float DeltaTime) const
 {
 	float RecoilHorizontalRemaining = RecoilHorizontal - RecoilHorizontalAccumulated;
 	float RecoilVerticalRemaining = RecoilVertical - RecoilVerticalAccumulated;
 
-	float RecoilHorizontalStep = RecoilHorizontalVelocity * DeltaTime;
-	float RecoilVerticalStep = RecoilVerticalVelocity * DeltaTime;
+	float RecoilHorizontalStep = ControllerHorizontalVelocity * DeltaTime;
+	float RecoilVerticalStep = ControllerVerticalVelocity * DeltaTime;
 
-	float RecoilHorizontalToAdd = FMath::Abs(RecoilHorizontalStep) > FMath::Abs(RecoilHorizontalRemaining) ? RecoilHorizontalRemaining : RecoilHorizontalStep;
-	float RecoilVerticalToAdd = FMath::Abs(RecoilVerticalStep) > FMath::Abs(RecoilVerticalRemaining) ? RecoilVerticalRemaining : RecoilVerticalStep;
+	if (FMath::Abs(RecoilHorizontalStep) > FMath::Abs(RecoilHorizontalRemaining))
+	{
+		RecoilHorizontalStep = RecoilHorizontalRemaining;
+	}
+	if (FMath::Abs(RecoilVerticalStep) > FMath::Abs(RecoilVerticalRemaining))
+	{
+		RecoilVerticalStep = RecoilVerticalRemaining;
+	}
 	
-	return FRotator(RecoilVerticalToAdd, RecoilHorizontalToAdd, 0.0f);
+	return FRotator(RecoilVerticalStep, RecoilHorizontalStep, 0.0f);
 }
 
-FRotator AShooterCharacter::CalculateRecoilRecoveryToSubtract(float DeltaTime) const
+FRotator AShooterCharacter::CalculateRecoilRecoveryStep(float DeltaTime) const
 {
-	float RecoilRecoveryHorizontalStep = RecoilRecoveryHorizontalVelocity * DeltaTime;
-	float RecoilRecoveryVerticalStep = RecoilRecoveryVerticalVelocity * DeltaTime;
+	float RecoilRecoveryHorizontalStep = ControllerHorizontalVelocity * DeltaTime;
+	float RecoilRecoveryVerticalStep = ControllerVerticalVelocity * DeltaTime;
 
-	float RecoilRecoveryHorizontalToSubtract = FMath::Abs(RecoilRecoveryHorizontalStep) > FMath::Abs(RecoilHorizontalAccumulatedTotal) ? RecoilHorizontalAccumulatedTotal : RecoilRecoveryHorizontalStep;
-	float RecoilRecoveryVerticalToSubtract = FMath::Abs(RecoilRecoveryVerticalStep) > FMath::Abs(RecoilVerticalAccumulatedTotal) ? RecoilVerticalAccumulatedTotal : RecoilRecoveryVerticalStep;
+	if (FMath::Abs(RecoilRecoveryHorizontalStep) > FMath::Abs(RecoilRecoveryHorizontal))
+	{
+		RecoilRecoveryHorizontalStep = RecoilRecoveryHorizontal;
+	}
+	if (FMath::Abs(RecoilRecoveryVerticalStep) > FMath::Abs(RecoilRecoveryVertical))
+	{
+		RecoilRecoveryVerticalStep = RecoilRecoveryVertical;
+	}
 
-	return FRotator(RecoilRecoveryVerticalToSubtract, RecoilRecoveryHorizontalToSubtract, 0.0f);
+	return FRotator(RecoilRecoveryVerticalStep, RecoilRecoveryHorizontalStep, 0.0f);
+}
+
+void AShooterCharacter::AdjustRecoilAccumulated(FRotator DeltaControlRotation)
+{
+	if (FMath::Abs(DeltaControlRotation.Yaw) > FMath::Abs(RecoilHorizontalAccumulated))
+	{
+		RecoilHorizontalAccumulated = (DeltaControlRotation.Yaw > 0.0f && RecoilHorizontalAccumulated > 0.0f) || (DeltaControlRotation.Yaw < 0.0f && RecoilHorizontalAccumulated < 0.0f) ? RecoilHorizontalAccumulated : 0.0f;
+	}
+	else
+	{
+		RecoilHorizontalAccumulated = (DeltaControlRotation.Yaw > 0.0f && RecoilHorizontalAccumulated > 0.0f) || (DeltaControlRotation.Yaw < 0.0f && RecoilHorizontalAccumulated < 0.0f) ? DeltaControlRotation.Yaw : 0.0f;
+	}
+
+	if (FMath::Abs(DeltaControlRotation.Pitch) > RecoilVerticalAccumulated)
+	{
+		RecoilVerticalAccumulated = DeltaControlRotation.Pitch > 0.0f ? RecoilVerticalAccumulated : 0.0f;
+	}
+	else
+	{
+		RecoilVerticalAccumulated = DeltaControlRotation.Pitch > 0.0f ? DeltaControlRotation.Pitch : 0.0f;
+	}
+}
+
+void AShooterCharacter::AdjustRecoilRecovery(FRotator DeltaControlRotation)
+{
+	if (RecoilHorizontalAccumulated == 0.0f)
+	{
+		if (RecoilRecoveryHorizontal > 0.0f && DeltaControlRotation.Yaw < 0.0f)
+		{
+			RecoilRecoveryHorizontal += DeltaControlRotation.Yaw;
+			if (RecoilRecoveryHorizontal < 0.0f)
+			{
+				RecoilRecoveryHorizontal = 0.0f;
+			}
+		}
+		else if (RecoilRecoveryHorizontal < 0.0f && DeltaControlRotation.Yaw > 0.0f)
+		{
+			RecoilRecoveryHorizontal += DeltaControlRotation.Yaw;
+			if (RecoilRecoveryHorizontal > 0.0f)
+			{
+				RecoilRecoveryHorizontal = 0.0f;
+			}
+		}
+	}
+
+	if (RecoilVerticalAccumulated == 0.0f)
+	{
+		if (RecoilRecoveryVertical > 0.0f && DeltaControlRotation.Pitch < 0.0f)
+		{
+			RecoilRecoveryVertical += DeltaControlRotation.Pitch;
+			if (RecoilRecoveryVertical < 0.0f)
+			{
+				RecoilRecoveryVertical = 0.0f;
+			}
+		}
+	}
+}
+
+void AShooterCharacter::OnRecoilUpdateEnd()
+{
+	FRotator DeltaControlRotation = UKismetMathLibrary::NormalizedDeltaRotator(GetControlRotation(), RecoilLastControlRotation);
+
+	AdjustRecoilAccumulated(DeltaControlRotation);
+
+	RecoilRecoveryHorizontal += RecoilHorizontalAccumulated;
+	RecoilRecoveryVertical += RecoilVerticalAccumulated;
+
+	AdjustRecoilRecovery(DeltaControlRotation);
 }
 
 void AShooterCharacter::StartProceduralAnim(bool bHasVelocity) const
@@ -842,88 +922,49 @@ void AShooterCharacter::Handle_OnTurningAnimTimelineFinished()
 }
 
 bool AShooterCharacter::Handle_OnRecoilUpdate(float DeltaTime)
-{	
+{
 	if (RecoilHorizontalAccumulated == RecoilHorizontal && RecoilVerticalAccumulated == RecoilVertical)
 	{
-		RecoilHorizontal = 0.0f;
-		RecoilVertical = 0.0f;
-		RecoilHorizontalAccumulatedTotal += RecoilHorizontalAccumulated;
-		RecoilVerticalAccumulatedTotal += RecoilVerticalAccumulated;
-		RecoilHorizontalAccumulated = 0.0f;
-		RecoilVerticalAccumulated = 0.0f;
-
-		// Use delta rotation values for accumulated recoil in case the recoil was controlled by the player
-		float RecoilHorizontalDirection = RecoilHorizontalAccumulatedTotal > 0.0f ? 1.0f : -1.0f;
-		float RecoilVerticalDirection = RecoilVerticalAccumulatedTotal > 0.0f ? 1.0f : -1.0f;
-
-		FRotator DeltaControlRotation = UKismetMathLibrary::NormalizedDeltaRotator(GetControlRotation(), RecoilLastControlRotation);
-
-		if (FMath::Abs(RecoilHorizontalAccumulatedTotal) > FMath::Abs(DeltaControlRotation.Yaw))
-		{
-			RecoilHorizontalAccumulatedTotal = FMath::Abs(DeltaControlRotation.Yaw) * RecoilHorizontalDirection;
-		}
-		if (FMath::Abs(RecoilVerticalAccumulatedTotal) > FMath::Abs(DeltaControlRotation.Pitch))
-		{
-			RecoilVerticalAccumulatedTotal = FMath::Abs(DeltaControlRotation.Pitch) * RecoilVerticalDirection;
-		}
-
-		RecoilRecoveryHorizontalVelocity = RecoilHorizontalAccumulatedTotal / RecoilRecoveryTotalTime;
-		RecoilRecoveryVerticalVelocity = RecoilVerticalAccumulatedTotal / RecoilRecoveryTotalTime;
-
+		OnRecoilUpdateEnd();
+		
 		StopRecoilUpdate();
+
+		ControllerHorizontalVelocity = RecoilRecoveryHorizontal / RecoilRecoveryTotalTime;
+		ControllerVerticalVelocity = RecoilRecoveryVertical / RecoilRecoveryTotalTime;
+
 		StartRecoilRecoveryUpdate();
 
 		return false;
 	}
 
-	FRotator RecoilToAdd = CalculateRecoilToAdd(DeltaTime);
+	FRotator RecoilStep = CalculateRecoilStep(DeltaTime);
 
-	RecoilHorizontalAccumulated += RecoilToAdd.Yaw;
-	RecoilVerticalAccumulated += RecoilToAdd.Pitch;
+	RecoilHorizontalAccumulated += RecoilStep.Yaw;
+	RecoilVerticalAccumulated += RecoilStep.Pitch;
 
-	// Setting controller rotation directly is giving unexpected results, so calling LookAction function instead
-	/*if (GetController())
-	{
-		GetController()->SetControlRotation(GetControlRotation().Add(RecoilToAdd.Pitch, RecoilToAdd.Yaw, 0.0f));
-	}*/
-	
-	AddControllerYawInput(RecoilToAdd.Yaw);
-	AddControllerPitchInput(RecoilToAdd.Pitch);
+	AddControllerYawInput(RecoilStep.Yaw);
+	AddControllerPitchInput(RecoilStep.Pitch);
 
 	return true;
 }
 
 bool AShooterCharacter::Handle_OnRecoilRecoveryUpdate(float DeltaTime)
 {
-	if (RecoilHorizontalAccumulatedTotal == 0.0f && RecoilVerticalAccumulatedTotal == 0.0f)
+	if (RecoilRecoveryHorizontal == 0.0f && RecoilRecoveryVertical == 0.0f)
 	{
 		StopRecoilUpdate();
 
 		return false;
 	}
 
-	FRotator RecoilRecoveryToSubtract = CalculateRecoilRecoveryToSubtract(DeltaTime);
+	FRotator RecoilRecoveryStep = CalculateRecoilRecoveryStep(DeltaTime);
 
-	RecoilHorizontalAccumulatedTotal -= RecoilRecoveryToSubtract.Yaw;
-	RecoilVerticalAccumulatedTotal -= RecoilRecoveryToSubtract.Pitch;
+	RecoilRecoveryHorizontal -= RecoilRecoveryStep.Yaw;
+	RecoilRecoveryVertical -= RecoilRecoveryStep.Pitch;
 
-	FRotator DeltaControlRotation = UKismetMathLibrary::NormalizedDeltaRotator(GetControlRotation(), RecoilLastControlRotation);
+	AddControllerYawInput(-RecoilRecoveryStep.Yaw);
+	AddControllerPitchInput(-RecoilRecoveryStep.Pitch);
 
-	RecoilRecoveryToSubtract.Yaw = FMath::Abs(RecoilRecoveryToSubtract.Yaw) > FMath::Abs(DeltaControlRotation.Yaw) ? FMath::Abs(DeltaControlRotation.Yaw) : RecoilRecoveryToSubtract.Yaw;
-	RecoilRecoveryToSubtract.Pitch = FMath::Abs(RecoilRecoveryToSubtract.Pitch) > FMath::Abs(DeltaControlRotation.Pitch) ? FMath::Abs(DeltaControlRotation.Pitch) : RecoilRecoveryToSubtract.Pitch;
-
-	RecoilRecoveryToSubtract.Yaw *= DeltaControlRotation.Yaw > 0.0f ? -1.0f : 1.0f;
-	RecoilRecoveryToSubtract.Pitch *= DeltaControlRotation.Pitch > 0.0f ? -1.0f : 1.0f;
-
-	// Setting controller rotation directly is giving unexpected results, so calling LookAction function instead
-	/*if (GetController())
-	{
-		GetController()->SetControlRotation(GetControlRotation().Add(RecoilRecoveryToSubtract.Pitch, RecoilRecoveryToSubtract.Yaw, 0.0f));
-	}*/
-	
-	AddControllerYawInput(RecoilRecoveryToSubtract.Yaw);
-	AddControllerPitchInput(RecoilRecoveryToSubtract.Pitch);
-	
 	return true;
 }
 
@@ -1145,29 +1186,27 @@ void AShooterCharacter::Handle_OnCharacterInventoryWeaponArrayReplicated()
 
 void AShooterCharacter::Handle_OnCharacterCombatWeaponRecoilGenerated(AWeapon* Weapon, float RecoilHorizontalKick, float RecoilVerticalKick)
 {
-	RecoilHorizontal = RecoilHorizontalKick;
-	RecoilVertical = RecoilVerticalKick;
-
-	RecoilHorizontalVelocity = RecoilHorizontal / RecoilKickTotalTime;
-	RecoilVerticalVelocity = RecoilVertical / RecoilKickTotalTime;
-
-	RecoilHorizontalAccumulatedTotal += RecoilHorizontalAccumulated;
-	RecoilVerticalAccumulatedTotal += RecoilVerticalAccumulated;
-	RecoilHorizontalAccumulated = 0.0f;
-	RecoilVerticalAccumulated = 0.0f;
-
-	if (!OnRecoilUpdateHandle.Pin() && !OnRecoilRecoveryUpdateHandle.Pin())
-	{
-		RecoilLastControlRotation = GetControlRotation();
-	}
-
 	if (OnRecoilRecoveryUpdateHandle.Pin())
 	{
 		StopRecoilRecoveryUpdate();
 	}
+	else if (OnRecoilUpdateHandle.Pin())
+	{
+		OnRecoilUpdateEnd();
+	}
+
+	RecoilHorizontal = RecoilHorizontalKick;
+	RecoilVertical = RecoilVerticalKick;
+
+	RecoilHorizontalAccumulated = 0.0f;
+	RecoilVerticalAccumulated = 0.0f;
+
+	ControllerHorizontalVelocity = RecoilHorizontalKick / RecoilKickTotalTime;
+	ControllerVerticalVelocity = RecoilVerticalKick / RecoilKickTotalTime;
+
+	RecoilLastControlRotation = GetControlRotation();
 
 	StartRecoilUpdate();
-	
 }
 
 void AShooterCharacter::Handle_OnMovementComponentSprint()

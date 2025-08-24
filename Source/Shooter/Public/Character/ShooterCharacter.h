@@ -102,8 +102,11 @@ protected:
 
 	virtual FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
 
-	FRotator CalculateRecoilToAdd(float DeltaTime) const;
-	FRotator CalculateRecoilRecoveryToSubtract(float DeltaTime) const;
+	FRotator CalculateRecoilStep(float DeltaTime) const;
+	FRotator CalculateRecoilRecoveryStep(float DeltaTime) const;
+	void AdjustRecoilAccumulated(FRotator DeltaControlRotation);
+	void AdjustRecoilRecovery(FRotator DeltaControlRotation);
+	void OnRecoilUpdateEnd();
 
 	void StartProceduralAnim(bool bHasVelocity) const;
 	void StopProceduralAnim() const;
@@ -510,14 +513,11 @@ protected:
 	float RecoilHorizontalAccumulated;
 	float RecoilVerticalAccumulated;
 
-	float RecoilHorizontalAccumulatedTotal;
-	float RecoilVerticalAccumulatedTotal;
+	float RecoilRecoveryHorizontal;
+	float RecoilRecoveryVertical;
 
-	float RecoilHorizontalVelocity;
-	float RecoilVerticalVelocity;
-
-	float RecoilRecoveryHorizontalVelocity;
-	float RecoilRecoveryVerticalVelocity;
+	float ControllerHorizontalVelocity;
+	float ControllerVerticalVelocity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1", Units = "s"))
 	float RecoilKickTotalTime;
