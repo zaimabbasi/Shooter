@@ -119,6 +119,9 @@ protected:
 	bool bIsAiming;
 	FVector ADSCameraTargetLocation;
 
+	FOnTimelineFloat OnADSTimelineUpdate;
+	//FOnTimelineEventStatic OnADSTimelineFinished;
+
 public:
 	//virtual void Lean(ELeaningDirection NewLeaningDirection);
 	virtual bool CanLean() const;
@@ -289,6 +292,32 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float SwayRollRotationSensitivity;
 
+	FOnTimelineFloat OnIdleAnimTimelineHorizontalMovementUpdate;
+	FOnTimelineFloat OnIdleAnimTimelineVerticalMovementUpdate;
+	FOnTimelineFloat OnIdleAnimTimelineRollRotationUpdate;
+
+	FOnTimelineFloat OnWalkAnimTimelineHorizontalMovementUpdate;
+	FOnTimelineFloat OnWalkAnimTimelineVerticalMovementUpdate;
+	FOnTimelineFloat OnWalkAnimTimelineRollRotationUpdate;
+
+	FOnTimelineFloat OnIdleWalkAnimResetTimelineUpdate;
+	FOnTimelineEventStatic OnIdleWalkAnimResetTimelineFinished;
+
+protected:
+	UFUNCTION()
+	virtual void Handle_OnTurningAnimTimelineUpdate(float Value);
+
+	UFUNCTION()
+	virtual void Handle_OnTurningAnimTimelineFinished();
+
+	float ReferenceActorRotationYaw;
+
+	UPROPERTY(Replicated)
+	ETurningDirection TurningDirection;
+
+	FOnTimelineFloat OnTurningAnimTimelineUpdate;
+	FOnTimelineEventStatic OnTurningAnimTimelineFinished;
+
 protected:
 	virtual void OnCharacterAimAction(const FInputActionValue& Value);
 	virtual void OnCharacterAlterAction(const FInputActionValue& Value);
@@ -315,12 +344,6 @@ protected:
 	float GetControllerInputScaleValue() const;
 
 	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
-
-	UFUNCTION()
-	virtual void Handle_OnTurningAnimTimelineUpdate(float Value);
-
-	UFUNCTION()
-	virtual void Handle_OnTurningAnimTimelineFinished();
 
 	/*UFUNCTION()
 	virtual void Handle_OnCharacterAnimInstanceIdle();
@@ -429,9 +452,6 @@ protected:
 	bool bIsTransition;
 
 	UPROPERTY(Replicated)
-	ETurningDirection TurningDirection;
-
-	UPROPERTY(Replicated)
 	float AO_Pitch;
 
 	UPROPERTY(Replicated)
@@ -439,8 +459,7 @@ protected:
 
 	UPROPERTY(Replicated)
 	float RootBoneYaw;
-
-	float ReferenceActorRotationYaw;
+	
 	float VelocityYawOffset;
 
 	float DefaultCameraFOV;
@@ -567,23 +586,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCurveFloat> TurningAnimTimelineCurve;
-
-	FOnTimelineFloat OnADSTimelineUpdate;
-	//FOnTimelineEventStatic OnADSTimelineFinished;
-
-	FOnTimelineFloat OnIdleAnimTimelineHorizontalMovementUpdate;
-	FOnTimelineFloat OnIdleAnimTimelineVerticalMovementUpdate;
-	FOnTimelineFloat OnIdleAnimTimelineRollRotationUpdate;
-
-	FOnTimelineFloat OnWalkAnimTimelineHorizontalMovementUpdate;
-	FOnTimelineFloat OnWalkAnimTimelineVerticalMovementUpdate;
-	FOnTimelineFloat OnWalkAnimTimelineRollRotationUpdate;
-
-	FOnTimelineFloat OnIdleWalkAnimResetTimelineUpdate;
-	FOnTimelineEventStatic OnIdleWalkAnimResetTimelineFinished;
-
-	FOnTimelineFloat OnTurningAnimTimelineUpdate;
-	FOnTimelineEventStatic OnTurningAnimTimelineFinished;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

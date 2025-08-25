@@ -993,6 +993,17 @@ void AShooterCharacter::Handle_OnIdleWalkAnimResetTimelineFinished()
 	}
 }
 
+void AShooterCharacter::Handle_OnTurningAnimTimelineUpdate(float Value)
+{
+	float DeltaReference = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0f, GetActorRotation().Yaw, 0.0f), FRotator(0.0f, ReferenceActorRotationYaw, 0.0f)).Yaw;
+	ReferenceActorRotationYaw += DeltaReference * Value;
+}
+
+void AShooterCharacter::Handle_OnTurningAnimTimelineFinished()
+{
+	TurningDirection = ETurningDirection::TD_None;
+}
+
 void AShooterCharacter::OnCharacterAimAction(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
@@ -1336,17 +1347,6 @@ FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) co
 //	}
 //	bIsTransition = bNewIsTransition;
 //}
-
-void AShooterCharacter::Handle_OnTurningAnimTimelineUpdate(float Value)
-{
-	float DeltaReference = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0f, GetActorRotation().Yaw, 0.0f), FRotator(0.0f, ReferenceActorRotationYaw, 0.0f)).Yaw;
-	ReferenceActorRotationYaw += DeltaReference * Value;
-}
-
-void AShooterCharacter::Handle_OnTurningAnimTimelineFinished()
-{
-	TurningDirection = ETurningDirection::TD_None;
-}
 
 //void AShooterCharacter::Handle_OnCharacterAnimInstanceIdle()
 //{
