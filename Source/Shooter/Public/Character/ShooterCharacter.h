@@ -32,38 +32,50 @@ public:
 	virtual void PostInitializeComponents() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void RecalculateBaseEyeHeight() override;
-	//virtual void PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker) override;
+	virtual void Tick(float DeltaTime) override;
 
-	//virtual void Tick(float DeltaTime) override;
+protected:
+	virtual void BeginPlay() override;
 
+public:
 	virtual void Init();
+	virtual void UpdateAO_Pitch(float ControlRotationPitch, float DeltaTime);
+	virtual void UpdateAO_Yaw(float ControlRotationYaw, float DeltaTime);
+	virtual void OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity);
+
+	virtual float GetAllowedAO_Yaw() const;
+	
 	ECombatAction GetCombatAction() const;
 	AWeapon* GetEquippedWeapon() const;
 
 	UAnimInstance* GetHandsAnimInstance() const;
 	ECombatAction GetHandsAnimCombatAction() const;
-	
-	virtual float GetAllowedAO_Yaw() const;
-	virtual void UpdateAO_Pitch(float ControlRotationPitch, float DeltaTime);
-	virtual void UpdateAO_Yaw(float ControlRotationYaw, float DeltaTime);
-	virtual void OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity);
 
-	UFUNCTION()
-	virtual void OnRep_IsProned();
-
+public:
 	UFUNCTION(BlueprintCallable, Category = "Character", meta = (HidePin = "bClientSimulation"))
 	virtual void Prone(bool bClientSimulation = false);
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Character", meta = (HidePin = "bClientSimulation"))
 	virtual void UnProne(bool bClientSimulation = false);
 
 	UFUNCTION(BlueprintCallable, Category = "Character")
 	virtual bool CanProne() const;
 
-	virtual void OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
+	UFUNCTION()
+	virtual void OnRep_IsProned();
+
 	virtual void OnStartProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
+	virtual void OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust);
+	
 	void RecalculatePronedEyeHeight();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+	float PronedEyeHeight;
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_IsProned, Category = Character)
+	uint32 bIsProned : 1;
+
+public:
 	UFUNCTION(BlueprintCallable, Category = "Character")
 	virtual void Slow();
 
@@ -73,6 +85,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Character")
 	virtual bool CanSlow() const;
 
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = Character)
+	uint32 bIsSlowing : 1;
+
+public:
 	UFUNCTION(BlueprintCallable, Category = "Character")
 	virtual void Sprint();
 
@@ -82,59 +98,37 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Character")
 	virtual bool CanSprint() const;
 
-protected:
-	virtual void BeginPlay() override;
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = Character)
+	uint32 bIsSprinting : 1;
 
+public:
 	virtual void Aim();
 	virtual void UnAim();
 	virtual bool CanAim() const;
 	virtual bool CanAimInCombatAction(ECombatAction CombatAction) const;
+
+protected:
+	void CalculateADSCameraTargetLocation();
+
+	UFUNCTION()
+	virtual void Handle_OnADSTimelineUpdate(float Value);
+
+	/*UFUNCTION()
+	virtual void Handle_OnADSTimelineFinished();*/
+
+	bool bIsAiming;
+	FVector ADSCameraTargetLocation;
+
+public:
+	//virtual void Lean(ELeaningDirection NewLeaningDirection);
 	virtual bool CanLean() const;
 
-	virtual void StartRecoilUpdate();
-	virtual void StopRecoilUpdate();
-
-	virtual void StartRecoilRecoveryUpdate();
-	virtual void StopRecoilRecoveryUpdate();
-
+protected:
 	virtual void StartLeaningUpdate();
 	virtual void StopLeaningUpdate();
 
-	virtual FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
-
-	FRotator CalculateRecoilStep(float DeltaTime) const;
-	FRotator CalculateRecoilRecoveryStep(float DeltaTime) const;
-	void AdjustRecoilAccumulated(FRotator DeltaControlRotation);
-	void AdjustRecoilRecovery(FRotator DeltaControlRotation);
-	void OnRecoilUpdateEnd();
-
-	void StartProceduralAnim(bool bHasVelocity) const;
-	void StopProceduralAnim() const;
-	void StartResetProceduralAnim(float PlayRate = 1.0f) const;
-
-	float GetProceduralAnimScaleValue() const;
-	float GetControllerInputScaleValue() const;
-
-	virtual void OnCharacterAimAction(const FInputActionValue& Value);
-	virtual void OnCharacterAlterAction(const FInputActionValue& Value);
-	virtual void OnCharacterCrouchAction(const FInputActionValue& Value);
-	virtual void OnCharacterEquipPrimaryWeaponAction(const FInputActionValue& Value);
-	virtual void OnCharacterEquipSecondaryWeaponAction(const FInputActionValue& Value);
-	virtual void OnCharacterHolsterWeaponAction(const FInputActionValue& Value);
-	virtual void OnCharacterLeanLeftAction(const FInputActionValue& Value);
-	virtual void OnCharacterLeanRightAction(const FInputActionValue& Value);
-	virtual void OnCharacterLookAction(const FInputActionValue& Value);
-	virtual void OnCharacterMoveBackwardAction(const FInputActionValue& Value);
-	virtual void OnCharacterMoveForwardAction(const FInputActionValue& Value);
-	virtual void OnCharacterMoveLeftAction(const FInputActionValue& Value);
-	virtual void OnCharacterMoveRightAction(const FInputActionValue& Value);
-	virtual void OnCharacterProneAction(const FInputActionValue& Value);
-	virtual void OnCharacterSlowAction(const FInputActionValue& Value);
-	virtual void OnCharacterSprintAction(const FInputActionValue& Value);
-	virtual void OnWeaponChamberCheckAction(const FInputActionValue& Value);
-	virtual void OnWeaponFireAction(const FInputActionValue& Value);
-	virtual void OnWeaponFiremodeAction(const FInputActionValue& Value);
-	virtual void OnWeaponReloadAction(const FInputActionValue& Value);
+	void CalculateLeaningTargetAngle();
+	void CalculateLeaningTransitionDuration(ELeaningDirection OldLeaningDirection);
 
 	UFUNCTION(Server, Reliable)
 	void Server_Lean(ELeaningDirection NewLeaningDirection);
@@ -144,10 +138,74 @@ protected:
 	virtual void OnRep_LeaningDirection(ELeaningDirection OldLeaningDirection);
 
 	UFUNCTION()
-	virtual void Handle_OnADSTimelineUpdate(float Value);
+	virtual bool Handle_OnLeaningUpdate(float DeltaTime);
 
-	/*UFUNCTION()
-	virtual void Handle_OnADSTimelineFinished();*/
+	float LeaningTargetAngle;
+	float LeaningAngle;
+	float LeaningTransitionDuration;
+
+	UPROPERTY(ReplicatedUsing = OnRep_LeaningDirection)
+	ELeaningDirection LeaningDirection;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "45", Units = "deg"))
+	float LeaningMaxAngle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "1", ClampMax = "10.0"))
+	float LeaningInterpSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "1.0", Units = "s"))
+	float DefaultLeaningTransitionDuration;
+
+	FTickerDelegate OnLeaningUpdate;
+	FTSTicker::FDelegateHandle OnLeaningUpdateHandle;
+
+protected:
+	virtual void StartRecoilUpdate();
+	virtual void StopRecoilUpdate();
+	virtual void StartRecoilRecoveryUpdate();
+	virtual void StopRecoilRecoveryUpdate();
+
+	FRotator CalculateRecoilStep(float DeltaTime) const;
+	FRotator CalculateRecoilRecoveryStep(float DeltaTime) const;
+	void AdjustRecoilAccumulated(FRotator DeltaControlRotation);
+	void AdjustRecoilRecovery(FRotator DeltaControlRotation);
+	void OnRecoilUpdateEnd();
+
+	UFUNCTION()
+	virtual bool Handle_OnRecoilUpdate(float DeltaTime);
+
+	UFUNCTION()
+	virtual bool Handle_OnRecoilRecoveryUpdate(float DeltaTime);
+
+	float RecoilHorizontal;
+	float RecoilVertical;
+
+	float RecoilHorizontalAccumulated;
+	float RecoilVerticalAccumulated;
+
+	float RecoilRecoveryHorizontal;
+	float RecoilRecoveryVertical;
+
+	float ControllerHorizontalVelocity;
+	float ControllerVerticalVelocity;
+
+	FRotator RecoilLastControlRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1", Units = "s"))
+	float RecoilKickTotalTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1", Units = "s"))
+	float RecoilRecoveryTotalTime;
+
+	FTickerDelegate OnRecoilUpdate;
+	FTickerDelegate OnRecoilRecoveryUpdate;
+	FTSTicker::FDelegateHandle OnRecoilUpdateHandle;
+	FTSTicker::FDelegateHandle OnRecoilRecoveryUpdateHandle;
+	
+protected:
+	void StartProceduralAnim(bool bHasVelocity) const;
+	void StopProceduralAnim() const;
+	void StartResetProceduralAnim(float PlayRate = 1.0f) const;
 
 	UFUNCTION()
 	virtual void Handle_OnIdleAnimTimelineHorizontalMovementUpdate(float Value);
@@ -173,20 +231,96 @@ protected:
 	UFUNCTION()
 	virtual void Handle_OnIdleWalkAnimResetTimelineFinished();
 
+	float ProceduralAnimHorizontalMovement;
+	float ProceduralAnimVerticalMovement;
+	float ProceduralAnimRollRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMaxHorizontalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMinHorizontalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMaxVerticalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMinVerticalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMaxRollRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float IdleAnimMinRollRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMaxHorizontalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMinHorizontalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMaxVerticalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMinVerticalMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMaxRollRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float WalkAnimMinRollRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float SwayHorizontalMovementLimit;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float SwayVerticalMovementLimit;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float SwayRollRotationLimit;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float SwayHorizontalMovementSensitivity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float SwayVerticalMovementSensitivity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float SwayRollRotationSensitivity;
+
+protected:
+	virtual void OnCharacterAimAction(const FInputActionValue& Value);
+	virtual void OnCharacterAlterAction(const FInputActionValue& Value);
+	virtual void OnCharacterCrouchAction(const FInputActionValue& Value);
+	virtual void OnCharacterEquipPrimaryWeaponAction(const FInputActionValue& Value);
+	virtual void OnCharacterEquipSecondaryWeaponAction(const FInputActionValue& Value);
+	virtual void OnCharacterHolsterWeaponAction(const FInputActionValue& Value);
+	virtual void OnCharacterLeanLeftAction(const FInputActionValue& Value);
+	virtual void OnCharacterLeanRightAction(const FInputActionValue& Value);
+	virtual void OnCharacterLookAction(const FInputActionValue& Value);
+	virtual void OnCharacterMoveBackwardAction(const FInputActionValue& Value);
+	virtual void OnCharacterMoveForwardAction(const FInputActionValue& Value);
+	virtual void OnCharacterMoveLeftAction(const FInputActionValue& Value);
+	virtual void OnCharacterMoveRightAction(const FInputActionValue& Value);
+	virtual void OnCharacterProneAction(const FInputActionValue& Value);
+	virtual void OnCharacterSlowAction(const FInputActionValue& Value);
+	virtual void OnCharacterSprintAction(const FInputActionValue& Value);
+	virtual void OnWeaponChamberCheckAction(const FInputActionValue& Value);
+	virtual void OnWeaponFireAction(const FInputActionValue& Value);
+	virtual void OnWeaponFiremodeAction(const FInputActionValue& Value);
+	virtual void OnWeaponReloadAction(const FInputActionValue& Value);
+
+	float GetProceduralAnimScaleValue() const;
+	float GetControllerInputScaleValue() const;
+
+	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
+
 	UFUNCTION()
 	virtual void Handle_OnTurningAnimTimelineUpdate(float Value);
 
 	UFUNCTION()
 	virtual void Handle_OnTurningAnimTimelineFinished();
-
-	UFUNCTION()
-	virtual bool Handle_OnRecoilUpdate(float DeltaTime);
-
-	UFUNCTION()
-	virtual bool Handle_OnRecoilRecoveryUpdate(float DeltaTime);
-
-	UFUNCTION()
-	virtual bool Handle_OnLeaningUpdate(float DeltaTime);
 
 	/*UFUNCTION()
 	virtual void Handle_OnCharacterAnimInstanceIdle();
@@ -284,25 +418,36 @@ protected:
 	UFUNCTION()
 	virtual void Handle_OnMovementComponentSprint();
 
-private:
-	void CalculateADSCameraTargetLocation();
-	void CalculateLeaningTargetAngle();
-	void CalculateLeaningTransitionDuration(ELeaningDirection OldLeaningDirection);
+	bool bIsAlterAction;
 
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
-	float PronedEyeHeight;
+	bool bIsMoveInputBackward;
+	bool bIsMoveInputForward;
+	bool bIsMoveInputLeft;
+	bool bIsMoveInputRight;
 
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_IsProned, Category = Character)
-	uint32 bIsProned : 1;
+	UPROPERTY(Replicated)
+	bool bIsTransition;
 
-	UPROPERTY(BlueprintReadOnly, Replicated, Category = Character)
-	uint32 bIsSlowing : 1;
+	UPROPERTY(Replicated)
+	ETurningDirection TurningDirection;
 
-	UPROPERTY(BlueprintReadOnly, Replicated, Category = Character)
-	uint32 bIsSprinting : 1;
+	UPROPERTY(Replicated)
+	float AO_Pitch;
 
-protected:
+	UPROPERTY(Replicated)
+	float AO_Yaw;
+
+	UPROPERTY(Replicated)
+	float RootBoneYaw;
+
+	float ReferenceActorRotationYaw;
+	float VelocityYawOffset;
+
+	float DefaultCameraFOV;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1"))
+	float ControllerInputAimingScale;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCharacterDataAsset> CharacterDataAsset;
 
@@ -423,60 +568,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCurveFloat> TurningAnimTimelineCurve;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float IdleAnimMaxHorizontalMovement;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float IdleAnimMinHorizontalMovement;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float IdleAnimMaxVerticalMovement;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float IdleAnimMinVerticalMovement;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float IdleAnimMaxRollRotation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float IdleAnimMinRollRotation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float WalkAnimMaxHorizontalMovement;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float WalkAnimMinHorizontalMovement;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float WalkAnimMaxVerticalMovement;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float WalkAnimMinVerticalMovement;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float WalkAnimMaxRollRotation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float WalkAnimMinRollRotation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float SwayHorizontalMovementLimit;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float SwayVerticalMovementLimit;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float SwayRollRotationLimit;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float SwayHorizontalMovementSensitivity;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float SwayVerticalMovementSensitivity;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float SwayRollRotationSensitivity;
-
 	FOnTimelineFloat OnADSTimelineUpdate;
 	//FOnTimelineEventStatic OnADSTimelineFinished;
 
@@ -493,91 +584,6 @@ protected:
 
 	FOnTimelineFloat OnTurningAnimTimelineUpdate;
 	FOnTimelineEventStatic OnTurningAnimTimelineFinished;
-
-	FTickerDelegate OnRecoilUpdate;
-	FTickerDelegate OnRecoilRecoveryUpdate;
-
-	FTSTicker::FDelegateHandle OnRecoilUpdateHandle;
-	FTSTicker::FDelegateHandle OnRecoilRecoveryUpdateHandle;
-
-	FTickerDelegate OnLeaningUpdate;
-	FTSTicker::FDelegateHandle OnLeaningUpdateHandle;
-
-	float ProceduralAnimHorizontalMovement;
-	float ProceduralAnimVerticalMovement;
-	float ProceduralAnimRollRotation;
-
-	float RecoilHorizontal;
-	float RecoilVertical;
-
-	float RecoilHorizontalAccumulated;
-	float RecoilVerticalAccumulated;
-
-	float RecoilRecoveryHorizontal;
-	float RecoilRecoveryVertical;
-
-	float ControllerHorizontalVelocity;
-	float ControllerVerticalVelocity;
-
-	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1", Units = "s"))
-	float RecoilKickTotalTime;
-
-	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1", Units = "s"))
-	float RecoilRecoveryTotalTime;
-	
-	FRotator RecoilLastControlRotation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "45", Units = "deg"))
-	float LeaningMaxAngle;
-
-	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "1", ClampMax = "10.0"))
-	float LeaningInterpSpeed;
-
-	float LeaningTargetAngle;
-
-	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "1.0", Units = "s"))
-	float LeaningDefaultTransitionDuration;
-
-	float LeaningTransitionDuration;
-
-	float CameraDefaultFOV;
-
-	FVector ADSCameraTargetLocation;
-
-	bool bIsAiming;
-
-	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true", UIMin = "0", UIMax = "1", ClampMin = "0", ClampMax = "1"))
-	float ControllerInputAimingScale;
-
-	bool bIsAlterAction;
-
-	bool bIsMoveInputBackward;
-	bool bIsMoveInputForward;
-	bool bIsMoveInputLeft;
-	bool bIsMoveInputRight;
-
-	UPROPERTY(Replicated)
-	bool bIsTransition;
-
-	UPROPERTY(ReplicatedUsing = OnRep_LeaningDirection)
-	ELeaningDirection LeaningDirection;
-
-	float LeaningAngle;
-
-	UPROPERTY(Replicated)
-	ETurningDirection TurningDirection;
-
-	UPROPERTY(Replicated)
-	float AO_Pitch;
-
-	UPROPERTY(Replicated)
-	float AO_Yaw;
-
-	UPROPERTY(Replicated)
-	float RootBoneYaw;
-
-	float ReferenceActorRotationYaw;
-	float VelocityYawOffset;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -599,8 +605,8 @@ private:
 	TObjectPtr<UShooterCharacterMovementComponent> ShooterCharacterMovement;
 
 public:
-	FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	FORCEINLINE USkeletalMeshComponent* GetHandsMesh() const { return HandsMesh; }
+	FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	FORCEINLINE UCharacterCombatComponent* GetCharacterCombat() const { return CharacterCombat; }
 	FORCEINLINE UCharacterInventoryComponent* GetCharacterInventory() const { return CharacterInventory; }
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
@@ -612,8 +618,6 @@ public:
 	FORCEINLINE float GetLeaningAngle() const { return LeaningAngle; }
 	FORCEINLINE float GetRootBoneYaw() const { return RootBoneYaw; }
 	FORCEINLINE float GetVelocityYawOffset() const { return VelocityYawOffset; }
-	FORCEINLINE float GetLeaningInterpSpeed() const { return LeaningInterpSpeed; }
-	FORCEINLINE float GetLeaningTargetAngle() const { return LeaningTargetAngle; }
 	FORCEINLINE float GetLeaningTransitionDuration() const { return LeaningTransitionDuration; }
 	FORCEINLINE float GetSwayHorizontalMovementLimit() const { return SwayHorizontalMovementLimit; }
 	FORCEINLINE float GetSwayVerticalMovementLimit() const { return SwayVerticalMovementLimit; }

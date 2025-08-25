@@ -111,7 +111,7 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 
 	LeaningMaxAngle = 15.0f;
 	LeaningInterpSpeed = 7.0f;
-	LeaningDefaultTransitionDuration = 0.25f;
+	DefaultLeaningTransitionDuration = 0.25f;
 
 }
 
@@ -175,7 +175,7 @@ void AShooterCharacter::PostInitializeComponents()
 	}
 	if (FirstPersonCamera)
 	{
-		CameraDefaultFOV = FirstPersonCamera->FieldOfView;
+		DefaultCameraFOV = FirstPersonCamera->FieldOfView;
 	}
 
 	if (CharacterCombat)
@@ -268,45 +268,9 @@ void AShooterCharacter::RecalculateBaseEyeHeight()
 	}
 }
 
-//void AShooterCharacter::PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker)
-//{
-//	Super::PreReplication(ChangedPropertyTracker);
-//
-//	/*if (HasAuthority())
-//	{
-//		if (GetController())
-//		{
-//			SetRemoteViewYaw(GetController()->GetControlRotation().Yaw);
-//		}
-//	}*/
-//}
-
-//void AShooterCharacter::Tick(float DeltaTime)
-//{
-//	Super::Tick(DeltaTime);
-//
-//}
-
-void AShooterCharacter::Init()
+void AShooterCharacter::Tick(float DeltaTime)
 {
-	if (CharacterInventory)
-	{
-		if (CharacterDataAsset.LoadSynchronous())
-		{
-			CharacterInventory->Init(CharacterDataAsset->InventoryParams);
-		}
-
-		for (AWeapon* Weapon : CharacterInventory->GetWeaponArray())
-		{
-			CharacterInventory->LoadAmmoInWeaponMag(Weapon);
-		}
-
-		for (AWeapon* Weapon : CharacterInventory->GetWeaponArray())
-		{
-			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
-			//Weapon->bIsHolster = true;
-		}
-	}
+	Super::Tick(DeltaTime);
 
 }
 
@@ -342,33 +306,26 @@ void AShooterCharacter::BeginPlay()
 
 }
 
-ECombatAction AShooterCharacter::GetCombatAction() const
+void AShooterCharacter::Init()
 {
-	return CharacterCombat != nullptr ? CharacterCombat->GetCombatAction() : ECombatAction::CA_None;
-}
-
-AWeapon* AShooterCharacter::GetEquippedWeapon() const
-{
-	return CharacterCombat != nullptr ? CharacterCombat->GetEquippedWeapon() : nullptr;
-}
-
-UAnimInstance* AShooterCharacter::GetHandsAnimInstance() const
-{
-	return HandsMesh != nullptr ? HandsMesh->GetAnimInstance() : nullptr;;
-}
-
-ECombatAction AShooterCharacter::GetHandsAnimCombatAction() const
-{
-	if (UHandsAnimInstance* HandsAnimInstance = Cast<UHandsAnimInstance>(GetHandsAnimInstance()))
+	if (CharacterInventory)
 	{
-		return HandsAnimInstance->GetCombatAction();
-	}
-	return ECombatAction::CA_None;
-}
+		if (CharacterDataAsset.LoadSynchronous())
+		{
+			CharacterInventory->Init(CharacterDataAsset->InventoryParams);
+		}
 
-float AShooterCharacter::GetAllowedAO_Yaw() const
-{
-	return (!bIsCrouched && !bIsProned) || bIsCrouched ? 90.0f : 45.0f;
+		for (AWeapon* Weapon : CharacterInventory->GetWeaponArray())
+		{
+			CharacterInventory->LoadAmmoInWeaponMag(Weapon);
+		}
+
+		for (AWeapon* Weapon : CharacterInventory->GetWeaponArray())
+		{
+			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+			//Weapon->bIsHolster = true;
+		}
+	}
 }
 
 void AShooterCharacter::UpdateAO_Pitch(float ControlRotationPitch, float DeltaTime)
@@ -400,9 +357,163 @@ void AShooterCharacter::UpdateAO_Yaw(float ControlRotationYaw, float DeltaTime)
 	}
 }
 
+void AShooterCharacter::OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity)
+{
+	FVector Velocity = GetVelocity();
+	bool bHasVelocity = Velocity.SizeSquared2D() > 0.0f;
+	bool bHasOldVelocity = OldVelocity.SizeSquared2D() > 0.0f;
+	//bool bIsThirdAction = bIsTransition || bIsSprinting || (bIsProned && bHasVelocity);
+	FRotator ActorRotation = GetActorRotation();
+
+	if (bHasVelocity)
+	{
+		ReferenceActorRotationYaw = FMath::RInterpTo(FRotator(0.0f, ReferenceActorRotationYaw, 0.0f), FRotator(0.0f, ActorRotation.Yaw, 0.0f), DeltaTime, 15.0f).Yaw;
+
+		float VelocityYaw = UKismetMathLibrary::MakeRotFromX(Velocity).Yaw;
+		VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, ActorRotation.Yaw, 0.0)).Yaw;
+	}
+
+	if (GetEquippedWeapon() != nullptr && GetCombatAction() == ECombatAction::CA_Idle)
+	{
+		if ((bHasVelocity && !bHasOldVelocity) || (!bHasVelocity && bHasOldVelocity))
+		{
+			StopProceduralAnim();
+			StartResetProceduralAnim(bHasVelocity ? 4.0f : 3.0f);
+		}
+	}
+}
+
+float AShooterCharacter::GetAllowedAO_Yaw() const
+{
+	return (!bIsCrouched && !bIsProned) || bIsCrouched ? 90.0f : 45.0f;
+}
+
+ECombatAction AShooterCharacter::GetCombatAction() const
+{
+	return CharacterCombat != nullptr ? CharacterCombat->GetCombatAction() : ECombatAction::CA_None;
+}
+
+AWeapon* AShooterCharacter::GetEquippedWeapon() const
+{
+	return CharacterCombat != nullptr ? CharacterCombat->GetEquippedWeapon() : nullptr;
+}
+
+UAnimInstance* AShooterCharacter::GetHandsAnimInstance() const
+{
+	return HandsMesh != nullptr ? HandsMesh->GetAnimInstance() : nullptr;;
+}
+
+ECombatAction AShooterCharacter::GetHandsAnimCombatAction() const
+{
+	if (UHandsAnimInstance* HandsAnimInstance = Cast<UHandsAnimInstance>(GetHandsAnimInstance()))
+	{
+		return HandsAnimInstance->GetCombatAction();
+	}
+	return ECombatAction::CA_None;
+}
+
+void AShooterCharacter::Prone(bool bClientSimulation)
+{
+	if (ShooterCharacterMovement && CanProne())
+	{
+		ShooterCharacterMovement->bWantsToProne = true;
+	}
+}
+
+void AShooterCharacter::UnProne(bool bClientSimulation)
+{
+	if (ShooterCharacterMovement)
+	{
+		ShooterCharacterMovement->bWantsToProne = false;
+	}
+}
+
 bool AShooterCharacter::CanProne() const
 {
 	return !bIsProned && GetRootComponent() && !GetRootComponent()->IsSimulatingPhysics();
+}
+
+void AShooterCharacter::OnRep_IsProned()
+{
+	if (ShooterCharacterMovement)
+	{
+		if (bIsProned)
+		{
+			ShooterCharacterMovement->bWantsToProne = true;
+			ShooterCharacterMovement->Prone(true);
+		}
+		else
+		{
+			ShooterCharacterMovement->bWantsToProne = false;
+			ShooterCharacterMovement->UnProne(true);
+			if (bIsCrouched)
+			{
+				ShooterCharacterMovement->Crouch(true);
+				ShooterCharacterMovement->bWantsToCrouch = true;
+			}
+		}
+		ShooterCharacterMovement->bNetworkUpdateReceived = true;
+	}
+}
+
+void AShooterCharacter::OnStartProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	RecalculateBaseEyeHeight();
+
+	const ACharacter* DefaultChar = GetDefault<ACharacter>(GetClass());
+	if (GetMesh() && DefaultChar->GetMesh())
+	{
+		FVector& MeshRelativeLocation = GetMesh()->GetRelativeLocation_DirectMutable();
+		MeshRelativeLocation.Z = DefaultChar->GetMesh()->GetRelativeLocation().Z + HalfHeightAdjust;
+		BaseTranslationOffset.Z = MeshRelativeLocation.Z;
+	}
+	else
+	{
+		BaseTranslationOffset.Z = DefaultChar->GetBaseTranslationOffset().Z + HalfHeightAdjust;
+	}
+}
+
+void AShooterCharacter::OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	RecalculateBaseEyeHeight();
+
+	const ACharacter* DefaultChar = GetDefault<ACharacter>(GetClass());
+	if (GetMesh() && DefaultChar->GetMesh())
+	{
+		FVector& MeshRelativeLocation = GetMesh()->GetRelativeLocation_DirectMutable();
+		MeshRelativeLocation.Z = DefaultChar->GetMesh()->GetRelativeLocation().Z;
+		BaseTranslationOffset.Z = MeshRelativeLocation.Z;
+	}
+	else
+	{
+		BaseTranslationOffset.Z = DefaultChar->GetBaseTranslationOffset().Z;
+	}
+}
+
+void AShooterCharacter::RecalculatePronedEyeHeight()
+{
+	if (ShooterCharacterMovement)
+	{
+		constexpr float EyeHeightRatio = 0.8f;	// how high the character's eyes are, relative to the proned height
+
+		PronedEyeHeight = ShooterCharacterMovement->GetPronedHalfHeight() * EyeHeightRatio;
+	}
+}
+
+void AShooterCharacter::Slow()
+{
+	if (ShooterCharacterMovement && CanSlow())
+	{
+		ShooterCharacterMovement->bWantsToSlow = true;
+	}
+}
+
+void AShooterCharacter::UnSlow()
+{
+	if (ShooterCharacterMovement)
+	{
+		ShooterCharacterMovement->bWantsToSlow = false;
+	}
 }
 
 bool AShooterCharacter::CanSlow() const
@@ -410,35 +521,237 @@ bool AShooterCharacter::CanSlow() const
 	return !bIsSlowing && !bIsProned && GetRootComponent() && !GetRootComponent()->IsSimulatingPhysics();
 }
 
+void AShooterCharacter::Sprint()
+{
+	if (ShooterCharacterMovement && CanSprint())
+	{
+		ShooterCharacterMovement->bWantsToSprint = true;
+	}
+}
+
+void AShooterCharacter::UnSprint()
+{
+	if (ShooterCharacterMovement)
+	{
+		ShooterCharacterMovement->bWantsToSprint = false;
+	}
+}
+
 bool AShooterCharacter::CanSprint() const
 {
 	return !bIsSprinting && !bIsSlowing && GetRootComponent() && !GetRootComponent()->IsSimulatingPhysics();
 }
 
-FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const
+void AShooterCharacter::Aim()
 {
-	FName WeaponHolsterSocketName = NAME_None;
-	if (Weapon && CharacterInventory)
+	if (CanAim())
 	{
-		if (Weapon->IsPistol())
+		if (bIsSprinting)
 		{
-			WeaponHolsterSocketName = PISTOL_HOLSTER_SOCKET_NAME;
+			UnSprint();
 		}
-		else
-		{
-			const int8 WeaponIndex = CharacterInventory->FindWeapon(Weapon);
-			if (WeaponIndex == PRIMARY_WEAPON_INDEX)
-			{
-				WeaponHolsterSocketName = WEAPON_HOLSTER_SOCKET_NAME;
-			}
-			else if (WeaponIndex != INDEX_NONE)
-			{
 
-				WeaponHolsterSocketName = WEAPON_HOLSTER_N_SOCKET_NAME(WeaponIndex);
-			}
-		}
+		StopProceduralAnim();
+		StartResetProceduralAnim(GetVelocity().SizeSquared2D() > 0.0f ? 4.0f : 3.0f);
+
+		CalculateADSCameraTargetLocation();
+
+		bIsAiming = true;
+		ADSTimeline->Play();
 	}
-	return WeaponHolsterSocketName;
+}
+
+void AShooterCharacter::UnAim()
+{
+	StopProceduralAnim();
+	StartResetProceduralAnim(GetVelocity().SizeSquared2D() > 0.0f ? 4.0f : 3.0f);
+
+	bIsAiming = false;
+	ADSTimeline->Reverse();
+}
+
+bool AShooterCharacter::CanAim() const
+{
+	bool bIsAccelerating = GetCharacterMovement() && GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f;
+	bool bIsCrawling = bIsProned && GetVelocity().SizeSquared2D() > 0.0f && bIsAccelerating;
+
+	return !bIsAiming && !bIsCrawling && CanAimInCombatAction(GetCombatAction());
+}
+
+bool AShooterCharacter::CanAimInCombatAction(ECombatAction CombatAction) const
+{
+	return CombatAction == ECombatAction::CA_Fire || CombatAction == ECombatAction::CA_FireDry || (bIsAiming && CombatAction == ECombatAction::CA_Firemode) || CombatAction == ECombatAction::CA_Idle;
+}
+
+void AShooterCharacter::CalculateADSCameraTargetLocation()
+{
+	if (HandsMesh)
+	{
+		AWeapon* EquippedWeapon = GetEquippedWeapon();
+		AScope* WeaponScope = EquippedWeapon != nullptr ? EquippedWeapon->GetScope() : nullptr;
+		ASightRear* WeaponSightRear = EquippedWeapon != nullptr ? EquippedWeapon->GetSightRear() : nullptr;
+		USkeletalMeshComponent* ScopeSightMesh = WeaponScope != nullptr ? WeaponScope->GetMesh() : WeaponSightRear != nullptr ? WeaponSightRear->GetMesh() : nullptr;
+
+		FTransform AimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME);
+		FTransform ModAimCameraTransform = ScopeSightMesh != nullptr ? ScopeSightMesh->GetSocketTransform(MOD_AIM_CAMERA_SOCKET_NAME) : FTransform::Identity;
+
+		ADSCameraTargetLocation = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, ScopeSightMesh != nullptr ? ModAimCameraTransform : AimCameraTransform).GetLocation();
+
+		if (ScopeSightMesh != nullptr)
+		{
+			FVector DefaultADSCameraTargetLocation = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, AimCameraTransform).GetLocation();
+			ADSCameraTargetLocation.Y = DefaultADSCameraTargetLocation.Y;
+		}
+
+		AimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME);
+		FVector AimCameraLocationInWeaponRoot = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_ROOT_SOCKET_NAME, AimCameraTransform).GetLocation();
+
+		AimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME);
+		FVector AimCameraLocationInWeapon = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_SOCKET_NAME, AimCameraTransform).GetLocation();
+
+		ADSCameraTargetLocation += AimCameraLocationInWeapon - AimCameraLocationInWeaponRoot;
+	}
+}
+
+void AShooterCharacter::Handle_OnADSTimelineUpdate(float Value)
+{
+	if (FirstPersonCamera)
+	{
+		float DeltaFOV = (DefaultCameraFOV * 0.8f) - DefaultCameraFOV;
+		FirstPersonCamera->SetRelativeLocation(ADSCameraTargetLocation * Value);
+		FirstPersonCamera->SetFieldOfView(DefaultCameraFOV + (DeltaFOV * Value));
+	}
+}
+
+//void AShooterCharacter::Handle_OnADSTimelineFinished()
+//{
+//
+//}
+
+//void AShooterCharacter::Lean(ELeaningDirection NewLeaningDirection)
+//{
+//}
+
+bool AShooterCharacter::CanLean() const
+{
+	bool bIsAccelerating = GetCharacterMovement() && GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f;
+	bool bHasVelocity = GetVelocity().SizeSquared2D() > 0.0f;
+	return !bIsSprinting && !(bIsProned && bHasVelocity && bIsAccelerating);
+}
+
+void AShooterCharacter::StartLeaningUpdate()
+{
+	if (!OnLeaningUpdateHandle.Pin())
+	{
+		OnLeaningUpdateHandle = FTSTicker::GetCoreTicker().AddTicker(OnLeaningUpdate);
+	}
+}
+
+void AShooterCharacter::StopLeaningUpdate()
+{
+	FTSTicker::GetCoreTicker().RemoveTicker(OnLeaningUpdateHandle);
+}
+
+void AShooterCharacter::CalculateLeaningTargetAngle()
+{
+	switch (LeaningDirection)
+	{
+	case ELeaningDirection::LD_None:
+		LeaningTargetAngle = 0.0f;
+		break;
+	case ELeaningDirection::LD_Left:
+		LeaningTargetAngle = -LeaningMaxAngle;
+		break;
+	case ELeaningDirection::LD_Right:
+		LeaningTargetAngle = LeaningMaxAngle;
+		break;
+	case ELeaningDirection::Default_MAX:
+		break;
+	default:
+		break;
+	}
+}
+
+void AShooterCharacter::CalculateLeaningTransitionDuration(ELeaningDirection OldLeaningDirection)
+{
+	if ((LeaningDirection == ELeaningDirection::LD_Left && OldLeaningDirection == ELeaningDirection::LD_Right) ||
+		(LeaningDirection == ELeaningDirection::LD_Right && OldLeaningDirection == ELeaningDirection::LD_Left))
+	{
+		LeaningTransitionDuration = DefaultLeaningTransitionDuration * 2.0f;
+	}
+	else
+	{
+		LeaningTransitionDuration = DefaultLeaningTransitionDuration;
+	}
+}
+
+void AShooterCharacter::Server_Lean_Implementation(ELeaningDirection NewLeaningDirection)
+{
+	if (CanLean())
+	{
+		ELeaningDirection OldLeaningDirection = LeaningDirection;
+		LeaningDirection = NewLeaningDirection;
+
+		CalculateLeaningTargetAngle();
+		CalculateLeaningTransitionDuration(OldLeaningDirection);
+
+		StartLeaningUpdate();
+	}
+}
+
+void AShooterCharacter::OnRep_LeaningDirection(ELeaningDirection OldLeaningDirection)
+{
+	CalculateLeaningTargetAngle();
+	CalculateLeaningTransitionDuration(OldLeaningDirection);
+
+	StartLeaningUpdate();
+}
+
+bool AShooterCharacter::Handle_OnLeaningUpdate(float DeltaTime)
+{
+	LeaningAngle = FMath::FInterpTo(LeaningAngle, LeaningTargetAngle, DeltaTime, LeaningInterpSpeed);
+
+	if (FirstPersonCamera)
+	{
+		FRotator CameraRotation = FirstPersonCamera->GetRelativeRotation();
+		CameraRotation.Roll = LeaningAngle * -0.6f;
+		FirstPersonCamera->SetRelativeRotation(CameraRotation);
+	}
+
+	if (LeaningAngle == LeaningTargetAngle)
+	{
+		StopLeaningUpdate();
+
+		return false;
+	}
+
+	return true;
+}
+
+void AShooterCharacter::StartRecoilUpdate()
+{
+	if (!OnRecoilUpdateHandle.Pin())
+	{
+		OnRecoilUpdateHandle = FTSTicker::GetCoreTicker().AddTicker(OnRecoilUpdate);
+	}
+}
+
+void AShooterCharacter::StopRecoilUpdate()
+{
+	FTSTicker::GetCoreTicker().RemoveTicker(OnRecoilUpdateHandle);
+}
+
+void AShooterCharacter::StartRecoilRecoveryUpdate()
+{
+	if (!OnRecoilRecoveryUpdateHandle.Pin())
+	{
+		OnRecoilRecoveryUpdateHandle = FTSTicker::GetCoreTicker().AddTicker(OnRecoilRecoveryUpdate);
+	}
+}
+
+void AShooterCharacter::StopRecoilRecoveryUpdate()
+{
+	FTSTicker::GetCoreTicker().RemoveTicker(OnRecoilRecoveryUpdateHandle);
 }
 
 FRotator AShooterCharacter::CalculateRecoilStep(float DeltaTime) const
@@ -457,7 +770,7 @@ FRotator AShooterCharacter::CalculateRecoilStep(float DeltaTime) const
 	{
 		RecoilVerticalStep = RecoilVerticalRemaining;
 	}
-	
+
 	return FRotator(RecoilVerticalStep, RecoilHorizontalStep, 0.0f);
 }
 
@@ -546,6 +859,53 @@ void AShooterCharacter::OnRecoilUpdateEnd()
 	AdjustRecoilRecovery(DeltaControlRotation);
 }
 
+bool AShooterCharacter::Handle_OnRecoilUpdate(float DeltaTime)
+{
+	if (RecoilHorizontalAccumulated == RecoilHorizontal && RecoilVerticalAccumulated == RecoilVertical)
+	{
+		OnRecoilUpdateEnd();
+
+		StopRecoilUpdate();
+
+		ControllerHorizontalVelocity = RecoilRecoveryHorizontal / RecoilRecoveryTotalTime;
+		ControllerVerticalVelocity = RecoilRecoveryVertical / RecoilRecoveryTotalTime;
+
+		StartRecoilRecoveryUpdate();
+
+		return false;
+	}
+
+	FRotator RecoilStep = CalculateRecoilStep(DeltaTime);
+
+	RecoilHorizontalAccumulated += RecoilStep.Yaw;
+	RecoilVerticalAccumulated += RecoilStep.Pitch;
+
+	AddControllerYawInput(RecoilStep.Yaw);
+	AddControllerPitchInput(RecoilStep.Pitch);
+
+	return true;
+}
+
+bool AShooterCharacter::Handle_OnRecoilRecoveryUpdate(float DeltaTime)
+{
+	if (RecoilRecoveryHorizontal == 0.0f && RecoilRecoveryVertical == 0.0f)
+	{
+		StopRecoilUpdate();
+
+		return false;
+	}
+
+	FRotator RecoilRecoveryStep = CalculateRecoilRecoveryStep(DeltaTime);
+
+	RecoilRecoveryHorizontal -= RecoilRecoveryStep.Yaw;
+	RecoilRecoveryVertical -= RecoilRecoveryStep.Pitch;
+
+	AddControllerYawInput(-RecoilRecoveryStep.Yaw);
+	AddControllerPitchInput(-RecoilRecoveryStep.Pitch);
+
+	return true;
+}
+
 void AShooterCharacter::StartProceduralAnim(bool bHasVelocity) const
 {
 	if (bHasVelocity && WalkAnimTimeline && !WalkAnimTimeline->IsPlaying())
@@ -553,7 +913,7 @@ void AShooterCharacter::StartProceduralAnim(bool bHasVelocity) const
 		WalkAnimTimeline->PlayFromStart();
 	}
 	else if (!bHasVelocity && IdleAnimTimeline && !IdleAnimTimeline->IsPlaying())
-	{	
+	{
 		IdleAnimTimeline->PlayFromStart();
 	}
 }
@@ -578,283 +938,6 @@ void AShooterCharacter::StartResetProceduralAnim(float PlayRate) const
 		IdleWalkAnimResetTimeline->SetPlayRate(PlayRate);
 	}
 }
-
-float AShooterCharacter::GetProceduralAnimScaleValue() const
-{
-	return bIsAiming ? 0.25 : 1.0f;
-}
-
-float AShooterCharacter::GetControllerInputScaleValue() const
-{
-	return bIsAiming ? 0.5f : 1.0f;
-}
-
-void AShooterCharacter::OnEndProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
-{
-	RecalculateBaseEyeHeight();
-
-	const ACharacter* DefaultChar = GetDefault<ACharacter>(GetClass());
-	if (GetMesh() && DefaultChar->GetMesh())
-	{
-		FVector& MeshRelativeLocation = GetMesh()->GetRelativeLocation_DirectMutable();
-		MeshRelativeLocation.Z = DefaultChar->GetMesh()->GetRelativeLocation().Z;
-		BaseTranslationOffset.Z = MeshRelativeLocation.Z;
-	}
-	else
-	{
-		BaseTranslationOffset.Z = DefaultChar->GetBaseTranslationOffset().Z;
-	}
-}
-
-void AShooterCharacter::OnRep_IsProned()
-{
-	if (ShooterCharacterMovement)
-	{
-		if (bIsProned)
-		{
-			ShooterCharacterMovement->bWantsToProne = true;
-			ShooterCharacterMovement->Prone(true);
-		}
-		else
-		{
-			ShooterCharacterMovement->bWantsToProne = false;
-			ShooterCharacterMovement->UnProne(true);
-			if (bIsCrouched)
-			{
-				ShooterCharacterMovement->Crouch(true);
-				ShooterCharacterMovement->bWantsToCrouch = true;
-			}
-		}
-		ShooterCharacterMovement->bNetworkUpdateReceived = true;
-	}
-}
-
-void AShooterCharacter::OnStartProne(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
-{
-	RecalculateBaseEyeHeight();
-
-	const ACharacter* DefaultChar = GetDefault<ACharacter>(GetClass());
-	if (GetMesh() && DefaultChar->GetMesh())
-	{
-		FVector& MeshRelativeLocation = GetMesh()->GetRelativeLocation_DirectMutable();
-		MeshRelativeLocation.Z = DefaultChar->GetMesh()->GetRelativeLocation().Z + HalfHeightAdjust;
-		BaseTranslationOffset.Z = MeshRelativeLocation.Z;
-	}
-	else
-	{
-		BaseTranslationOffset.Z = DefaultChar->GetBaseTranslationOffset().Z + HalfHeightAdjust;
-	}
-}
-
-void AShooterCharacter::Prone(bool bClientSimulation)
-{
-	if (ShooterCharacterMovement && CanProne())
-	{
-		ShooterCharacterMovement->bWantsToProne = true;
-	}
-}
-
-void AShooterCharacter::RecalculatePronedEyeHeight()
-{
-	if (ShooterCharacterMovement!= nullptr)
-	{
-		constexpr float EyeHeightRatio = 0.8f;	// how high the character's eyes are, relative to the proned height
-
-		PronedEyeHeight = ShooterCharacterMovement->GetPronedHalfHeight() * EyeHeightRatio;
-	}
-}
-
-void AShooterCharacter::OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity)
-{
-	FVector Velocity = GetVelocity();
-	bool bHasVelocity = Velocity.SizeSquared2D() > 0.0f;
-	bool bHasOldVelocity = OldVelocity.SizeSquared2D() > 0.0f;
-	//bool bIsThirdAction = bIsTransition || bIsSprinting || (bIsProned && bHasVelocity);
-	FRotator ActorRotation = GetActorRotation();
-	
-	if (bHasVelocity)
-	{
-		ReferenceActorRotationYaw = FMath::RInterpTo(FRotator(0.0f, ReferenceActorRotationYaw, 0.0f), FRotator(0.0f, ActorRotation.Yaw, 0.0f), DeltaTime, 15.0f).Yaw;
-
-		float VelocityYaw = UKismetMathLibrary::MakeRotFromX(Velocity).Yaw;
-		VelocityYawOffset = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0, VelocityYaw, 0.0), FRotator(0.0, ActorRotation.Yaw, 0.0)).Yaw;
-	}
-
-	if (GetEquippedWeapon() != nullptr && GetCombatAction() == ECombatAction::CA_Idle)
-	{
-		if ((bHasVelocity && !bHasOldVelocity) || (!bHasVelocity && bHasOldVelocity))
-		{
-			StopProceduralAnim();
-			StartResetProceduralAnim(bHasVelocity ? 4.0f : 3.0f);
-		}
-	}
-
-}
-
-void AShooterCharacter::Slow()
-{
-	if (ShooterCharacterMovement && CanSlow())
-	{
-		ShooterCharacterMovement->bWantsToSlow = true;
-	}
-}
-
-void AShooterCharacter::Sprint()
-{
-	if (ShooterCharacterMovement && CanSprint())
-	{
-		ShooterCharacterMovement->bWantsToSprint = true;
-	}
-}
-
-void AShooterCharacter::UnProne(bool bClientSimulation)
-{
-	if (ShooterCharacterMovement)
-	{
-		ShooterCharacterMovement->bWantsToProne = false;
-	}
-}
-
-void AShooterCharacter::UnSlow()
-{
-	if (ShooterCharacterMovement)
-	{
-		ShooterCharacterMovement->bWantsToSlow = false;
-	}
-}
-
-void AShooterCharacter::UnSprint()
-{
-	if (ShooterCharacterMovement)
-	{
-		ShooterCharacterMovement->bWantsToSprint = false;
-	}
-}
-
-//void AShooterCharacter::SetIsTransition(bool bNewIsTransition)
-//{
-//	if (GetController() && GetController()->IsLocalController())
-//	{
-//		GetController()->SetIgnoreMoveInput(bNewIsTransition);
-//	}
-//	bIsTransition = bNewIsTransition;
-//}
-
-bool AShooterCharacter::CanAim() const
-{
-	bool bIsAccelerating = GetCharacterMovement() && GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f;
-	bool bIsCrawling = bIsProned && GetVelocity().SizeSquared2D() > 0.0f && bIsAccelerating;
-
-	return !bIsAiming && !bIsCrawling && CanAimInCombatAction(GetCombatAction());
-}
-
-bool AShooterCharacter::CanAimInCombatAction(ECombatAction CombatAction) const
-{
-	return CombatAction == ECombatAction::CA_Fire || CombatAction == ECombatAction::CA_FireDry || (bIsAiming && CombatAction == ECombatAction::CA_Firemode) || CombatAction == ECombatAction::CA_Idle;
-}
-
-void AShooterCharacter::Aim()
-{
-	if (CanAim())
-	{
-		if (bIsSprinting)
-		{
-			UnSprint();
-		}
-
-		StopProceduralAnim();
-		StartResetProceduralAnim(GetVelocity().SizeSquared2D() > 0.0f ? 4.0f : 3.0f);
-
-		CalculateADSCameraTargetLocation();
-		
-		bIsAiming = true;
-		ADSTimeline->Play();
-	}
-}
-
-void AShooterCharacter::UnAim()
-{
-	StopProceduralAnim();
-	StartResetProceduralAnim(GetVelocity().SizeSquared2D() > 0.0f ? 4.0f : 3.0f);
-
-	bIsAiming = false;
-	ADSTimeline->Reverse();
-}
-
-bool AShooterCharacter::CanLean() const
-{
-	bool bIsAccelerating = GetCharacterMovement() && GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f;
-	bool bHasVelocity = GetVelocity().SizeSquared2D() > 0.0f;
-	return !bIsSprinting && !(bIsProned && bHasVelocity && bIsAccelerating);
-}
-
-void AShooterCharacter::StartRecoilUpdate()
-{
-	if (!OnRecoilUpdateHandle.Pin())
-	{
-		OnRecoilUpdateHandle = FTSTicker::GetCoreTicker().AddTicker(OnRecoilUpdate);
-	}
-}
-
-void AShooterCharacter::StopRecoilUpdate()
-{
-	FTSTicker::GetCoreTicker().RemoveTicker(OnRecoilUpdateHandle);
-}
-
-void AShooterCharacter::StartRecoilRecoveryUpdate()
-{
-	if (!OnRecoilRecoveryUpdateHandle.Pin())
-	{
-		OnRecoilRecoveryUpdateHandle = FTSTicker::GetCoreTicker().AddTicker(OnRecoilRecoveryUpdate);
-	}
-}
-
-void AShooterCharacter::StopRecoilRecoveryUpdate()
-{
-	FTSTicker::GetCoreTicker().RemoveTicker(OnRecoilRecoveryUpdateHandle);
-}
-
-void AShooterCharacter::StartLeaningUpdate()
-{
-	if (!OnLeaningUpdateHandle.Pin())
-	{
-		OnLeaningUpdateHandle = FTSTicker::GetCoreTicker().AddTicker(OnLeaningUpdate);
-	}
-}
-
-void AShooterCharacter::StopLeaningUpdate()
-{
-	FTSTicker::GetCoreTicker().RemoveTicker(OnLeaningUpdateHandle);
-}
-
-void AShooterCharacter::Server_Lean_Implementation(ELeaningDirection NewLeaningDirection)
-{
-	if (CanLean())
-	{
-		ELeaningDirection OldLeaningDirection = LeaningDirection;
-		LeaningDirection = NewLeaningDirection;
-
-		CalculateLeaningTargetAngle();
-		CalculateLeaningTransitionDuration(OldLeaningDirection);
-
-		StartLeaningUpdate();
-	}
-}
-
-void AShooterCharacter::Handle_OnADSTimelineUpdate(float Value)
-{
-	if (FirstPersonCamera)
-	{
-		float DeltaFOV = (CameraDefaultFOV * 0.8f) - CameraDefaultFOV;
-		FirstPersonCamera->SetRelativeLocation(ADSCameraTargetLocation * Value);
-		FirstPersonCamera->SetFieldOfView(CameraDefaultFOV + (DeltaFOV * Value));
-	}
-}
-
-//void AShooterCharacter::Handle_OnADSTimelineFinished()
-//{
-//
-//}
 
 void AShooterCharacter::Handle_OnIdleAnimTimelineHorizontalMovementUpdate(float Value)
 {
@@ -908,323 +991,6 @@ void AShooterCharacter::Handle_OnIdleWalkAnimResetTimelineFinished()
 	{
 		StartProceduralAnim(bHasVelocity);
 	}
-}
-
-void AShooterCharacter::Handle_OnTurningAnimTimelineUpdate(float Value)
-{
-	float DeltaReference = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0f, GetActorRotation().Yaw, 0.0f), FRotator(0.0f, ReferenceActorRotationYaw, 0.0f)).Yaw;
-	ReferenceActorRotationYaw += DeltaReference * Value;
-}
-
-void AShooterCharacter::Handle_OnTurningAnimTimelineFinished()
-{
-	TurningDirection = ETurningDirection::TD_None;
-}
-
-bool AShooterCharacter::Handle_OnRecoilUpdate(float DeltaTime)
-{
-	if (RecoilHorizontalAccumulated == RecoilHorizontal && RecoilVerticalAccumulated == RecoilVertical)
-	{
-		OnRecoilUpdateEnd();
-		
-		StopRecoilUpdate();
-
-		ControllerHorizontalVelocity = RecoilRecoveryHorizontal / RecoilRecoveryTotalTime;
-		ControllerVerticalVelocity = RecoilRecoveryVertical / RecoilRecoveryTotalTime;
-
-		StartRecoilRecoveryUpdate();
-
-		return false;
-	}
-
-	FRotator RecoilStep = CalculateRecoilStep(DeltaTime);
-
-	RecoilHorizontalAccumulated += RecoilStep.Yaw;
-	RecoilVerticalAccumulated += RecoilStep.Pitch;
-
-	AddControllerYawInput(RecoilStep.Yaw);
-	AddControllerPitchInput(RecoilStep.Pitch);
-
-	return true;
-}
-
-bool AShooterCharacter::Handle_OnRecoilRecoveryUpdate(float DeltaTime)
-{
-	if (RecoilRecoveryHorizontal == 0.0f && RecoilRecoveryVertical == 0.0f)
-	{
-		StopRecoilUpdate();
-
-		return false;
-	}
-
-	FRotator RecoilRecoveryStep = CalculateRecoilRecoveryStep(DeltaTime);
-
-	RecoilRecoveryHorizontal -= RecoilRecoveryStep.Yaw;
-	RecoilRecoveryVertical -= RecoilRecoveryStep.Pitch;
-
-	AddControllerYawInput(-RecoilRecoveryStep.Yaw);
-	AddControllerPitchInput(-RecoilRecoveryStep.Pitch);
-
-	return true;
-}
-
-bool AShooterCharacter::Handle_OnLeaningUpdate(float DeltaTime)
-{
-	LeaningAngle = FMath::FInterpTo(LeaningAngle, LeaningTargetAngle, DeltaTime, LeaningInterpSpeed);
-
-	if (FirstPersonCamera)
-	{
-		FRotator CameraRotation = FirstPersonCamera->GetRelativeRotation();
-		CameraRotation.Roll = LeaningAngle * -0.6f;
-		FirstPersonCamera->SetRelativeRotation(CameraRotation);
-	}
-
-	if (LeaningAngle == LeaningTargetAngle)
-	{
-		StopLeaningUpdate();
-
-		return false;
-	}
-
-	return true;
-}
-
-//void AShooterCharacter::Handle_OnCharacterAnimInstanceIdle()
-//{
-//	if (WalkAnimTimeline && WalkAnimTimeline->IsPlaying())
-//	{
-//		WalkAnimTimeline->Stop();
-//	}
-//	if (IdleAnimTimeline && !IdleAnimTimeline->IsPlaying())
-//	{
-//		IdleAnimTimeline->PlayFromStart();
-//	}
-//}
-
-//void AShooterCharacter::Handle_OnCharacterAnimInstanceWalk()
-//{
-//	if (IdleAnimTimeline && IdleAnimTimeline->IsPlaying())
-//	{
-//		IdleAnimTimeline->Stop();
-//	}
-//	if (WalkAnimTimeline && !WalkAnimTimeline->IsPlaying())
-//	{
-//		WalkAnimTimeline->PlayFromStart();
-//	}
-//}
-
-//void AShooterCharacter::Handle_OnCharacterAnimInstanceThirdOrCombatAction()
-//{
-//	if (IdleAnimTimeline && IdleAnimTimeline->IsPlaying())
-//	{
-//		IdleAnimTimeline->Stop();
-//	}
-//	if (WalkAnimTimeline && WalkAnimTimeline->IsPlaying())
-//	{
-//		WalkAnimTimeline->Stop();
-//	}
-//}
-
-//void AShooterCharacter::Handle_OnCharacterAnimInstanceTurningInPlace(ETurningDirection NewTurningDirection)
-//{
-//	TurningDirection = NewTurningDirection;
-//}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceCrouchAimSlowToTransitionIdleLowAimToProneIdleAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToProneIdleAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToSprintSlowStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceIdleLowAimToTransitionIdleLowAimToProneIdleAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleLowAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleLowAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToCrouchIdleAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToIdleAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToProneIdleAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionIdleAimToProneIdleAimToProneIdleAimStarted()
-{
-	bIsTransition = false;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionIdleAimToSprintSlowToSprintSlowStarted()
-{
-	bIsTransition = false;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionIdleLowAimToProneIdleAimToProneIdleAimStarted()
-{
-	bIsTransition = false;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleAimToIdleAimStarted()
-{
-	bIsTransition = false;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleLowAimToIdleLowAimStarted()
-{
-	bIsTransition = false;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToCrouchIdleAimToIdleLowAimStarted()
-{
-	bIsTransition = false;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleAimStarted()
-{
-	bIsTransition = false;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleLowAimStarted()
-{
-	bIsTransition = false;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted()
-{
-	bIsTransition = false;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceWalkAimToTransitionIdleAimToProneIdleAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted()
-{
-	bIsTransition = true;
-}
-
-void AShooterCharacter::Handle_OnCharacterCombatCombatActionChanged(ECombatAction CombatAction)
-{
-	if (GetEquippedWeapon() != nullptr)
-	{
-		if (!CanAimInCombatAction(CombatAction))
-		{
-			UnAim();
-		}
-
-		if (CombatAction == ECombatAction::CA_Idle)
-		{
-			StartResetProceduralAnim(GetVelocity().SizeSquared2D() > 0.0f ? 4.0f : 3.0f);
-		}
-		else
-		{
-			StopProceduralAnim();
-		}
-	}
-	
-}
-
-void AShooterCharacter::Handle_OnCharacterCombatEquippedWeaponChanged(AWeapon* Weapon)
-{
-	if (HandsMesh)
-	{
-		USkinnedMeshComponent* NewLeaderPoseComponent = Weapon != nullptr ? Weapon->GetMesh() : nullptr;
-		HandsMesh->SetLeaderPoseComponent(NewLeaderPoseComponent);
-	}
-}
-
-void AShooterCharacter::Handle_OnCharacterInventoryWeaponArrayReplicated()
-{
-	if (CharacterInventory && CharacterCombat)
-	{
-		AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
-		CharacterCombat->EquipWeapon(PrimaryWeapon);
-	}
-}
-
-void AShooterCharacter::Handle_OnCharacterCombatWeaponRecoilGenerated(AWeapon* Weapon, float RecoilHorizontalKick, float RecoilVerticalKick)
-{
-	if (OnRecoilRecoveryUpdateHandle.Pin())
-	{
-		StopRecoilRecoveryUpdate();
-	}
-	else if (OnRecoilUpdateHandle.Pin())
-	{
-		OnRecoilUpdateEnd();
-	}
-
-	RecoilHorizontal = RecoilHorizontalKick;
-	RecoilVertical = RecoilVerticalKick;
-
-	RecoilHorizontalAccumulated = 0.0f;
-	RecoilVerticalAccumulated = 0.0f;
-
-	ControllerHorizontalVelocity = RecoilHorizontalKick / RecoilKickTotalTime;
-	ControllerVerticalVelocity = RecoilVerticalKick / RecoilKickTotalTime;
-
-	RecoilLastControlRotation = GetControlRotation();
-
-	StartRecoilUpdate();
-}
-
-void AShooterCharacter::Handle_OnMovementComponentSprint()
-{
-	if (LeaningDirection != ELeaningDirection::LD_None)
-	{
-		LeaningDirection = ELeaningDirection::LD_None;
-		LeaningTargetAngle = 0.0f;
-		LeaningTransitionDuration = LeaningDefaultTransitionDuration;
-	}
-}
-
-void AShooterCharacter::OnRep_LeaningDirection(ELeaningDirection OldLeaningDirection)
-{
-	CalculateLeaningTargetAngle();
-	CalculateLeaningTransitionDuration(OldLeaningDirection);
-
-	StartLeaningUpdate();
 }
 
 void AShooterCharacter::OnCharacterAimAction(const FInputActionValue& Value)
@@ -1526,65 +1292,288 @@ void AShooterCharacter::OnWeaponReloadAction(const FInputActionValue& Value)
 	}
 }
 
-void AShooterCharacter::CalculateADSCameraTargetLocation()
+float AShooterCharacter::GetProceduralAnimScaleValue() const
+{
+	return bIsAiming ? 0.25 : 1.0f;
+}
+
+float AShooterCharacter::GetControllerInputScaleValue() const
+{
+	return bIsAiming ? 0.5f : 1.0f;
+}
+
+FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const
+{
+	FName WeaponHolsterSocketName = NAME_None;
+	if (Weapon && CharacterInventory)
+	{
+		if (Weapon->IsPistol())
+		{
+			WeaponHolsterSocketName = PISTOL_HOLSTER_SOCKET_NAME;
+		}
+		else
+		{
+			const int8 WeaponIndex = CharacterInventory->FindWeapon(Weapon);
+			if (WeaponIndex == PRIMARY_WEAPON_INDEX)
+			{
+				WeaponHolsterSocketName = WEAPON_HOLSTER_SOCKET_NAME;
+			}
+			else if (WeaponIndex != INDEX_NONE)
+			{
+
+				WeaponHolsterSocketName = WEAPON_HOLSTER_N_SOCKET_NAME(WeaponIndex);
+			}
+		}
+	}
+	return WeaponHolsterSocketName;
+}
+
+//void AShooterCharacter::SetIsTransition(bool bNewIsTransition)
+//{
+//	if (GetController() && GetController()->IsLocalController())
+//	{
+//		GetController()->SetIgnoreMoveInput(bNewIsTransition);
+//	}
+//	bIsTransition = bNewIsTransition;
+//}
+
+void AShooterCharacter::Handle_OnTurningAnimTimelineUpdate(float Value)
+{
+	float DeltaReference = UKismetMathLibrary::NormalizedDeltaRotator(FRotator(0.0f, GetActorRotation().Yaw, 0.0f), FRotator(0.0f, ReferenceActorRotationYaw, 0.0f)).Yaw;
+	ReferenceActorRotationYaw += DeltaReference * Value;
+}
+
+void AShooterCharacter::Handle_OnTurningAnimTimelineFinished()
+{
+	TurningDirection = ETurningDirection::TD_None;
+}
+
+//void AShooterCharacter::Handle_OnCharacterAnimInstanceIdle()
+//{
+//	if (WalkAnimTimeline && WalkAnimTimeline->IsPlaying())
+//	{
+//		WalkAnimTimeline->Stop();
+//	}
+//	if (IdleAnimTimeline && !IdleAnimTimeline->IsPlaying())
+//	{
+//		IdleAnimTimeline->PlayFromStart();
+//	}
+//}
+
+//void AShooterCharacter::Handle_OnCharacterAnimInstanceWalk()
+//{
+//	if (IdleAnimTimeline && IdleAnimTimeline->IsPlaying())
+//	{
+//		IdleAnimTimeline->Stop();
+//	}
+//	if (WalkAnimTimeline && !WalkAnimTimeline->IsPlaying())
+//	{
+//		WalkAnimTimeline->PlayFromStart();
+//	}
+//}
+
+//void AShooterCharacter::Handle_OnCharacterAnimInstanceThirdOrCombatAction()
+//{
+//	if (IdleAnimTimeline && IdleAnimTimeline->IsPlaying())
+//	{
+//		IdleAnimTimeline->Stop();
+//	}
+//	if (WalkAnimTimeline && WalkAnimTimeline->IsPlaying())
+//	{
+//		WalkAnimTimeline->Stop();
+//	}
+//}
+
+//void AShooterCharacter::Handle_OnCharacterAnimInstanceTurningInPlace(ETurningDirection NewTurningDirection)
+//{
+//	TurningDirection = NewTurningDirection;
+//}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceCrouchAimToTransitionIdleLowAimToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceCrouchAimSlowToTransitionIdleLowAimToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceIdleAimToTransitionIdleAimToSprintSlowStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceIdleLowAimToTransitionIdleLowAimToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceProneFastToTransitionProneIdleAimToIdleLowAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceProneIdleAimToTransitionProneIdleAimToIdleLowAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToCrouchIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceSprintSlowToTransitionSprintSlowToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionIdleAimToProneIdleAimToProneIdleAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionIdleAimToSprintSlowToSprintSlowStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionIdleLowAimToProneIdleAimToProneIdleAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleAimToIdleAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionProneIdleAimToIdleLowAimToIdleLowAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToCrouchIdleAimToIdleLowAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToIdleAimToIdleLowAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted()
+{
+	bIsTransition = false;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceWalkAimToTransitionIdleAimToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterAnimInstanceWalkAimSlowToTransitionIdleAimToProneIdleAimStarted()
+{
+	bIsTransition = true;
+}
+
+void AShooterCharacter::Handle_OnCharacterCombatCombatActionChanged(ECombatAction CombatAction)
+{
+	if (GetEquippedWeapon() != nullptr)
+	{
+		if (!CanAimInCombatAction(CombatAction))
+		{
+			UnAim();
+		}
+
+		if (CombatAction == ECombatAction::CA_Idle)
+		{
+			StartResetProceduralAnim(GetVelocity().SizeSquared2D() > 0.0f ? 4.0f : 3.0f);
+		}
+		else
+		{
+			StopProceduralAnim();
+		}
+	}
+	
+}
+
+void AShooterCharacter::Handle_OnCharacterCombatEquippedWeaponChanged(AWeapon* Weapon)
 {
 	if (HandsMesh)
 	{
-		AWeapon* EquippedWeapon = GetEquippedWeapon();
-		AScope* WeaponScope = EquippedWeapon != nullptr ? EquippedWeapon->GetScope() : nullptr;
-		ASightRear* WeaponSightRear = EquippedWeapon != nullptr ? EquippedWeapon->GetSightRear() : nullptr;
-		USkeletalMeshComponent* ScopeSightMesh = WeaponScope != nullptr ? WeaponScope->GetMesh() : WeaponSightRear != nullptr ? WeaponSightRear->GetMesh() : nullptr;
-		
-		FTransform AimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME);
-		FTransform ModAimCameraTransform = ScopeSightMesh != nullptr ? ScopeSightMesh->GetSocketTransform(MOD_AIM_CAMERA_SOCKET_NAME) : FTransform::Identity;
-
-		ADSCameraTargetLocation = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, ScopeSightMesh != nullptr ? ModAimCameraTransform : AimCameraTransform).GetLocation();
-
-		if (ScopeSightMesh != nullptr)
-		{
-			FVector DefaultADSCameraTargetLocation = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, AimCameraTransform).GetLocation();
-			ADSCameraTargetLocation.Y = DefaultADSCameraTargetLocation.Y;
-		}
-
-		AimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME);
-		FVector AimCameraLocationInWeaponRoot = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_ROOT_SOCKET_NAME, AimCameraTransform).GetLocation();
-
-		AimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME);
-		FVector AimCameraLocationInWeapon = FShooterUtility::TransformToBoneSpace(HandsMesh, WEAPON_SOCKET_NAME, AimCameraTransform).GetLocation();
-
-		ADSCameraTargetLocation += AimCameraLocationInWeapon - AimCameraLocationInWeaponRoot;
+		USkinnedMeshComponent* NewLeaderPoseComponent = Weapon != nullptr ? Weapon->GetMesh() : nullptr;
+		HandsMesh->SetLeaderPoseComponent(NewLeaderPoseComponent);
 	}
 }
 
-void AShooterCharacter::CalculateLeaningTargetAngle()
+void AShooterCharacter::Handle_OnCharacterInventoryWeaponArrayReplicated()
 {
-	switch (LeaningDirection)
+	if (CharacterInventory && CharacterCombat)
 	{
-	case ELeaningDirection::LD_None:
+		AWeapon* PrimaryWeapon = CharacterInventory->GetWeaponAtIndex(PRIMARY_WEAPON_INDEX);
+		CharacterCombat->EquipWeapon(PrimaryWeapon);
+	}
+}
+
+void AShooterCharacter::Handle_OnCharacterCombatWeaponRecoilGenerated(AWeapon* Weapon, float RecoilHorizontalKick, float RecoilVerticalKick)
+{
+	if (OnRecoilRecoveryUpdateHandle.Pin())
+	{
+		StopRecoilRecoveryUpdate();
+	}
+	else if (OnRecoilUpdateHandle.Pin())
+	{
+		OnRecoilUpdateEnd();
+	}
+
+	RecoilHorizontal = RecoilHorizontalKick;
+	RecoilVertical = RecoilVerticalKick;
+
+	RecoilHorizontalAccumulated = 0.0f;
+	RecoilVerticalAccumulated = 0.0f;
+
+	ControllerHorizontalVelocity = RecoilHorizontalKick / RecoilKickTotalTime;
+	ControllerVerticalVelocity = RecoilVerticalKick / RecoilKickTotalTime;
+
+	RecoilLastControlRotation = GetControlRotation();
+
+	StartRecoilUpdate();
+}
+
+void AShooterCharacter::Handle_OnMovementComponentSprint()
+{
+	if (LeaningDirection != ELeaningDirection::LD_None)
+	{
+		LeaningDirection = ELeaningDirection::LD_None;
 		LeaningTargetAngle = 0.0f;
-		break;
-	case ELeaningDirection::LD_Left:
-		LeaningTargetAngle = -LeaningMaxAngle;
-		break;
-	case ELeaningDirection::LD_Right:
-		LeaningTargetAngle = LeaningMaxAngle;
-		break;
-	case ELeaningDirection::Default_MAX:
-		break;
-	default:
-		break;
-	}
-}
-
-void AShooterCharacter::CalculateLeaningTransitionDuration(ELeaningDirection OldLeaningDirection)
-{
-	if ((LeaningDirection == ELeaningDirection::LD_Left && OldLeaningDirection == ELeaningDirection::LD_Right) ||
-		(LeaningDirection == ELeaningDirection::LD_Right && OldLeaningDirection == ELeaningDirection::LD_Left))
-	{
-		LeaningTransitionDuration = LeaningDefaultTransitionDuration * 2.0f;
-	}
-	else
-	{
-		LeaningTransitionDuration = LeaningDefaultTransitionDuration;
+		LeaningTransitionDuration = DefaultLeaningTransitionDuration;
 	}
 }
