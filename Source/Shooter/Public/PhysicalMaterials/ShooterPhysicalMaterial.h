@@ -7,6 +7,8 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "ShooterPhysicalMaterial.generated.h"
 
+class UNiagaraSystem;
+
 UCLASS()
 class SHOOTER_API UShooterPhysicalMaterial : public UPhysicalMaterial, public IImpactable
 {
@@ -21,4 +23,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<USoundBase> BulletImpactSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UNiagaraSystem> BulletImpactSystem;
 };

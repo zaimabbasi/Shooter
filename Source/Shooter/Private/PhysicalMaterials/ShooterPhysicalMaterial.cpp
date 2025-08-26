@@ -4,6 +4,7 @@
 #include "PhysicalMaterials/ShooterPhysicalMaterial.h"
 #include "Components/DecalComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
 
 void UShooterPhysicalMaterial::HandleBulletImpact_Implementation(const FHitResult& HitResult)
 {
@@ -14,4 +15,6 @@ void UShooterPhysicalMaterial::HandleBulletImpact_Implementation(const FHitResul
 	{
 		DecalComponent->SetFadeScreenSize(0.0f);
 	}
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(HitResult.GetComponent(), BulletImpactSystem.LoadSynchronous(), HitResult.Location, HitResult.Normal.Rotation());
 }
