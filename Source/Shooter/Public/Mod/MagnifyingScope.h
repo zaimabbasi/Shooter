@@ -15,7 +15,14 @@ class SHOOTER_API AMagnifyingScope : public AScope
 	
 public:
 	AMagnifyingScope();
+	virtual void PostInitializeComponents() override;
+
+public:
 	virtual FName GetDefaultAttachParentSocketName() const override;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", UIMin = "1", UIMax = "100", ClampMin = "1", ClampMax = "100", Units = "Times"))
+	float Magnification;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
