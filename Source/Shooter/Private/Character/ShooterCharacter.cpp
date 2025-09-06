@@ -600,7 +600,11 @@ void AShooterCharacter::CalculateADSCameraTargetLocation()
 		if (ScopeSightMesh != nullptr)
 		{
 			FVector DefaultADSCameraTargetLocation = FShooterUtility::TransformToBoneSpace(HandsMesh, CAMERA_ANIMATED_SOCKET_NAME, AimCameraTransform).GetLocation();
-			ADSCameraTargetLocation.Y = DefaultADSCameraTargetLocation.Y;
+
+			if (WeaponScope == nullptr)
+			{
+				ADSCameraTargetLocation.Y = DefaultADSCameraTargetLocation.Y;
+			}
 		}
 
 		AimCameraTransform = HandsMesh->GetSocketTransform(AIM_CAMERA_SOCKET_NAME);
