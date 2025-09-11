@@ -304,6 +304,7 @@ void AShooterCharacter::BeginPlay()
 		}
 	}
 
+	ReferenceActorRotationYaw = GetActorRotation().Yaw;
 }
 
 void AShooterCharacter::Init()
