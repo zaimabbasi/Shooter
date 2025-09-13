@@ -133,6 +133,7 @@ private:
 	void CalculateLPalmTransform();
 	void CalculateThirdActionTransforms();
 	void CalculateWeaponRootAnimTransform();
+	void CalculateWeaponTransform();
 	void CalculateTransforms();
 	//float CalculateVelocityYawOffsetAlpha(float VelocityYawOffset);
 
@@ -169,6 +170,7 @@ protected:
 	TObjectPtr<AWeapon> Weapon;
 	TObjectPtr<AShooterCharacter> ShooterCharacter;
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
+	FName HolsterSocketName;
 	FRotator ControlRotation;
 	FRotator ControlRotationLast;
 	bool bIsCharacterThirdActionLast;
@@ -203,16 +205,16 @@ private:
 	TObjectPtr<USkeletalMeshComponent> ForegripHandguardMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FPoseSnapshot PoseSnapshot;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	ECombatAction CombatAction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	EWeaponFiremode Firemode;
 
-	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	bool bIsHolster;*/
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FPoseSnapshot PoseSnapshot;
+	bool bIsEquipped;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsArmed;
@@ -267,6 +269,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform WeaponRootAnimTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FTransform WeaponTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bHasCharacterVelocity;

@@ -15,4 +15,7 @@ public:
 	APistol();
 	virtual bool IsPistol() const override { return true; }
 
+protected:
+	virtual void OnInventoryIndexChanged() override;
+
 };

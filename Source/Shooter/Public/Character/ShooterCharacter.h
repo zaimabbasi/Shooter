@@ -343,8 +343,6 @@ protected:
 	float GetProceduralAnimScaleValue() const;
 	float GetControllerInputScaleValue() const;
 
-	FName GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const;
-
 	/*UFUNCTION()
 	virtual void Handle_OnCharacterAnimInstanceIdle();
 

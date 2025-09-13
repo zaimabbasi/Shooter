@@ -33,6 +33,7 @@
 #include <random>
 
 AWeapon::AWeapon() :
+	InventoryIndex(INDEX_NONE),
 	FiremodeIndex(0)
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -113,6 +114,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, FiremodeIndex);
+	DOREPLIFETIME(AWeapon, InventoryIndex);
 
 }
 
@@ -257,6 +259,26 @@ void AWeapon::OnFireEnd()
 	{
 		Multicast_ProxyOnFireEnd();
 	}
+}
+
+void AWeapon::SetInventoryIndex(int8 NewInventoryIndex)
+{
+	if (InventoryIndex != NewInventoryIndex)
+	{
+		InventoryIndex = NewInventoryIndex;
+
+		OnInventoryIndexChanged();
+	}
+}
+
+void AWeapon::OnInventoryIndexChanged()
+{
+	HolsterSocketName = InventoryIndex == INDEX_NONE ? FName(NAME_None) : InventoryIndex == 0 ? WEAPON_HOLSTER_SOCKET_NAME : WEAPON_HOLSTER_N_SOCKET_NAME(InventoryIndex);
+}
+
+void AWeapon::OnRep_InventoryIndex()
+{
+	OnInventoryIndexChanged();
 }
 
 FTransform AWeapon::GetFireportSocketTransform() const

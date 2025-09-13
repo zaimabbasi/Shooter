@@ -39,23 +39,30 @@ void UCharacterInventoryComponent::Init(const FInventoryParams& InventoryParams)
 {
 	if (UWorld* World = GetWorld())
 	{
-		AActor* OwningActor = GetOwner();
 		if (AWeapon* const PrimaryWeapon = World->SpawnActor<AWeapon>(InventoryParams.PrimaryWeaponClass))
 		{
-			PrimaryWeapon->SetOwner(OwningActor);
-			PrimaryWeapon->Init();
-			WeaponArray.Add(PrimaryWeapon);
+			AddWeapon(PrimaryWeapon);
 		}
 		if (AWeapon* const SecondaryWeapon = World->SpawnActor<AWeapon>(InventoryParams.SecondaryWeaponClass))
 		{
-			SecondaryWeapon->SetOwner(OwningActor);
-			SecondaryWeapon->Init();
-			WeaponArray.Add(SecondaryWeapon);
+			AddWeapon(SecondaryWeapon);
 		}
 	}
 	WeaponAmmoArray.Add(InventoryParams.PrimaryWeaponMaxAmmo);
 	WeaponAmmoArray.Add(InventoryParams.SecondaryWeaponMaxAmmo);
 
+}
+
+void UCharacterInventoryComponent::AddWeapon(AWeapon* Weapon)
+{
+	if (Weapon)
+	{
+		Weapon->SetOwner(GetOwner());
+		Weapon->Init();
+
+		int8 Index = WeaponArray.Add(Weapon);
+		Weapon->SetInventoryIndex(Index);
+	}
 }
 
 int8 UCharacterInventoryComponent::FindWeapon(AWeapon* const& Weapon) const

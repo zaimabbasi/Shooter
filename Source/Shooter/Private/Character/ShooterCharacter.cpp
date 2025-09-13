@@ -38,7 +38,7 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 
 	HandsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandsMesh"));
 	HandsMesh->SetupAttachment(GetMesh());
-	//HandsMesh->bOnlyOwnerSee = true;
+	HandsMesh->bOnlyOwnerSee = true;
 	HandsMesh->CastShadow = false;
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -1316,32 +1316,6 @@ float AShooterCharacter::GetProceduralAnimScaleValue() const
 float AShooterCharacter::GetControllerInputScaleValue() const
 {
 	return bIsAiming ? 0.5f : 1.0f;
-}
-
-FName AShooterCharacter::GetCharacterWeaponHolsterSocketName(AWeapon* Weapon) const
-{
-	FName WeaponHolsterSocketName = NAME_None;
-	if (Weapon && CharacterInventory)
-	{
-		if (Weapon->IsPistol())
-		{
-			WeaponHolsterSocketName = PISTOL_HOLSTER_SOCKET_NAME;
-		}
-		else
-		{
-			const int8 WeaponIndex = CharacterInventory->FindWeapon(Weapon);
-			if (WeaponIndex == PRIMARY_WEAPON_INDEX)
-			{
-				WeaponHolsterSocketName = WEAPON_HOLSTER_SOCKET_NAME;
-			}
-			else if (WeaponIndex != INDEX_NONE)
-			{
-
-				WeaponHolsterSocketName = WEAPON_HOLSTER_N_SOCKET_NAME(WeaponIndex);
-			}
-		}
-	}
-	return WeaponHolsterSocketName;
 }
 
 //void AShooterCharacter::SetIsTransition(bool bNewIsTransition)

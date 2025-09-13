@@ -48,9 +48,9 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
+	HolsterSocketName = Weapon->GetHolsterSocketName();
 	Firemode = Weapon->GetFiremode();
 	bIsArmed = Weapon->GetIsArmed();
-	//bIsHolster = Weapon->GetIsHolster();
 	bIsPistol = Weapon->IsPistol();
 	bIsOneHanded = Weapon->GetIsOneHanded();
 	bIsBoltCatched = Weapon->GetIsBoltCatched();
@@ -70,9 +70,10 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsCharacterThirdActionLast = bIsCharacterThirdAction;
 	bIsCharacterThirdAction = bIsCharacterTransition || bIsCharacterSprinting || (bIsCharacterProned && bHasCharacterVelocity);
 
-	AWeapon* CharacterEquippedWeapon = ShooterCharacter != nullptr ? ShooterCharacter->GetEquippedWeapon() : nullptr;
+	bIsEquipped = ShooterCharacter && ShooterCharacter->GetEquippedWeapon() == Weapon;
+
 	ECombatAction CharacterCombatAction = ShooterCharacter != nullptr ? ShooterCharacter->GetCombatAction() : ECombatAction::CA_None;
-	CombatAction = Weapon == CharacterEquippedWeapon ? CharacterCombatAction : ECombatAction::CA_Out;
+	CombatAction = bIsEquipped ? CharacterCombatAction : ECombatAction::CA_Out;
 
 	AO_Pitch = ShooterCharacter != nullptr ? ShooterCharacter->GetAO_Pitch() : 0.0f;
 	AO_Yaw = ShooterCharacter != nullptr ? ShooterCharacter->GetAO_Yaw() : 0.0f;
@@ -527,6 +528,19 @@ void UWeaponAnimInstance::CalculateWeaponRootAnimTransform()
 	WeaponRootAnimTransform = FTransform(FRotator(ProceduralAnimRollRotation + SwayRollRotation, 0.0f, -RecoilKickPitchRotation), FVector(ProceduralAnimHorizontalMovement + SwayHorizontalMovement, -RecoilKickMovement, ProceduralAnimVerticalMovement + SwayVerticalMovement), FVector::OneVector);
 }
 
+void UWeaponAnimInstance::CalculateWeaponTransform()
+{
+	if (!bIsEquipped && CharacterMesh && WeaponMesh)
+	{
+		WeaponTransform = CharacterMesh->GetSocketTransform(HolsterSocketName);
+		WeaponTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_ROOT_ANIM_SOCKET_NAME, WeaponTransform);
+	}
+	else
+	{
+		WeaponTransform = FTransform::Identity;
+	}
+}
+
 void UWeaponAnimInstance::CalculateTransforms()
 {
 	CalculateRootBoneLocation();
@@ -544,6 +558,8 @@ void UWeaponAnimInstance::CalculateTransforms()
 	{
 		CalculateWeaponRootAnimTransform();
 	}
+
+	CalculateWeaponTransform();
 }
 
 //float UWeaponAnimInstance::CalculateVelocityYawOffsetAlpha(float VelocityYawOffset)

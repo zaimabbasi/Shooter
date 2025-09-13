@@ -77,6 +77,20 @@ public:
 	
 	virtual void OnFireEnd();
 
+public:
+	void SetInventoryIndex(int8 NewInventoryIndex);
+
+protected:
+	virtual void OnInventoryIndexChanged();
+
+	UFUNCTION()
+	virtual void OnRep_InventoryIndex();
+
+	UPROPERTY(ReplicatedUsing = OnRep_InventoryIndex)
+	int8 InventoryIndex;
+
+	FName HolsterSocketName;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -272,5 +286,6 @@ public:
 	FORCEINLINE bool GetIsBoltCatched() const { return bIsBoltCatched; }
 	FORCEINLINE float GetRecoilKickMaxDistance() const { return RecoilKickMaxDistance; }
 	FORCEINLINE float GetRecoilKickMaxPitchRotation() const { return RecoilKickMaxPitchRotation; }
+	FORCEINLINE FName GetHolsterSocketName() const { return HolsterSocketName; }
 
 };
