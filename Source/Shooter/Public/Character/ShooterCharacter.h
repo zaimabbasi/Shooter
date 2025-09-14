@@ -319,6 +319,13 @@ protected:
 	FOnTimelineEventStatic OnTurningAnimTimelineFinished;
 
 protected:
+	UPROPERTY(EditAnywhere)
+	FSkeletalMeshMergeParams MeshMergeParams;
+
+	UPROPERTY(EditAnywhere)
+	FSkeletonMergeParams SkeletonMergeParams;
+
+protected:
 	virtual void OnCharacterAimAction(const FInputActionValue& Value);
 	virtual void OnCharacterAlterAction(const FInputActionValue& Value);
 	virtual void OnCharacterCrouchAction(const FInputActionValue& Value);
@@ -467,9 +474,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UCharacterDataAsset> CharacterDataAsset;
-
-	UPROPERTY(EditAnywhere)
-	FSkeletalMeshMergeParams CharacterMeshMergeParams;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UInputMappingContext> CombatMappingContext;

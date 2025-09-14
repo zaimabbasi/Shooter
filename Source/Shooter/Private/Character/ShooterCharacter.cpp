@@ -135,9 +135,16 @@ void AShooterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
+	for (USkeletalMesh* MeshToMerge : MeshMergeParams.MeshesToMerge)
+	{
+		SkeletonMergeParams.SkeletonsToMerge.Add(MeshToMerge->GetSkeleton());
+	}
+	MeshMergeParams.Skeleton = USkeletalMergingLibrary::MergeSkeletons(SkeletonMergeParams);
+
 	if (GetMesh())
 	{
-		GetMesh()->SetSkeletalMeshAsset(USkeletalMergingLibrary::MergeMeshes(CharacterMeshMergeParams));
+		GetMesh()->SetSkeletalMeshAsset(USkeletalMergingLibrary::MergeMeshes(MeshMergeParams));
+
 		if (UCharacterAnimInstance* CharacterAnimInstance = Cast<UCharacterAnimInstance>(GetMesh()->GetAnimInstance()))
 		{
 			/*CharacterAnimInstance->OnCharacterAnimInstanceIdle.AddDynamic(this, &AShooterCharacter::Handle_OnCharacterAnimInstanceIdle);
@@ -171,6 +178,7 @@ void AShooterCharacter::PostInitializeComponents()
 	}
 	if (LegsMesh)
 	{
+		LegsMesh->SetSkeletalMeshAsset(MeshMergeParams.MeshesToMerge.Last());
 		LegsMesh->SetLeaderPoseComponent(GetMesh());
 	}
 	if (FirstPersonCamera)
