@@ -559,7 +559,7 @@ void UWeaponAnimInstance::CalculateTransforms()
 		CalculateWeaponRootAnimTransform();
 	}
 
-	CalculateWeaponTransform();
+	//CalculateWeaponTransform();
 }
 
 //float UWeaponAnimInstance::CalculateVelocityYawOffsetAlpha(float VelocityYawOffset)
