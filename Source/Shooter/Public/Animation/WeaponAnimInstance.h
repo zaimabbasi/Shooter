@@ -126,14 +126,18 @@ protected:
 
 private:
 	bool ShouldCopyCharacterIKSLPalm() const;
-	void CalculateLHandMarkerAlpha();
 	void CalculateSway(float DeltaSeconds);
 	void CalculateRecoil(float DeltaSeconds);
+	void CalculateWeaponLHandMarkerAlpha();
 	void CalculateRootBoneLocation();
-	void CalculateLPalmTransform();
-	void CalculateThirdActionTransforms();
 	void CalculateWeaponRootAnimTransform();
 	void CalculateWeaponTransform();
+	void CalculateBendGoalLeftTransform();
+	void CalculateBendGoalRightTransform();
+	void CalculateWeaponLCollarboneMarkerTransform();
+	void CalculateWeaponRCollarboneMarkerTransform();
+	void CalculateWeaponLHandMarkerTransform();
+	void CalculateWeaponRHandMarkerTransform();
 	void CalculateTransforms();
 	//float CalculateVelocityYawOffsetAlpha(float VelocityYawOffset);
 
@@ -250,28 +254,31 @@ private:
 	FVector RootBoneLocation;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FTransform WeaponRootAnimTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FTransform WeaponTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform BendGoalLeftTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform BendGoalRightTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform LCollarboneTransform;
+	FTransform WeaponLCollarboneMarkerTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform RCollarboneTransform;
+	FTransform WeaponRCollarboneMarkerTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform LPalmTransform;
+	FTransform WeaponLHandMarkerTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform RPalmTransform;
+	FTransform WeaponRHandMarkerTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform WeaponRootAnimTransform;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform WeaponTransform;
+	bool bIsCharacterTransition;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bHasCharacterVelocity;

@@ -34,6 +34,17 @@ protected:
 	UFUNCTION()
 	void AnimNotify_OutToIdle() const;
 
+private:
+	void CalculateRootBoneLocation();
+	void CalculateWeaponRootAnimTransform();
+	void CalculateBendGoalLeftTransform();
+	void CalculateBendGoalRightTransform();
+	void CalculateWeaponLCollarboneMarkerTransform();
+	void CalculateWeaponRCollarboneMarkerTransform();
+	void CalculateWeaponLHandMarkerTransform();
+	void CalculateWeaponRHandMarkerTransform();
+	void CalculateTransforms();
+
 public:
 	FOnHandsAnimInstanceAnimNotifySignature OnHandsAnimInstanceIdle;
 	FOnHandsAnimInstanceAnimNotifySignature OnHandsAnimInstanceIdleToOut;
@@ -58,6 +69,9 @@ private:
 	bool bIsSprinting;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	bool bIsTransition;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bHasVelocity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -73,25 +87,10 @@ private:
 	float LeaningAngle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float WeaponLHandMarkerAlpha;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float WeaponRHandMarkerAlpha;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	ECombatAction CombatAction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FVector RootBoneLocation;
-
-	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform RibcageTransform;*/
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform LCollarboneTransform;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform RCollarboneTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FTransform WeaponRootAnimTransform;
@@ -103,10 +102,16 @@ private:
 	FTransform BendGoalRightTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform LPalmTransform;
+	FTransform WeaponLCollarboneMarkerTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform RPalmTransform;
+	FTransform WeaponRCollarboneMarkerTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FTransform WeaponLHandMarkerTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	FTransform WeaponRHandMarkerTransform;
 
 public:
 	FORCEINLINE ECombatAction GetCombatAction() const { return CombatAction; }

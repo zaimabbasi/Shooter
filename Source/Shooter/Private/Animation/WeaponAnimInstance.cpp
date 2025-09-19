@@ -64,11 +64,12 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	CharacterMesh = ShooterCharacter != nullptr ? ShooterCharacter->GetMesh() : nullptr;
 	bIsCharacterProned = ShooterCharacter && ShooterCharacter->bIsProned;
 	bIsCharacterSprinting = ShooterCharacter && ShooterCharacter->bIsSprinting;
+	bIsCharacterTransition = ShooterCharacter && ShooterCharacter->GetIsTransition();
 	bHasCharacterVelocity = ShooterCharacter && ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
 
-	bool bIsCharacterTransition = ShooterCharacter && ShooterCharacter->GetIsTransition();
 	bIsCharacterThirdActionLast = bIsCharacterThirdAction;
-	bIsCharacterThirdAction = bIsCharacterTransition || bIsCharacterSprinting || (bIsCharacterProned && bHasCharacterVelocity);
+	//bIsCharacterThirdAction = bIsCharacterTransition || bIsCharacterSprinting || (bIsCharacterProned && bHasCharacterVelocity);
+	bIsCharacterThirdAction = bIsCharacterSprinting || (bIsCharacterProned && bHasCharacterVelocity);
 
 	bIsEquipped = ShooterCharacter && ShooterCharacter->GetEquippedWeapon() == Weapon;
 
@@ -85,11 +86,11 @@ void UWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	RecoilRecoveryTotalTime = ShooterCharacter != nullptr ? ShooterCharacter->GetRecoilRecoveryTotalTime() / 2.0f : 1.0f;
 
-	CalculateLHandMarkerAlpha();
-
 	CalculateSway(DeltaSeconds);
 
 	CalculateRecoil(DeltaSeconds);
+
+	CalculateWeaponLHandMarkerAlpha();
 
 	CalculateTransforms();
 
@@ -385,19 +386,6 @@ bool UWeaponAnimInstance::ShouldCopyCharacterIKSLPalm() const
 	return (bIsCharacterProned && bHasCharacterVelocity) || (bIsCharacterSprinting && (bIsPistol || bIsOneHanded));
 }
 
-void UWeaponAnimInstance::CalculateLHandMarkerAlpha()
-{
-	if (bIsCharacterThirdAction && !bIsCharacterThirdActionLast)
-	{
-		WeaponLHandMarkerAlphaLast = WeaponLHandMarkerAlpha;
-		WeaponLHandMarkerAlpha = 1.0f;
-	}
-	else if (!bIsCharacterThirdAction && bIsCharacterThirdActionLast)
-	{
-		WeaponLHandMarkerAlpha = WeaponLHandMarkerAlphaLast;
-	}
-}
-
 void UWeaponAnimInstance::CalculateSway(float DeltaSeconds)
 {
 	FRotator DeltaControlRotation = UKismetMathLibrary::NormalizedDeltaRotator(ControlRotation, ControlRotationLast);
@@ -467,6 +455,19 @@ void UWeaponAnimInstance::CalculateRecoil(float DeltaSeconds)
 	}
 }
 
+void UWeaponAnimInstance::CalculateWeaponLHandMarkerAlpha()
+{
+	if (bIsCharacterThirdAction && !bIsCharacterThirdActionLast)
+	{
+		WeaponLHandMarkerAlphaLast = WeaponLHandMarkerAlpha;
+		WeaponLHandMarkerAlpha = 1.0f;
+	}
+	else if (!bIsCharacterThirdAction && bIsCharacterThirdActionLast)
+	{
+		WeaponLHandMarkerAlpha = WeaponLHandMarkerAlphaLast;
+	}
+}
+
 void UWeaponAnimInstance::CalculateRootBoneLocation()
 {
 	if (CharacterMesh)
@@ -480,52 +481,21 @@ void UWeaponAnimInstance::CalculateRootBoneLocation()
 	}
 }
 
-void UWeaponAnimInstance::CalculateLPalmTransform()
-{
-	if (WeaponMesh && ForegripHandguardMesh)
-	{
-		LPalmTransform = ForegripHandguardMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		LPalmTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, LPalmTransform);
-	}
-}
-
-void UWeaponAnimInstance::CalculateThirdActionTransforms()
-{
-	if (CharacterMesh && WeaponMesh)
-	{
-		/*LCollarboneTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		LCollarboneTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WeaponMesh->GetParentBone(BASE_HUMAN_L_COLLARBONE_SOCKET_NAME), LCollarboneTransform);*/
-
-		/*RCollarboneTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RCollarboneTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WeaponMesh->GetParentBone(BASE_HUMAN_R_COLLARBONE_SOCKET_NAME), RCollarboneTransform);*/
-
-		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		WeaponRootAnimTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_ROOT_SOCKET_NAME, WeaponRootAnimTransform);
-
-		BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		BendGoalLeftTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, BendGoalLeftTransform);
-
-		BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		BendGoalRightTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, BendGoalRightTransform);
-
-		if (ShouldCopyCharacterIKSLPalm())
-		{
-			LPalmTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-			LPalmTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, LPalmTransform);
-		}
-
-		/*RPalmTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RPalmTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, RPalmTransform);*/
-	}
-}
-
 void UWeaponAnimInstance::CalculateWeaponRootAnimTransform()
 {
-	float ProceduralAnimHorizontalMovement = ShooterCharacter != nullptr ? ShooterCharacter->GetProceduralAnimHorizontalMovement() : 0.0f;
-	float ProceduralAnimVerticalMovement = ShooterCharacter != nullptr ? ShooterCharacter->GetProceduralAnimVerticalMovement() : 0.0f;
-	float ProceduralAnimRollRotation = ShooterCharacter != nullptr ? ShooterCharacter->GetProceduralAnimRollRotation() : 0.0f;
+	if (bIsCharacterThirdAction && CharacterMesh && WeaponMesh)
+	{
+		WeaponRootAnimTransform = CharacterMesh->GetSocketTransform(WEAPON_ROOT_3RD_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		WeaponRootAnimTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_ROOT_SOCKET_NAME, WeaponRootAnimTransform);
+	}
+	else
+	{
+		float ProceduralAnimHorizontalMovement = ShooterCharacter != nullptr ? ShooterCharacter->GetProceduralAnimHorizontalMovement() : 0.0f;
+		float ProceduralAnimVerticalMovement = ShooterCharacter != nullptr ? ShooterCharacter->GetProceduralAnimVerticalMovement() : 0.0f;
+		float ProceduralAnimRollRotation = ShooterCharacter != nullptr ? ShooterCharacter->GetProceduralAnimRollRotation() : 0.0f;
 
-	WeaponRootAnimTransform = FTransform(FRotator(ProceduralAnimRollRotation + SwayRollRotation, 0.0f, -RecoilKickPitchRotation), FVector(ProceduralAnimHorizontalMovement + SwayHorizontalMovement, -RecoilKickMovement, ProceduralAnimVerticalMovement + SwayVerticalMovement), FVector::OneVector);
+		WeaponRootAnimTransform = FTransform(FRotator(ProceduralAnimRollRotation + SwayRollRotation, 0.0f, -RecoilKickPitchRotation), FVector(ProceduralAnimHorizontalMovement + SwayHorizontalMovement, -RecoilKickMovement, ProceduralAnimVerticalMovement + SwayVerticalMovement), FVector::OneVector);
+	}
 }
 
 void UWeaponAnimInstance::CalculateWeaponTransform()
@@ -541,25 +511,81 @@ void UWeaponAnimInstance::CalculateWeaponTransform()
 	}
 }
 
+void UWeaponAnimInstance::CalculateBendGoalLeftTransform()
+{
+	if (bIsCharacterThirdAction && CharacterMesh && WeaponMesh)
+	{
+		BendGoalLeftTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		BendGoalLeftTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, BendGoalLeftTransform);
+	}
+}
+
+void UWeaponAnimInstance::CalculateBendGoalRightTransform()
+{
+	if (bIsCharacterThirdAction && CharacterMesh && WeaponMesh)
+	{
+		BendGoalRightTransform = CharacterMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		BendGoalRightTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, BendGoalRightTransform);
+	}
+}
+
+void UWeaponAnimInstance::CalculateWeaponLCollarboneMarkerTransform()
+{
+	if (bIsCharacterThirdAction && CharacterMesh && WeaponMesh)
+	{
+		WeaponLCollarboneMarkerTransform = CharacterMesh->GetSocketTransform(L_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		WeaponLCollarboneMarkerTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, WeaponLCollarboneMarkerTransform);
+	}
+}
+
+void UWeaponAnimInstance::CalculateWeaponRCollarboneMarkerTransform()
+{
+	if (bIsCharacterThirdAction && CharacterMesh && WeaponMesh)
+	{
+		WeaponRCollarboneMarkerTransform = CharacterMesh->GetSocketTransform(R_COLLARBONE_ANIM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		WeaponRCollarboneMarkerTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, WeaponRCollarboneMarkerTransform);
+	}
+}
+
+void UWeaponAnimInstance::CalculateWeaponLHandMarkerTransform()
+{
+	if (ShouldCopyCharacterIKSLPalm() && CharacterMesh && WeaponMesh)
+	{
+		WeaponLHandMarkerTransform = CharacterMesh->GetSocketTransform(IK_S_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		WeaponLHandMarkerTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, WeaponLHandMarkerTransform);
+	}
+	if (!ShouldCopyCharacterIKSLPalm() && WeaponMesh && ForegripHandguardMesh)
+	{
+		WeaponLHandMarkerTransform = ForegripHandguardMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		WeaponLHandMarkerTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, WeaponLHandMarkerTransform);
+	}
+}
+
+void UWeaponAnimInstance::CalculateWeaponRHandMarkerTransform()
+{
+	if (bIsCharacterThirdAction && CharacterMesh && WeaponMesh)
+	{
+		WeaponRHandMarkerTransform = CharacterMesh->GetSocketTransform(IK_S_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		WeaponRHandMarkerTransform = FShooterUtility::TransformToBoneSpace(WeaponMesh, WEAPON_SOCKET_NAME, WeaponRHandMarkerTransform);
+	}
+}
+
 void UWeaponAnimInstance::CalculateTransforms()
 {
 	CalculateRootBoneLocation();
 
-	if (!ShouldCopyCharacterIKSLPalm())
-	{
-		CalculateLPalmTransform();
-	}
-
-	if (bIsCharacterThirdAction)
-	{
-		CalculateThirdActionTransforms();
-	}
-	else
-	{
-		CalculateWeaponRootAnimTransform();
-	}
+	CalculateWeaponRootAnimTransform();
 
 	//CalculateWeaponTransform();
+
+	CalculateBendGoalLeftTransform();
+	CalculateBendGoalRightTransform();
+
+	CalculateWeaponLCollarboneMarkerTransform();
+	CalculateWeaponRCollarboneMarkerTransform();
+
+	CalculateWeaponLHandMarkerTransform();
+	CalculateWeaponRHandMarkerTransform();
 }
 
 //float UWeaponAnimInstance::CalculateVelocityYawOffsetAlpha(float VelocityYawOffset)

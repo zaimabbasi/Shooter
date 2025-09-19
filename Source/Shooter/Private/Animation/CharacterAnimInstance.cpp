@@ -18,6 +18,8 @@ void UCharacterAnimInstance::NativeInitializeAnimation()
 	ShooterCharacter = Cast<AShooterCharacter>(TryGetPawnOwner());
 	CharacterMesh = GetOwningComponent();
 
+	bIsThirdAction = true;
+
 }
 
 void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -46,43 +48,20 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	CombatAction = ShooterCharacter->GetCombatAction();
 	LeaningDirection = ShooterCharacter->GetLeaningDirection();
 	TurningDirection = ShooterCharacter->GetTurningDirection();
+	bIsTransition = ShooterCharacter->GetIsTransition();
 
 	bIsAccelerating = ShooterCharacter->GetCharacterMovement() && ShooterCharacter->GetCharacterMovement()->GetCurrentAcceleration().SizeSquared2D() > 0.0f;
 	bHasVelocity = ShooterCharacter->GetVelocity().SizeSquared2D() > 0.0f;
 
-	bool bIsTransition = ShooterCharacter->GetIsTransition();
-	bIsThirdAction = bIsTransition || bIsSprinting || (bIsProned && bHasVelocity);
+	//bIsThirdAction = bIsTransition || bIsSprinting || (bIsProned && bHasVelocity);
+	bIsThirdAction = bIsSprinting || (bIsProned && bHasVelocity);
 
 	AWeapon* EquippedWeapon = ShooterCharacter->GetEquippedWeapon();
 	bIsWeaponEquipped = EquippedWeapon != nullptr;
 	bIsEquippedWeaponPistol = EquippedWeapon && EquippedWeapon->IsPistol();
 	bIsEquippedWeaponOneHanded = EquippedWeapon && EquippedWeapon->GetIsOneHanded();
 
-	// Old
-	/*if (HandsMesh && !bIsThirdAction)
-	{
-		BendGoalLeftTransform = HandsMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		BendGoalRightTransform = HandsMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-
-		LPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-	}*/
-	// New
-	if (CharacterMesh && HandsMesh && !bIsThirdAction)
-	{
-		BendGoalLeftTransform = HandsMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		BendGoalLeftTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, BASE_HUMAN_SPINE3_SOCKET_NAME, BendGoalLeftTransform);
-
-		BendGoalRightTransform = HandsMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		BendGoalRightTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, BASE_HUMAN_SPINE3_SOCKET_NAME, BendGoalRightTransform);
-
-		LPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		LPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, BASE_HUMAN_SPINE3_SOCKET_NAME, LPalmTransform);
-
-		RPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
-		RPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, BASE_HUMAN_SPINE3_SOCKET_NAME, RPalmTransform);
-	}
-
+	CalculateTransforms();
 }
 
 void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
@@ -209,4 +188,49 @@ void UCharacterAnimInstance::AnimNotify_TransitionSprintSlowToIdleAimToIdleLowAi
 void UCharacterAnimInstance::AnimNotify_TransitionSprintSlowToProneIdleAimToProneIdleAimStarted() const
 {
 	OnCharacterAnimInstanceTransitionSprintSlowToProneIdleAimToProneIdleAimStarted.Broadcast();
+}
+
+void UCharacterAnimInstance::CalculateBendGoalLeftTransform()
+{
+	if (!bIsThirdAction && CharacterMesh && HandsMesh)
+	{
+		BendGoalLeftTransform = HandsMesh->GetSocketTransform(BEND_GOAL_LEFT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		BendGoalLeftTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, BASE_HUMAN_SPINE3_SOCKET_NAME, BendGoalLeftTransform);
+	}
+}
+
+void UCharacterAnimInstance::CalculateBendGoalRightTransform()
+{
+	if (!bIsThirdAction && CharacterMesh && HandsMesh)
+	{
+		BendGoalRightTransform = HandsMesh->GetSocketTransform(BEND_GOAL_RIGHT_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		BendGoalRightTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, BASE_HUMAN_SPINE3_SOCKET_NAME, BendGoalRightTransform);
+	}
+}
+
+void UCharacterAnimInstance::CalculateIKSLPalmTransform()
+{
+	if (!bIsThirdAction && CharacterMesh && HandsMesh)
+	{
+		IKSLPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_L_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		IKSLPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, BASE_HUMAN_SPINE3_SOCKET_NAME, IKSLPalmTransform);
+	}
+}
+
+void UCharacterAnimInstance::CalculateIKSRPalmTransform()
+{
+	if (!bIsThirdAction && CharacterMesh && HandsMesh)
+	{
+		IKSRPalmTransform = HandsMesh->GetSocketTransform(BASE_HUMAN_R_PALM_SOCKET_NAME, ERelativeTransformSpace::RTS_World);
+		IKSRPalmTransform = FShooterUtility::TransformToBoneSpace(CharacterMesh, BASE_HUMAN_SPINE3_SOCKET_NAME, IKSRPalmTransform);
+	}
+}
+
+void UCharacterAnimInstance::CalculateTransforms()
+{
+	CalculateBendGoalLeftTransform();
+	CalculateBendGoalRightTransform();
+
+	CalculateIKSLPalmTransform();
+	CalculateIKSRPalmTransform();
 }

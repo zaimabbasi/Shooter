@@ -99,6 +99,13 @@ protected:
 	UFUNCTION()
 	void AnimNotify_TransitionSprintSlowToProneIdleAimToProneIdleAimStarted() const;
 
+private:
+	void CalculateBendGoalLeftTransform();
+	void CalculateBendGoalRightTransform();
+	void CalculateIKSLPalmTransform();
+	void CalculateIKSRPalmTransform();
+	void CalculateTransforms();
+
 public:
 	// Delegates - From Standing To Transitions
 	FOnCharacterAnimInstanceAnimNotifySignature OnCharacterAnimInstanceIdleAimToTransitionIdleAimToSprintSlowStarted;
@@ -156,6 +163,9 @@ private:
 	bool bIsSprinting;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	bool bIsTransition;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsAccelerating;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -204,9 +214,9 @@ private:
 	FTransform BendGoalRightTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform LPalmTransform;
+	FTransform IKSLPalmTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FTransform RPalmTransform;
+	FTransform IKSRPalmTransform;
 
 };
