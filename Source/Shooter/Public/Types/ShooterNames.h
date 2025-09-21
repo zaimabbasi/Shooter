@@ -42,6 +42,8 @@
 #define MOD_SIGHT_FRONT_SOCKET_NAME							(TEXT("mod_sight_front"))
 #define MOD_SIGHT_REAR_SOCKET_NAME							(TEXT("mod_sight_rear"))
 #define MOD_STOCK_SOCKET_NAME								(TEXT("mod_stock"))
+#define MOD_TACTICAL_SOCKET_NAME							(TEXT("mod_tactical"))
+#define MODE_SOCKET_NAME(Index)								(*FString::Printf(TEXT("mode_%03d"), Index))
 #define PATRON_SOCKET_NAME(Index)							(*FString::Printf(TEXT("patron_%03d"), Index))
 
 // Muzzle Types

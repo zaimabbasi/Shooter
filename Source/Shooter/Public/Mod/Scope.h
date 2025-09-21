@@ -13,6 +13,13 @@ class SHOOTER_API AScope : public AMod
 
 public:
 	AScope();
+	virtual void PostInitializeComponents() override;
 	virtual FName GetDefaultAttachParentSocketName() const override;
+
+protected:
+	virtual bool HasModes() const;
+	virtual uint8 GetNumModes() const;
+	virtual void SetMode(uint8 Mode);
+	TArray<FName> GetModeSocketNames() const;
 	
 };
