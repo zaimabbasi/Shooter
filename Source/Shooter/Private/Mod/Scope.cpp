@@ -15,7 +15,7 @@ void AScope::PostInitializeComponents()
 
     if (HasModes())
     {
-        SetMode(2);
+        SetMode(3);
     }
 }
 
