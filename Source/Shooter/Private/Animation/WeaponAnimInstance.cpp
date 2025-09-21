@@ -576,7 +576,7 @@ void UWeaponAnimInstance::CalculateTransforms()
 
 	CalculateWeaponRootAnimTransform();
 
-	//CalculateWeaponTransform();
+	CalculateWeaponTransform();
 
 	CalculateBendGoalLeftTransform();
 	CalculateBendGoalRightTransform();
